@@ -1,6 +1,7 @@
 // BACA INI //
 // Masing - Masing Feature App Bikin di Branch Masing-Masing //
-1. Clone Repo
+
+Clone Repo
 Buat Direktori di Lokal dengan nama sigma-app
 Open folder di VSCode
 git clone https://github.com/pbp-kelompok-e5/sigma-app.git
@@ -10,7 +11,7 @@ git checkout main
 Update dengan kondisi main
 git pull origin main
 
-2. Membuat Branch Fitur
+Membuat Branch Fitur
 buat branch baru
 git checkout -b feat/nama-kalian
 contoh : feat/farrell
