@@ -18,4 +18,5 @@ contoh : feat/farrell
 Fitur kalian masing-masing dikerjakan di branch masing-masing
 Informasi lebih lengkap, rujuk : https://pbp-fasilkom-ui.github.io/ganjil-2026/assignments/group/midterm-guide#development-di-feature-branch
 
+
 // END //
