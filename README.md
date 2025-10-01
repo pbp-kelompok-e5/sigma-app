@@ -11,795 +11,656 @@
 
 ### 🎯 Fitur Utama
 
-- **Smart Matching System**: Temukan partner olahraga berdasarkan minat, lokasi, dan skill level
-- **Event Discovery**: Jelajahi dan bergabung dengan event olahraga di kotamu
-- **Event Creation**: Buat dan kelola event olahraga sendiri
-- **Social Gamification**: Dapatkan points, badge, rating, dan bangun reputasi di komunitas
-- **Profile & Statistics**: Tampilkan pencapaian, skill, dan jadwal ketersediaan
-- **Rating & Review System**: Berikan feedback setelah event untuk meningkatkan kualitas komunitas
-- **Leaderboard System**: Kompetisi sehat melalui ranking points user
+- **Profile Management**: Kelola profil dan preferensi olahraga
+- **Partner Matching**: Temukan partner olahraga berdasarkan minat dan lokasi
+- **Event Discovery**: Jelajahi event olahraga di kotamu
+- **Event Creation**: Buat dan kelola event sendiri
+- **Review System**: Berikan feedback setelah event
+- **Leaderboard**: Kompetisi sehat melalui ranking points
 
 ### 💡 Cara Kerja
 
-1. **Onboarding** - Register dengan data olahraga favorit, skill level, dan lokasi
-2. **Find Partners** - Swipe-style matching untuk menemukan teman berolahraga
-3. **Join/Create Events** - Ikuti event yang ada atau buat event sendiri
-4. **Play Together** - Bertemu dan berolahraga bersama secara offline
-5. **Build Reputation** - Dapatkan points, rating dan badge berdasarkan partisipasi
-6. **Compete** - Naik ranking di leaderboard dan tunjukkan kehebatan Anda!
+1. **Register** - Daftar dengan data olahraga favorit dan lokasi
+2. **Find Partners** - Browse dan connect dengan teman berolahraga
+3. **Join/Create Events** - Ikuti event atau buat event sendiri
+4. **Play Together** - Bertemu dan berolahraga bersama
+5. **Give Reviews** - Berikan feedback post-event
+6. **Earn Points** - Naik ranking di leaderboard
 
 ---
 
-## 📦 Pembagian Modul (5 Modul Independen)
+## 📦 Pembagian Modul (6 Modul dengan Relasi)
 
-> [!IMPORTANT]
-> **Prinsip DRY**: Setiap model hanya didefinisikan di SATU modul. Modul lain mengimport jika diperlukan.
+> [!NOTE]
+> **Setiap modul tetap fokus pada tanggung jawabnya, tetapi menggunakan Foreign Key untuk relasi yang efisien**
 
 ---
 
-### Modul 1: Profile & User Management
-**PIC: [Nama Anggota 1]**
+### Modul 1: Authentication & User Profile
 
 **Tanggung Jawab:**
 - Autentikasi user (register, login, logout)
 - Manajemen profil user
-- Data preferensi olahraga user
-- Data jadwal ketersediaan user
-- **Sistem Points & Leaderboard**
+- Data preferensi olahraga
 
 **Fitur:**
-- Register dengan form lengkap (nama, email, password, foto, lokasi)
+- Register (nama, email, password, foto, kota)
 - Login & Logout
-- View Profile (public & private view)
+- View Profile (public & private)
 - Edit Profile
   - Update foto profil
-  - Edit bio & deskripsi
-  - Manage olahraga favorit & skill level
-  - Set jadwal free time (hari & jam)
-  - Update lokasi
+  - Edit bio
+  - Update kota
+- Sport Preferences
+  - Add/remove sport favorit
+  - Set skill level per sport
 - Delete Account
-- **Points Dashboard**
-  - View total points
-  - Points history & breakdown
-  - Points earning activities
-- **Leaderboard Page**
-  - Global ranking by total points
-  - Filter by period (weekly, monthly, all-time)
-  - Filter by sport category
-  - View top performers
-  - User's current rank & position
-  - Points comparison
 
-**Models & Atribut:**
+**Models:**
 
-**User** (extend Django User)
+**User** (Django built-in)
 ```python
-- username (CharField, unique)
-- email (EmailField, unique)
-- date_joined (DateTimeField)
-- is_verified (BooleanField)
+from django.contrib.auth.models import User
 ```
 
 **UserProfile**
 ```python
-- user (OneToOneField -> User)
-- full_name (CharField)
-- bio (TextField, nullable)
-- profile_picture (ImageField, nullable)
-- gender (CharField, choices)
-- city (CharField)
-- total_points (IntegerField, default=0) # NEW: Total Points
-- reputation_score (IntegerField, default=0)
-- attendance_rate (DecimalField, default=0.0)
-- total_events_joined (IntegerField, default=0)
-- total_events_organized (IntegerField, default=0)
-- created_at (DateTimeField)
-- updated_at (DateTimeField)
+from django.db import models
+from django.contrib.auth.models import User
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=100)
+    bio = models.TextField(blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    city = models.CharField(max_length=50)
+    total_points = models.IntegerField(default=0)
+    total_events = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.full_name
 ```
 
 **SportPreference**
 ```python
-- user (ForeignKey -> User)
-- sport_type (CharField, choices: football, basketball, badminton, tennis, running, cycling, swimming, volleyball, gym, yoga)
-- skill_level (CharField, choices: beginner, intermediate, advanced, expert)
-- is_primary (BooleanField)
-- years_of_experience (IntegerField, nullable)
-- created_at (DateTimeField)
-```
+SPORT_CHOICES = [
+    ('football', 'Football'),
+    ('basketball', 'Basketball'),
+    ('badminton', 'Badminton'),
+    ('tennis', 'Tennis'),
+    ('running', 'Running'),
+    ('cycling', 'Cycling'),
+    ('swimming', 'Swimming'),
+    ('volleyball', 'Volleyball'),
+]
 
-**Availability** (jadwal free time)
-```python
-- user (ForeignKey -> User)
-- day_of_week (CharField, choices: monday-sunday)
-- start_time (TimeField)
-- end_time (TimeField)
-- is_active (BooleanField, default=True)
-```
+SKILL_CHOICES = [
+    ('beginner', 'Beginner'),
+    ('intermediate', 'Intermediate'),
+    ('advanced', 'Advanced'),
+]
 
-**PointTransaction** (NEW)
-```python
-- user (ForeignKey -> User)
-- activity_type (CharField, choices: event_join, event_complete, event_organize, connection_made, rating_received, badge_earned, review_given, consecutive_attendance)
-- points_earned (IntegerField)
-- description (TextField)
-- related_event_id (IntegerField, nullable)
-- related_user_id (IntegerField, nullable)
-- created_at (DateTimeField)
-```
-
-**LeaderboardEntry** (NEW)
-```python
-- user (ForeignKey -> User)
-- rank (IntegerField)
-- total_points (IntegerField)
-- period_type (CharField, choices: weekly, monthly, all_time)
-- sport_category (CharField, nullable)
-- last_updated (DateTimeField)
-- rank_change (IntegerField, default=0) # naik/turun rank
+class SportPreference(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sport_preferences')
+    sport_type = models.CharField(max_length=20, choices=SPORT_CHOICES)
+    skill_level = models.CharField(max_length=20, choices=SKILL_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'sport_type']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.sport_type}"
 ```
 
 **API Endpoints:**
 - `POST /auth/register/`
 - `POST /auth/login/`
 - `POST /auth/logout/`
-- `GET /profile/<user_id>/`
+- `GET /profile/<int:user_id>/`
 - `PUT /profile/update/`
 - `DELETE /profile/delete/`
-- `GET /profile/<user_id>/sport-preferences/`
-- `POST /profile/sport-preferences/add/`
-- `PUT /profile/availability/update/`
-- `GET /profile/points/` # Points dashboard
-- `GET /profile/points/history/` # Points transaction history
-- `GET /leaderboard/` # Global leaderboard
-- `GET /leaderboard/filter/?period=<>&sport=<>` # Filtered leaderboard
-- `GET /leaderboard/my-rank/` # User's current rank
+- `GET /profile/sports/`
+- `POST /profile/sports/add/`
+- `DELETE /profile/sports/<int:sport_id>/`
 
 ---
 
-### Modul 2: Partner Matching & Social Network
-**PIC: [Nama Anggota 2]**
+### Modul 2: Partner Matching
 
 **Tanggung Jawab:**
-- Sistem matching & recommendation partners
-- Manajemen koneksi antar user
-- Filter & search partners
-- Social networking features
+- Browse & search users
+- Connection system
+- Match recommendations
 
 **Fitur:**
-- Browse People
-  - Card view dengan swipe functionality
-  - Grid view untuk desktop
-- Smart Matches (rekomendasi berdasarkan algoritma)
-- Filter Partners
+- Browse Users
+  - Card view
+  - Grid view
+- Search Users (by name, city)
+- Filter Users
   - By sport type
-  - By location/distance
+  - By city
   - By skill level
-  - By availability
-  - By points range
-- Connect/Skip functionality
-- Friends List
+- Connect with Users
+- My Connections
   - View all connections
   - Remove connection
-  - View mutual friends
-- Connection Request Management
-  - Accept/Reject requests
-  - View pending requests
-- Mutual Connection Notification
-- Search Partners by name
-- User Statistics
-  - Total connections
-  - Connection growth
+- Connection Requests
+  - Accept/Reject
 
-**Models & Atribut:**
+**Models:**
 
 **Connection**
 ```python
-- from_user (ForeignKey -> User)
-- to_user (ForeignKey -> User)
-- status (CharField, choices: pending, accepted, rejected, blocked)
-- match_score (DecimalField, nullable)
-- message (TextField, nullable)
-- created_at (DateTimeField)
-- updated_at (DateTimeField)
-- is_mutual (BooleanField, default=False)
-```
+from django.db import models
+from django.contrib.auth.models import User
 
-**MatchPreference**
-```python
-- user (OneToOneField -> User)
-- preferred_sports (CharField) # JSON array
-- preferred_cities (CharField) # JSON array
-- preferred_skill_levels (CharField) # JSON array
-- preferred_gender (CharField, nullable)
-- preferred_points_range (CharField, nullable) # NEW
-- only_mutual_sports (BooleanField, default=False)
-- updated_at (DateTimeField)
-```
-
-**MatchHistory**
-```python
-- user (ForeignKey -> User)
-- viewed_user (ForeignKey -> User)
-- action (CharField, choices: skip, connect, view_profile)
-- timestamp (DateTimeField)
+class Connection(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='connections_sent')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='connections_received')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    message = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['from_user', 'to_user']
+    
+    def __str__(self):
+        return f"{self.from_user.username} -> {self.to_user.username} ({self.status})"
 ```
 
 **API Endpoints:**
-- `GET /matching/browse/`
-- `GET /matching/smart-matches/`
-- `POST /matching/connect/<user_id>/`
-- `POST /matching/skip/<user_id>/`
-- `GET /matching/connections/`
-- `DELETE /matching/connections/<connection_id>/`
-- `GET /matching/requests/`
-- `PUT /matching/requests/<connection_id>/accept/`
-- `PUT /matching/requests/<connection_id>/reject/`
-- `GET /matching/search/?q=<query>`
-- `GET /matching/statistics/`
+- `GET /users/browse/`
+- `GET /users/search/?q=<query>`
+- `GET /users/filter/?sport=<>&city=<>&skill=<>`
+- `POST /connections/send/<int:user_id>/`
+- `GET /connections/my-connections/`
+- `DELETE /connections/<int:connection_id>/`
+- `GET /connections/requests/`
+- `PUT /connections/<int:connection_id>/accept/`
+- `PUT /connections/<int:connection_id>/reject/`
 
 ---
 
-### Modul 3: Event Discovery & Participation
-**PIC: [Nama Anggota 3]**
+### Modul 3: Event Discovery
 
 **Tanggung Jawab:**
-- Display & browse semua event
-- Join event sebagai participant
-- Manajemen participant dari sisi user
-- Event recommendations
+- Display & browse events
+- Join event
+- My events (as participant)
 
 **Fitur:**
 - Event Listing
-  - List view dengan pagination
-  - Card view dengan thumbnail
-  - Map view
-- Event Detail Page
-  - Info lengkap event
-  - List participants
+  - List view
+  - Card view
+- Event Detail
+  - Event info
+  - Participants list
   - Organizer info
-  - Location map
 - Event Filtering
   - By sport type
-  - By date range
-  - By location
-  - By price (free/paid)
-  - By skill level required
-  - By availability status
-- Event Search (by title, description)
+  - By date
+  - By city
+- Event Search
 - Join Event
-  - Direct join (jika slot tersedia)
-  - Waiting list (jika full)
 - My Joined Events
-  - Upcoming events
-  - Past events
-  - Cancelled events
-- Leave Event (cancel participation)
-- Event Recommendations (berdasarkan algoritma)
-- Event Calendar View
+  - Upcoming
+  - Past
+- Leave Event
 
-**Models & Atribut:**
+**Models:**
 
 **Event**
 ```python
-- organizer_id (IntegerField) # Reference to User ID
-- title (CharField)
-- description (TextField)
-- sport_type (CharField, choices)
-- event_type (CharField, choices: casual, competitive, training)
-- skill_level_required (CharField, choices)
-- event_date (DateField)
-- start_time (TimeField)
-- end_time (TimeField)
-- location_name (CharField)
-- city (CharField)
-- address (TextField)
-- max_participants (IntegerField)
-- current_participants (IntegerField, default=0)
-- min_participants (IntegerField, default=2)
-- price (DecimalField, default=0.0)
-- is_paid (BooleanField, default=False)
-- payment_details (TextField, nullable)
-- event_image (ImageField, nullable)
-- is_public (BooleanField, default=True)
-- status (CharField, choices: draft, published, ongoing, completed, cancelled)
-- cancellation_reason (TextField, nullable)
-- created_at (DateTimeField)
-- updated_at (DateTimeField)
+from django.db import models
+from django.contrib.auth.models import User
+
+class Event(models.Model):
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('full', 'Full'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    SPORT_CHOICES = [
+        ('football', 'Football'),
+        ('basketball', 'Basketball'),
+        ('badminton', 'Badminton'),
+        ('tennis', 'Tennis'),
+        ('running', 'Running'),
+        ('cycling', 'Cycling'),
+        ('swimming', 'Swimming'),
+        ('volleyball', 'Volleyball'),
+    ]
+    
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    sport_type = models.CharField(max_length=20, choices=SPORT_CHOICES)
+    event_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    city = models.CharField(max_length=50)
+    location_name = models.CharField(max_length=200)
+    max_participants = models.IntegerField()
+    current_participants = models.IntegerField(default=0)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return self.title
+    
+    def is_full(self):
+        return self.current_participants >= self.max_participants
 ```
 
 **EventParticipant**
 ```python
-- event_id (IntegerField)
-- user_id (IntegerField)
-- status (CharField, choices: joined, waitlist, confirmed, cancelled, rejected)
-- join_timestamp (DateTimeField)
-- payment_status (CharField, choices: pending, confirmed, refunded)
-- payment_proof (ImageField, nullable)
-- is_organizer (BooleanField, default=False)
-- notes (TextField, nullable)
-- priority_score (DecimalField, nullable)
-- updated_at (DateTimeField)
-```
-
-**EventCategory**
-```python
-- name (CharField)
-- slug (SlugField, unique)
-- description (TextField, nullable)
-- icon (CharField, nullable)
-- is_active (BooleanField, default=True)
+class EventParticipant(models.Model):
+    STATUS_CHOICES = [
+        ('joined', 'Joined'),
+        ('attended', 'Attended'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='joined_events')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='joined')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['event', 'user']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.event.title}"
 ```
 
 **API Endpoints:**
 - `GET /events/`
-- `GET /events/<event_id>/`
-- `GET /events/filter/`
-- `GET /events/search/`
-- `POST /events/<event_id>/join/`
-- `DELETE /events/<event_id>/leave/`
-- `GET /events/my-events/`
-- `GET /events/recommendations/`
-- `GET /events/calendar/`
+- `GET /events/<int:event_id>/`
+- `GET /events/filter/?sport=<>&date=<>&city=<>`
+- `GET /events/search/?q=<query>`
+- `POST /events/<int:event_id>/join/`
+- `GET /events/my-joined/`
+- `DELETE /events/<int:event_id>/leave/`
 
 ---
 
-### Modul 4: Event Management & Organization
-**PIC: [Nama Anggota 4]**
+### Modul 4: Event Management
 
 **Tanggung Jawab:**
-- Create & manage event (CRUD)
-- Manajemen participants dari sisi organizer
-- Invitation system
-- Event updates & announcements
+- Create & edit event
+- Manage participants (as organizer)
+- My events (as organizer)
 
 **Fitur:**
 - Create Event
-  - Form lengkap dengan validasi
-  - Upload event image
-  - Set public/private
-  - Draft & publish
+  - Form dengan validasi
+  - Set tanggal & waktu
+  - Set lokasi & max participants
 - Edit Event
-  - Update info event
+  - Update info
   - Reschedule
-- Delete Event (soft delete)
-- Cancel Event dengan alasan
-- Manage Participants
-  - View all participants & waitlist
-  - Accept/Reject from waitlist
-  - Remove participant
-  - Send custom message
-- Payment Confirmation
-  - Verify payment proof
-  - Mark as paid
-  - Request additional proof
-- Invite Friends
-  - Send invitation ke connections
-  - Bulk invite
-- My Events Dashboard (as organizer)
+- Delete Event
+- Cancel Event
+- My Organized Events
   - Active events
   - Past events
-  - Draft events
   - Event statistics
-- Duplicate Event
-- Event Announcements
+- Manage Participants
+  - View participants
+  - Remove participant
+  - Mark attendance
 
-**Models & Atribut:**
+**Models:**
 
-**EventInvitation**
-```python
-- event_id (IntegerField)
-- from_user_id (IntegerField)
-- to_user_id (IntegerField)
-- status (CharField, choices: pending, accepted, declined, expired)
-- message (TextField, nullable)
-- sent_at (DateTimeField)
-- responded_at (DateTimeField, nullable)
-- expires_at (DateTimeField)
-```
-
-**EventUpdate**
-```python
-- event_id (IntegerField)
-- author_id (IntegerField)
-- title (CharField)
-- message (TextField)
-- is_important (BooleanField, default=False)
-- created_at (DateTimeField)
-```
-
-**EventPayment**
-```python
-- event_id (IntegerField)
-- participant_id (IntegerField)
-- amount (DecimalField)
-- payment_method (CharField, nullable)
-- payment_proof (ImageField)
-- verification_status (CharField, choices: pending, verified, rejected)
-- verified_by_id (IntegerField, nullable)
-- verified_at (DateTimeField, nullable)
-- rejection_reason (TextField, nullable)
-- created_at (DateTimeField)
-- updated_at (DateTimeField)
-```
+Menggunakan model **Event** dan **EventParticipant** dari Modul 3.
 
 **API Endpoints:**
 - `POST /events/create/`
-- `PUT /events/<event_id>/update/`
-- `DELETE /events/<event_id>/`
-- `POST /events/<event_id>/cancel/`
+- `PUT /events/<int:event_id>/update/`
+- `DELETE /events/<int:event_id>/`
+- `POST /events/<int:event_id>/cancel/`
 - `GET /events/my-organized/`
-- `GET /events/<event_id>/participants/`
-- `PUT /events/<event_id>/participants/<user_id>/accept/`
-- `PUT /events/<event_id>/participants/<user_id>/reject/`
-- `DELETE /events/<event_id>/participants/<user_id>/`
-- `POST /events/<event_id>/invite/`
-- `PUT /events/payments/<payment_id>/verify/`
-- `POST /events/<event_id>/updates/`
-- `POST /events/<event_id>/duplicate/`
+- `GET /events/<int:event_id>/participants/`
+- `DELETE /events/<int:event_id>/participants/<int:user_id>/`
+- `POST /events/<int:event_id>/mark-attendance/`
 
 ---
 
-### Modul 5: Rating, Review & Gamification
-**PIC: [Nama Anggota 5]**
+### Modul 5: Review & Rating
 
 **Tanggung Jawab:**
-- Rating & review system post-event
-- Badge & achievement system
-- Notification system
-- Reputation management
+- Review system post-event
+- Rating system
+- User reputation
 
 **Fitur:**
-- Post-Event Rating
-  - Rate organizer (jika participant)
-  - Rate participants (jika organizer)
-  - Multi-criteria rating
-- Review & Feedback
-  - Write review dengan foto
-  - Edit/delete own review
-  - Report inappropriate review
-- Badge System
-  - Display earned badges di profile
-  - Badge progress tracking
-  - Badge descriptions & requirements
-- Achievement Tracking
-  - Progress bars untuk badge
-  - Milestone notifications
-- Notification System
-  - Event reminders (H-1, H-2 jam)
-  - Connection requests
-  - Event invitations
-  - Payment confirmations
-  - Badge earned
-  - Event updates
-  - Points earned notifications
-  - Mark as read
-  - Notification preferences
-- Review Statistics
-  - Average ratings
-  - Review sentiment analysis
+- Write Review
+  - Rate organizer/participant (1-5 stars)
+  - Write comment
+- View Reviews
+  - My reviews given
+  - Reviews received
+- Edit/Delete Review
+- User Rating Summary
+  - Average rating
+  - Total reviews
+  - Rating distribution
 
-**Models & Atribut:**
-
-**Rating**
-```python
-- event_id (IntegerField)
-- from_user_id (IntegerField)
-- to_user_id (IntegerField)
-- overall_score (DecimalField)
-- punctuality_score (IntegerField, 1-5)
-- skill_score (IntegerField, 1-5)
-- attitude_score (IntegerField, 1-5)
-- communication_score (IntegerField, 1-5)
-- created_at (DateTimeField)
-- updated_at (DateTimeField)
-```
+**Models:**
 
 **Review**
 ```python
-- rating_id (IntegerField)
-- comment (TextField)
-- images (ImageField, nullable)
-- is_public (BooleanField, default=True)
-- helpful_count (IntegerField, default=0)
-- is_reported (BooleanField, default=False)
-- report_reason (TextField, nullable)
-- created_at (DateTimeField)
-- updated_at (DateTimeField)
+from django.db import models
+from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+class Review(models.Model):
+    event = models.ForeignKey('events.Event', on_delete=models.CASCADE, related_name='reviews')
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['event', 'from_user', 'to_user']
+    
+    def __str__(self):
+        return f"{self.from_user.username} -> {self.to_user.username} ({self.rating}⭐)"
 ```
 
-**Badge**
+**UserRating** (aggregate - updated via signals)
 ```python
-- code (CharField, unique)
-- name (CharField)
-- description (TextField)
-- icon (CharField)
-- category (CharField, choices)
-- requirement_type (CharField)
-- requirement_value (IntegerField)
-- points_bonus (IntegerField) # NEW: Points given when earned
-- is_active (BooleanField, default=True)
+class UserRating(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='rating_summary')
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+    total_reviews = models.IntegerField(default=0)
+    five_star = models.IntegerField(default=0)
+    four_star = models.IntegerField(default=0)
+    three_star = models.IntegerField(default=0)
+    two_star = models.IntegerField(default=0)
+    one_star = models.IntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.average_rating}⭐"
 ```
 
-**UserBadge**
+**API Endpoints:**
+- `POST /reviews/create/`
+- `GET /reviews/event/<int:event_id>/`
+- `GET /reviews/user/<int:user_id>/received/`
+- `GET /reviews/my-reviews/`
+- `PUT /reviews/<int:review_id>/update/`
+- `DELETE /reviews/<int:review_id>/`
+- `GET /reviews/user/<int:user_id>/summary/`
+
+---
+
+### Modul 6: Leaderboard & Points
+
+**Tanggung Jawab:**
+- Points tracking system
+- Leaderboard ranking
+- Achievement tracking
+
+**Fitur:**
+- Points Dashboard
+  - Total points
+  - Points history
+  - Points breakdown
+- Leaderboard
+  - Global ranking
+  - Filter by period (weekly, monthly, all-time)
+  - Filter by sport
+  - User's rank
+- Achievements
+  - Milestone tracking
+  - Achievement list
+  - Progress tracking
+
+**Models:**
+
+**PointTransaction**
 ```python
-- user_id (IntegerField)
-- badge_id (IntegerField)
-- earned_at (DateTimeField)
-- progress (IntegerField, default=0)
-- is_displayed (BooleanField, default=True)
+from django.db import models
+from django.contrib.auth.models import User
+
+class PointTransaction(models.Model):
+    ACTIVITY_CHOICES = [
+        ('event_join', 'Event Join'),
+        ('event_complete', 'Event Complete'),
+        ('event_organize', 'Event Organize'),
+        ('review_given', 'Review Given'),
+        ('five_star_received', 'Five Star Received'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='point_transactions')
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_CHOICES)
+    points = models.IntegerField()
+    description = models.TextField()
+    related_event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.activity_type} (+{self.points})"
+```
+
+**Leaderboard**
+```python
+class Leaderboard(models.Model):
+    PERIOD_CHOICES = [
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('all_time', 'All Time'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leaderboard_entries')
+    rank = models.IntegerField()
+    total_points = models.IntegerField()
+    period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
+    sport_type = models.CharField(max_length=20, blank=True, null=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['user', 'period', 'sport_type']
+        ordering = ['rank']
+    
+    def __str__(self):
+        return f"#{self.rank} - {self.user.username} ({self.total_points} pts)"
 ```
 
 **Achievement**
 ```python
-- user_id (IntegerField)
-- achievement_type (CharField)
-- title (CharField)
-- description (TextField)
-- points_earned (IntegerField) # NEW
-- earned_at (DateTimeField)
-- related_event_id (IntegerField, nullable)
-```
-
-**Notification**
-```python
-- user_id (IntegerField)
-- notification_type (CharField, choices)
-- title (CharField)
-- message (TextField)
-- related_event_id (IntegerField, nullable)
-- related_user_id (IntegerField, nullable)
-- action_url (CharField, nullable)
-- is_read (BooleanField, default=False)
-- is_sent (BooleanField, default=False)
-- scheduled_at (DateTimeField, nullable)
-- created_at (DateTimeField)
-- read_at (DateTimeField, nullable)
-```
-
-**NotificationPreference**
-```python
-- user_id (IntegerField)
-- email_notifications (BooleanField, default=True)
-- push_notifications (BooleanField, default=True)
-- event_reminders (BooleanField, default=True)
-- connection_requests (BooleanField, default=True)
-- event_invitations (BooleanField, default=True)
-- event_updates (BooleanField, default=True)
-- badge_earned (BooleanField, default=True)
-- rating_received (BooleanField, default=True)
-- points_earned (BooleanField, default=True) # NEW
+class Achievement(models.Model):
+    ACHIEVEMENT_CODES = [
+        ('first_event', 'First Event'),
+        ('ten_events', '10 Events'),
+        ('organizer', 'Organizer'),
+        ('highly_rated', 'Highly Rated'),
+        ('social_butterfly', 'Social Butterfly'),
+        ('early_bird', 'Early Bird'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    achievement_code = models.CharField(max_length=20, choices=ACHIEVEMENT_CODES)
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    bonus_points = models.IntegerField(default=0)
+    earned_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'achievement_code']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
 ```
 
 **API Endpoints:**
-- `POST /ratings/create/`
-- `GET /ratings/user/<user_id>/`
-- `GET /reviews/event/<event_id>/`
-- `POST /reviews/create/`
-- `PUT /reviews/<review_id>/update/`
-- `DELETE /reviews/<review_id>/`
-- `POST /reviews/<review_id>/report/`
-- `GET /badges/`
-- `GET /badges/user/<user_id>/`
-- `GET /achievements/user/<user_id>/`
-- `GET /notifications/`
-- `PUT /notifications/<notification_id>/read/`
-- `PUT /notifications/mark-all-read/`
-- `GET /notifications/preferences/`
-- `PUT /notifications/preferences/update/`
+- `GET /points/dashboard/`
+- `GET /points/history/`
+- `POST /points/add/` # Internal use (called by other modules via signals)
+- `GET /leaderboard/`
+- `GET /leaderboard/filter/?period=<>&sport=<>`
+- `GET /leaderboard/my-rank/`
+- `GET /achievements/`
+- `GET /achievements/<int:user_id>/`
 
 ---
 
-## 🎯 Sistem Points
+## 🎯 Sistem Points (Simplified)
 
-### Formula Perhitungan Points
+### Points per Activity
 
-**Base Points per Activity:**
+| Activity | Points | Trigger |
+|----------|--------|---------|
+| Join Event | +10 | EventParticipant created |
+| Complete Event (hadir) | +30 | EventParticipant status = 'attended' |
+| Organize Event (selesai) | +50 | Event status = 'completed' |
+| Give Review | +5 | Review created |
+| Get 5-star Review | +10 | Review with rating = 5 received |
 
-| Activity | Points | Description |
-|----------|--------|-------------|
-| **Event Join** | +10 | Bergabung dengan event |
-| **Event Complete** | +50 | Menyelesaikan event (hadir) |
-| **Event Organize** | +100 | Berhasil mengorganisir event (min 5 participants) |
-| **Connection Made** | +5 | Membuat koneksi baru (accepted) |
-| **Rating Received (5.0)** | +20 | Mendapat perfect rating |
-| **Rating Received (4.0-4.9)** | +10 | Mendapat rating baik |
-| **Review Given** | +5 | Memberikan review |
-| **Badge Earned** | +10 to +30 | Tergantung badge (lihat badge system) |
-| **Consecutive Attendance** | +25 per streak | Hadir berturut-turut (per 3 events) |
+### Ranking Tiers
 
+| Tier | Points Range | Badge |
+|------|-------------|-------|
+| 🥇 **Master** | 1000+ | Gold |
+| 🥈 **Expert** | 500-999 | Silver |
+| 🥉 **Advanced** | 200-499 | Bronze |
+| ⭐ **Intermediate** | 50-199 | Star |
+| 🔰 **Beginner** | 0-49 | Rookie |
 
-### Leaderboard Ranking System
+### Achievements
 
-**Ranking Update:**
-- Weekly leaderboard reset (optional)
-- Monthly leaderboard
-- All-time leaderboard (permanent)
-
----
-
-## 🧮 Algoritma Smart Matching
-
-### Match Score Formula
-
-```
-Match Score = (W1 × Sport Similarity) + (W2 × Location Proximity) + (W3 × Skill Compatibility) + (W4 × Activity Level)
-
-Weights:
-W1 = 0.35 (Sport Similarity)
-W2 = 0.30 (Location Proximity)
-W3 = 0.20 (Skill Compatibility)
-W4 = 0.15 (Activity Level)
-```
-
-**Components:**
-
-**Sport Similarity:**
-```
-Sport Similarity = {
-  1.0, if primary sports match
-  0.7, if any sport matches
-  0.3, if same sport category (team/individual)
-  0.0, if no match
-}
-```
-
-**Location Proximity:**
-```
-Location Proximity = {
-  1.0, if same city
-  0.0, if different city
-}
-```
-
-**Skill Compatibility:**
-```
-Skill Diff = |User1 Skill Level - User2 Skill Level|
-
-Skill Compatibility = {
-  1.0, if same level
-  0.7, if diff = 1 level
-  0.3, if diff = 2 levels
-  0.0, if diff ≥ 3 levels
-}
-```
-
-**Activity Level:**
-```
-Activity Level = (User's Total Points / 1000) capped at 1.0
-```
+| Achievement | Requirement | Bonus Points |
+|-------------|-------------|--------------|
+| 🏃 **First Event** | Join 1st event | +5 |
+| 🎯 **10 Events** | Complete 10 events | +20 |
+| 👑 **Organizer** | Organize 5 events | +30 |
+| ⭐ **Highly Rated** | Get 10 five-star reviews | +25 |
+| 🤝 **Social Butterfly** | Make 20 connections | +15 |
+| 🌅 **Early Bird** | Join 5 morning events | +10 |
 
 ---
 
-## 🏆 Badge System Details
-
-**Updated Badge Requirements:**
-
-| Badge | Requirement | Points Bonus |
-|-------|-------------|--------------|
-| 🏃 **Weekend Warrior** | Join 4 weekend events in 1 month | +15 |
-| ⭐ **Reliable Player** | 95% attendance (min 10 events) | +20 |
-| 🎯 **Perfect Rating** | 5.0 rating average (min 20 reviews) | +30 |
-| 👑 **Top Organizer** | 10+ successful events | +25 |
-| 🤝 **Social Butterfly** | 50+ connections | +15 |
-| 🔥 **On Fire** | 7 consecutive days events | +20 |
-| 💎 **Veteran** | 6+ months active | +30 |
-| 🌟 **Multi-Sport** | 5+ different sports | +15 |
-| 🚀 **Rising Star** | 1000+ points in 1 month | +25 |
-| 👊 **Consistency King** | 20+ events without cancellation | +20 |
-
----
-
-## 📊 Struktur Modul Independence
+## 📊 Struktur Database dengan Relasi
 
 ```
-Modul 1 (Profile & Leaderboard)
-  ├── Manages: User, Profile, Points, Rankings
-  └── Independent: Self-contained point system
-
-Modul 2 (Matching & Social)
-  ├── Manages: Connections, Matching
-  └── Independent: Uses user_id references
-
-Modul 3 (Event Discovery)
-  ├── Manages: Events, Participation
-  └── Independent: Event viewing & joining
-
-Modul 4 (Event Management)
-  ├── Manages: Event CRUD, Organization
-  └── Independent: Event creation & management
-
-Modul 5 (Rating & Gamification)
-  ├── Manages: Ratings, Badges, Notifications
-  └── Independent: Post-event activities
+User (Django Auth)
+  │
+  ├─── OneToOne ──> UserProfile (Modul 1)
+  │                     └─── total_points (updated by Modul 6)
+  │
+  ├─── ForeignKey ──> SportPreference (Modul 1)
+  │                     └─── Multiple sports per user
+  │
+  ├─── ForeignKey ──> Connection (Modul 2)
+  │                     ├─── from_user (connections sent)
+  │                     └─── to_user (connections received)
+  │
+  ├─── ForeignKey ──> Event (Modul 3/4)
+  │                     ├─── organizer (who created)
+  │                     └─── ForeignKey ──> EventParticipant (Modul 3)
+  │                                           └─── user (who joined)
+  │
+  ├─── ForeignKey ──> Review (Modul 5)
+  │                     ├─── from_user (reviewer)
+  │                     ├─── to_user (reviewed)
+  │                     └─── event (context)
+  │
+  ├─── OneToOne ──> UserRating (Modul 5)
+  │                     └─── aggregate review data
+  │
+  ├─── ForeignKey ──> PointTransaction (Modul 6)
+  │                     └─── history of points earned
+  │
+  ├─── ForeignKey ──> Leaderboard (Modul 6)
+  │                     └─── ranking per period/sport
+  │
+  └─── ForeignKey ──> Achievement (Modul 6)
+                        └─── earned achievements
 ```
-
-> [!TIP]
-> **Inter-Module Communication:**
-> - Gunakan ID references (user_id, event_id) bukan ForeignKey direct
-> - Setiap modul expose REST API untuk data sharing
-> - Async notifications via message queue (optional)
-
 ---
 
 ## 📥 Clone Repository
 
-1. **Buat direktori lokal** dengan nama `PLACEHOLDER-app`
-
-2. **Buka folder** di VSCode
-
-3. **Clone repository:**
-   ```bash
-   git clone https://github.com/pbp-kelompok-e5/PLACEHOLDER-app.git
-   ```
+```bash
+git clone https://github.com/pbp-kelompok-e5/sigma-app.git
+cd sigma-app
+```
 
 ---
 
-## 🔄 Update ke Versi Main Terbaru
+## 🔄 Update ke Main Terbaru
 
-Sebelum membuat branch baru, pastikan Anda memiliki versi terbaru dari `main`:
-
-1. **Pindah ke branch main:**
-   ```bash
-   git checkout main
-   ```
-
-2. **Update dari remote:**
-   ```bash
-   git pull origin main
-   ```
+```bash
+git checkout main
+git pull origin main
+```
 
 ---
 
 ## 🌿 Membuat Branch Personal
 
-1. **Buat branch baru** dengan nama Anda:
-   ```bash
-   git checkout -b nama-kalian
-   ```
-
-2. **Cek branch aktif:**
-   ```bash
-   git branch
-   ```
+```bash
+git checkout -b nama-kalian
+git branch  # cek branch aktif
+```
 
 ---
 
 ## 💻 Workflow Development
 
 > [!WARNING]
-> - **JANGAN commit langsung ke `main`**
-> - **SELALU cek branch sebelum commit**
+> - **JANGAN commit ke `main`**
+> - **SELALU cek branch**: `git branch`
+> - **Run migrations setelah pull**: `python manage.py migrate`
 
-### 📋 Development Checklist
+### Development Checklist
 
-- [ ] Code sudah ditest di lokal
-- [ ] Tidak ada conflict dengan branch main
-- [ ] Migrations sudah dibuat
-- [ ] Requirements.txt sudah diupdate
-- [ ] Commit message jelas dan deskriptif
-- [ ] API documentation updated
+- [ ] Models defined with proper ForeignKeys
+- [ ] Migrations created and tested
+- [ ] Signals implemented (if needed)
+- [ ] API endpoints working
+- [ ] Clear commit messages
 
 ---
 
-## 🚀 Quick Start Development
+## 🚀 Quick Start
 
 ```bash
-# 1. Setup virtual environment
+# Setup virtual environment
 python -m venv env
 source env/bin/activate  # Linux/Mac
 env\Scripts\activate     # Windows
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Run migrations
+# Create migrations
 python manage.py makemigrations
+
+# Apply migrations
 python manage.py migrate
 
-# 4. Create superuser
+# Create superuser (optional)
 python manage.py createsuperuser
 
-# 5. Run development server
+# Run development server
 python manage.py runserver
 ```
 
@@ -807,14 +668,37 @@ python manage.py runserver
 
 ## 👥 Tim Pengembang
 
-| Nama | Modul | GitHub |
-|------|-------|--------|
-| [Nama Anggota 1] | Profile & Leaderboard | [@username1] |
-| [Nama Anggota 2] | Matching & Social | [@username2] |
-| [Nama Anggota 3] | Event Discovery | [@username3] |
-| [Nama Anggota 4] | Event Management | [@username4] |
-| [Nama Anggota 5] | Rating & Gamification | [@username5] |
+| Nama | Modul |
+|------|-------|
+| [Hariz] | Authentication & Profile, Leaderboard & Points | 
+| [Anggota 2] | Partner Matching | 
+| [Anggota 3] | Event Discovery | 
+| [Anggota 4] | Event Management | 
+| [Anggota 5] | Review & Rating | 
+
+---
+
+## 📚 Useful Django Commands
+
+```bash
+# Check models
+python manage.py check
+
+# Show migrations
+python manage.py showmigrations
+
+# SQL for migration
+python manage.py sqlmigrate app_name migration_number
+
+# Django shell
+python manage.py shell
+
+# Create app
+python manage.py startapp app_name
+```
 
 ---
 
 **Happy Coding! 🚀**
+
+*Questions? Check Django docs or ask in team chat!*
