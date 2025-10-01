@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Sport Preferences - Sigma App{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">Sport Preferences</h1>
+                <a href="{% url 'authentication:profile' %}" class="text-gray-600 hover:text-gray-800">
+                    ← Back to Profile
+                </a>
+            </div>
+        </div>
+
+        <!-- Add New Sport Preference -->
+        <div class="px-6 py-6 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Add New Sport</h2>
+
+            <form method="post" class="flex flex-col sm:flex-row gap-4">
+                {% csrf_token %}
+
+                <div class="flex-1">
+                    <label for="{{ form.sport_type.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Sport Type
+                    </label>
+                    {{ form.sport_type }}
+                    {% if form.sport_type.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.sport_type.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex-1">
+                    <label for="{{ form.skill_level.id_for_label }}"
+                        class="block text-sm font-medium text-gray-700 mb-2">
+                        Skill Level
+                    </label>
+                    {{ form.skill_level }}
+                    {% if form.skill_level.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.skill_level.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit"
+                        class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition duration-200 whitespace-nowrap">
+                        Add Sport
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Current Sport Preferences -->
+        <div class="px-6 py-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Your Sports</h2>
+
+            {% if sport_preferences %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for preference in sport_preferences %}
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 relative group">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-3xl">
+                                {% if preference.sport_type == 'football' %}
+                                {% elif preference.sport_type == 'basketball' %}
+                                {% elif preference.sport_type == 'badminton' %}
+                                {% elif preference.sport_type == 'tennis' %}
+                                {% elif preference.sport_type == 'running' %}
+                                {% elif preference.sport_type == 'cycling' %}
+                                {% elif preference.sport_type == 'swimming' %}
+                                {% elif preference.sport_type == 'volleyball' %}
+                                {% else %}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ preference.get_sport_type_display }}</h3>
+                                <p class="text-sm text-gray-600">{{ preference.get_skill_level_display }}</p>
+                                <p class="text-xs text-gray-500">Added {{ preference.created_at|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
+
+                        <button
+                            class="delete-btn text-red-600 hover:text-red-800 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            data-id="{{ preference.id }}" data-sport="{{ preference.get_sport_type_display|escapejs }}"
+                            title="Remove {{ preference.get_sport_type_display }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                </path>
+                            </svg>
+                        </button>
+
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                            </path>
+                        </svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">🏃</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No sport preferences yet</h3>
+                <p class="text-gray-500 mb-4">Add your first sport preference to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to remove <span id="sportName" class="font-semibold"></span>
+            from your preferences?</p>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeDeleteModal()"
+                class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition duration-200">
+                Cancel
+            </button>
+            <button id="confirmDelete"
+                class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let deletePreferenceId = null;
+
+    function deleteSportPreference(preferenceId, sportName) {
+        deletePreferenceId = preferenceId;
+        document.getElementById('sportName').textContent = sportName;
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.remove('flex');
+        deletePreferenceId = null;
+    }
+
+    document.getElementById('confirmDelete').addEventListener('click', function () {
+        if (deletePreferenceId) {
+            fetch(`/profile/sports/${deletePreferenceId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error removing sport preference. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error removing sport preference. Please try again.');
+                });
+        }
+        closeDeleteModal();
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('deleteModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+</script>
+{% endblock %}

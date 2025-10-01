@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Sigma App{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">Edit Profile</h1>
+                <a href="{% url 'authentication:profile' %}" class="text-gray-600 hover:text-gray-800">
+                    ← Back to Profile
+                </a>
+            </div>
+        </div>
+        
+        <form method="post" class="px-6 py-6">
+            {% csrf_token %}
+            
+            <div class="space-y-6">
+                <!-- First Name -->
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        First Name
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.first_name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Last Name -->
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.last_name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.email.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Full Name (auto-generated, read-only display) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Display Name (Auto-generated)
+                    </label>
+                    <div class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600">
+                        <span id="display-name">{{ form.instance.full_name }}</span>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">This is automatically generated from your first and last name.</p>
+                </div>
+
+                <!-- City -->
+                <div>
+                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        City
+                    </label>
+                    {{ form.city }}
+                    {% if form.city.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.city.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Bio
+                    </label>
+                    {{ form.bio }}
+                    {% if form.bio.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.bio.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">Tell others about yourself and your sports interests.</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end space-x-3">
+                <a href="{% url 'authentication:profile' %}" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition duration-200">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition duration-200">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Update display name in real-time
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstNameField = document.getElementById('{{ form.first_name.id_for_label }}');
+        const lastNameField = document.getElementById('{{ form.last_name.id_for_label }}');
+        const displayNameSpan = document.getElementById('display-name');
+        
+        function updateDisplayName() {
+            const firstName = firstNameField.value.trim();
+            const lastName = lastNameField.value.trim();
+            const displayName = firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName || 'Your Name');
+            displayNameSpan.textContent = displayName;
+        }
+        
+        firstNameField.addEventListener('input', updateDisplayName);
+        lastNameField.addEventListener('input', updateDisplayName);
+    });
+</script>
+{% endblock %}
