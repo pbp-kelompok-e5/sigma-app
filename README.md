@@ -601,6 +601,10 @@ User (Django Auth)
 git clone https://github.com/pbp-kelompok-e5/sigma-app.git
 cd sigma-app
 ```
+---
+## Sumber Dataset
+
+https://discordapp.com/channels/1422214739521704028/1422214740326875312/1422434302603300915 
 
 ---
 
