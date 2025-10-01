@@ -1,13 +1,33 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {% block meta %} {% endblock meta %}
-  </head>
-  <body>
-    {% block content %} {% endblock %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sigma App{% endblock %}</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- DOMPurify CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+
+    <!-- Choices.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
+
+    {% block meta %}{% endblock %}
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    {% block content %}{% endblock %}
+
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>
