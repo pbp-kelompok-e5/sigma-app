@@ -72,7 +72,6 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=100)
     bio = models.TextField(blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     city = models.CharField(max_length=50)
     total_points = models.IntegerField(default=0)
     total_events = models.IntegerField(default=0)
