@@ -656,9 +656,6 @@ python manage.py makemigrations
 # Apply migrations
 python manage.py migrate
 
-# Create superuser (optional)
-python manage.py createsuperuser
-
 # Run development server
 python manage.py runserver
 ```
@@ -674,27 +671,6 @@ python manage.py runserver
 | [Anggota 3] | Event Discovery | 
 | [Anggota 4] | Event Management | 
 | [Anggota 5] | Review & Rating | 
-
----
-
-## 📚 Useful Django Commands
-
-```bash
-# Check models
-python manage.py check
-
-# Show migrations
-python manage.py showmigrations
-
-# SQL for migration
-python manage.py sqlmigrate app_name migration_number
-
-# Django shell
-python manage.py shell
-
-# Create app
-python manage.py startapp app_name
-```
 
 ---
 
