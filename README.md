@@ -603,8 +603,8 @@ cd sigma-app
 ```
 ---
 ## Sumber Dataset
-
-https://discordapp.com/channels/1422214739521704028/1422214740326875312/1422434302603300915 
+https://www.kaggle.com/datasets/arindamsahoo/social-media-users
+https://id.wikipedia.org/wiki/Daftar_kota_di_Indonesia_menurut_provinsi
 
 ---
 
