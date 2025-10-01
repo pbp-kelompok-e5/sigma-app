@@ -14,9 +14,10 @@
 - **Smart Matching System**: Temukan partner olahraga berdasarkan minat, lokasi, dan skill level
 - **Event Discovery**: Jelajahi dan bergabung dengan event olahraga di kotamu
 - **Event Creation**: Buat dan kelola event olahraga sendiri
-- **Social Gamification**: Dapatkan badge, rating, dan bangun reputasi di komunitas
+- **Social Gamification**: Dapatkan points, badge, rating, dan bangun reputasi di komunitas
 - **Profile & Statistics**: Tampilkan pencapaian, skill, dan jadwal ketersediaan
 - **Rating & Review System**: Berikan feedback setelah event untuk meningkatkan kualitas komunitas
+- **Leaderboard System**: Kompetisi sehat melalui ranking points user
 
 ### 💡 Cara Kerja
 
@@ -24,18 +25,19 @@
 2. **Find Partners** - Swipe-style matching untuk menemukan teman berolahraga
 3. **Join/Create Events** - Ikuti event yang ada atau buat event sendiri
 4. **Play Together** - Bertemu dan berolahraga bersama secara offline
-5. **Build Reputation** - Dapatkan rating dan badge berdasarkan partisipasi
+5. **Build Reputation** - Dapatkan points, rating dan badge berdasarkan partisipasi
+6. **Compete** - Naik ranking di leaderboard dan tunjukkan kehebatan Anda!
 
 ---
 
-## 📦 Pembagian Modul
+## 📦 Pembagian Modul (5 Modul Independen)
 
 > [!IMPORTANT]
 > **Prinsip DRY**: Setiap model hanya didefinisikan di SATU modul. Modul lain mengimport jika diperlukan.
 
 ---
 
-### Modul 1: Authentication & User Management
+### Modul 1: Profile & User Management
 **PIC: [Nama Anggota 1]**
 
 **Tanggung Jawab:**
@@ -43,6 +45,7 @@
 - Manajemen profil user
 - Data preferensi olahraga user
 - Data jadwal ketersediaan user
+- **Sistem Points & Leaderboard**
 
 **Fitur:**
 - Register dengan form lengkap (nama, email, password, foto, lokasi)
@@ -55,6 +58,17 @@
   - Set jadwal free time (hari & jam)
   - Update lokasi
 - Delete Account
+- **Points Dashboard**
+  - View total points
+  - Points history & breakdown
+  - Points earning activities
+- **Leaderboard Page**
+  - Global ranking by total points
+  - Filter by period (weekly, monthly, all-time)
+  - Filter by sport category
+  - View top performers
+  - User's current rank & position
+  - Points comparison
 
 **Models & Atribut:**
 
@@ -74,6 +88,7 @@
 - profile_picture (ImageField, nullable)
 - gender (CharField, choices)
 - city (CharField)
+- total_points (IntegerField, default=0) # NEW: Total Points
 - reputation_score (IntegerField, default=0)
 - attendance_rate (DecimalField, default=0.0)
 - total_events_joined (IntegerField, default=0)
@@ -87,7 +102,7 @@
 - user (ForeignKey -> User)
 - sport_type (CharField, choices: football, basketball, badminton, tennis, running, cycling, swimming, volleyball, gym, yoga)
 - skill_level (CharField, choices: beginner, intermediate, advanced, expert)
-- is_primary (BooleanField) # olahraga utama/favorit
+- is_primary (BooleanField)
 - years_of_experience (IntegerField, nullable)
 - created_at (DateTimeField)
 ```
@@ -101,6 +116,28 @@
 - is_active (BooleanField, default=True)
 ```
 
+**PointTransaction** (NEW)
+```python
+- user (ForeignKey -> User)
+- activity_type (CharField, choices: event_join, event_complete, event_organize, connection_made, rating_received, badge_earned, review_given, consecutive_attendance)
+- points_earned (IntegerField)
+- description (TextField)
+- related_event_id (IntegerField, nullable)
+- related_user_id (IntegerField, nullable)
+- created_at (DateTimeField)
+```
+
+**LeaderboardEntry** (NEW)
+```python
+- user (ForeignKey -> User)
+- rank (IntegerField)
+- total_points (IntegerField)
+- period_type (CharField, choices: weekly, monthly, all_time)
+- sport_category (CharField, nullable)
+- last_updated (DateTimeField)
+- rank_change (IntegerField, default=0) # naik/turun rank
+```
+
 **API Endpoints:**
 - `POST /auth/register/`
 - `POST /auth/login/`
@@ -111,16 +148,22 @@
 - `GET /profile/<user_id>/sport-preferences/`
 - `POST /profile/sport-preferences/add/`
 - `PUT /profile/availability/update/`
+- `GET /profile/points/` # Points dashboard
+- `GET /profile/points/history/` # Points transaction history
+- `GET /leaderboard/` # Global leaderboard
+- `GET /leaderboard/filter/?period=<>&sport=<>` # Filtered leaderboard
+- `GET /leaderboard/my-rank/` # User's current rank
 
 ---
 
-### Modul 2: Partner Matching System
+### Modul 2: Partner Matching & Social Network
 **PIC: [Nama Anggota 2]**
 
 **Tanggung Jawab:**
 - Sistem matching & recommendation partners
 - Manajemen koneksi antar user
 - Filter & search partners
+- Social networking features
 
 **Fitur:**
 - Browse People
@@ -132,15 +175,20 @@
   - By location/distance
   - By skill level
   - By availability
+  - By points range
 - Connect/Skip functionality
 - Friends List
   - View all connections
   - Remove connection
+  - View mutual friends
 - Connection Request Management
   - Accept/Reject requests
   - View pending requests
 - Mutual Connection Notification
 - Search Partners by name
+- User Statistics
+  - Total connections
+  - Connection growth
 
 **Models & Atribut:**
 
@@ -149,22 +197,21 @@
 - from_user (ForeignKey -> User)
 - to_user (ForeignKey -> User)
 - status (CharField, choices: pending, accepted, rejected, blocked)
-- match_score (DecimalField, nullable) # compatibility score
-- message (TextField, nullable) # pesan saat connect
+- match_score (DecimalField, nullable)
+- message (TextField, nullable)
 - created_at (DateTimeField)
 - updated_at (DateTimeField)
 - is_mutual (BooleanField, default=False)
-
-# Constraint: unique_together = ('from_user', 'to_user')
 ```
 
 **MatchPreference**
 ```python
 - user (OneToOneField -> User)
-- preferred_sports (ManyToManyField -> SportPreference)
-- preferred_cities (CharField) # JSON array of cities
+- preferred_sports (CharField) # JSON array
+- preferred_cities (CharField) # JSON array
 - preferred_skill_levels (CharField) # JSON array
 - preferred_gender (CharField, nullable)
+- preferred_points_range (CharField, nullable) # NEW
 - only_mutual_sports (BooleanField, default=False)
 - updated_at (DateTimeField)
 ```
@@ -178,31 +225,34 @@
 ```
 
 **API Endpoints:**
-- `GET /matching/browse/` # list users with pagination
-- `GET /matching/smart-matches/` # AI recommended matches
+- `GET /matching/browse/`
+- `GET /matching/smart-matches/`
 - `POST /matching/connect/<user_id>/`
 - `POST /matching/skip/<user_id>/`
-- `GET /matching/connections/` # friends list
+- `GET /matching/connections/`
 - `DELETE /matching/connections/<connection_id>/`
-- `GET /matching/requests/` # pending requests
+- `GET /matching/requests/`
 - `PUT /matching/requests/<connection_id>/accept/`
 - `PUT /matching/requests/<connection_id>/reject/`
 - `GET /matching/search/?q=<query>`
+- `GET /matching/statistics/`
 
 ---
 
-### Modul 3: Event Discovery & Management
+### Modul 3: Event Discovery & Participation
 **PIC: [Nama Anggota 3]**
 
 **Tanggung Jawab:**
 - Display & browse semua event
 - Join event sebagai participant
 - Manajemen participant dari sisi user
+- Event recommendations
 
 **Fitur:**
 - Event Listing
   - List view dengan pagination
   - Card view dengan thumbnail
+  - Map view
 - Event Detail Page
   - Info lengkap event
   - List participants
@@ -214,7 +264,7 @@
   - By location
   - By price (free/paid)
   - By skill level required
-  - By availability status (open/full/waitlist)
+  - By availability status
 - Event Search (by title, description)
 - Join Event
   - Direct join (jika slot tersedia)
@@ -225,17 +275,18 @@
   - Cancelled events
 - Leave Event (cancel participation)
 - Event Recommendations (berdasarkan algoritma)
+- Event Calendar View
 
 **Models & Atribut:**
 
-**Event** (Model Utama - didefinisikan di sini)
+**Event**
 ```python
-- organizer (ForeignKey -> User)
+- organizer_id (IntegerField) # Reference to User ID
 - title (CharField)
 - description (TextField)
-- sport_type (CharField, choices: sama dengan SportPreference)
+- sport_type (CharField, choices)
 - event_type (CharField, choices: casual, competitive, training)
-- skill_level_required (CharField, choices: any, beginner, intermediate, advanced)
+- skill_level_required (CharField, choices)
 - event_date (DateField)
 - start_time (TimeField)
 - end_time (TimeField)
@@ -258,18 +309,16 @@
 
 **EventParticipant**
 ```python
-- event (ForeignKey -> Event)
-- user (ForeignKey -> User)
+- event_id (IntegerField)
+- user_id (IntegerField)
 - status (CharField, choices: joined, waitlist, confirmed, cancelled, rejected)
 - join_timestamp (DateTimeField)
 - payment_status (CharField, choices: pending, confirmed, refunded)
 - payment_proof (ImageField, nullable)
 - is_organizer (BooleanField, default=False)
-- notes (TextField, nullable) # catatan dari participant
-- priority_score (DecimalField, nullable) # untuk waiting list
+- notes (TextField, nullable)
+- priority_score (DecimalField, nullable)
 - updated_at (DateTimeField)
-
-# Constraint: unique_together = ('event', 'user')
 ```
 
 **EventCategory**
@@ -277,29 +326,31 @@
 - name (CharField)
 - slug (SlugField, unique)
 - description (TextField, nullable)
-- icon (CharField, nullable) # emoji atau icon class
+- icon (CharField, nullable)
 - is_active (BooleanField, default=True)
 ```
 
 **API Endpoints:**
-- `GET /events/` # list all events
+- `GET /events/`
 - `GET /events/<event_id>/`
-- `GET /events/filter/?sport=<>&date=<>&location=<>`
-- `GET /events/search/?q=<query>`
+- `GET /events/filter/`
+- `GET /events/search/`
 - `POST /events/<event_id>/join/`
 - `DELETE /events/<event_id>/leave/`
-- `GET /events/my-events/` # joined events
+- `GET /events/my-events/`
 - `GET /events/recommendations/`
+- `GET /events/calendar/`
 
 ---
 
-### Modul 4: Event Creation & Organization
+### Modul 4: Event Management & Organization
 **PIC: [Nama Anggota 4]**
 
 **Tanggung Jawab:**
 - Create & manage event (CRUD)
 - Manajemen participants dari sisi organizer
 - Invitation system
+- Event updates & announcements
 
 **Fitur:**
 - Create Event
@@ -329,15 +380,16 @@
   - Past events
   - Draft events
   - Event statistics
-- Duplicate Event (create similar event)
+- Duplicate Event
+- Event Announcements
 
 **Models & Atribut:**
 
 **EventInvitation**
 ```python
-- event (ForeignKey -> Event)
-- from_user (ForeignKey -> User) # organizer
-- to_user (ForeignKey -> User) # invited user
+- event_id (IntegerField)
+- from_user_id (IntegerField)
+- to_user_id (IntegerField)
 - status (CharField, choices: pending, accepted, declined, expired)
 - message (TextField, nullable)
 - sent_at (DateTimeField)
@@ -345,10 +397,10 @@
 - expires_at (DateTimeField)
 ```
 
-**EventUpdate** (pengumuman dari organizer)
+**EventUpdate**
 ```python
-- event (ForeignKey -> Event)
-- author (ForeignKey -> User)
+- event_id (IntegerField)
+- author_id (IntegerField)
 - title (CharField)
 - message (TextField)
 - is_important (BooleanField, default=False)
@@ -357,13 +409,13 @@
 
 **EventPayment**
 ```python
-- event (ForeignKey -> Event)
-- participant (ForeignKey -> User)
+- event_id (IntegerField)
+- participant_id (IntegerField)
 - amount (DecimalField)
 - payment_method (CharField, nullable)
 - payment_proof (ImageField)
 - verification_status (CharField, choices: pending, verified, rejected)
-- verified_by (ForeignKey -> User, nullable)
+- verified_by_id (IntegerField, nullable)
 - verified_at (DateTimeField, nullable)
 - rejection_reason (TextField, nullable)
 - created_at (DateTimeField)
@@ -383,6 +435,7 @@
 - `POST /events/<event_id>/invite/`
 - `PUT /events/payments/<payment_id>/verify/`
 - `POST /events/<event_id>/updates/`
+- `POST /events/<event_id>/duplicate/`
 
 ---
 
@@ -399,7 +452,7 @@
 - Post-Event Rating
   - Rate organizer (jika participant)
   - Rate participants (jika organizer)
-  - Multi-criteria rating (punctuality, skill, attitude, communication)
+  - Multi-criteria rating
 - Review & Feedback
   - Write review dengan foto
   - Edit/delete own review
@@ -408,11 +461,6 @@
   - Display earned badges di profile
   - Badge progress tracking
   - Badge descriptions & requirements
-- Leaderboard
-  - By reputation score
-  - By total events
-  - By sport category
-  - Weekly/Monthly/All-time
 - Achievement Tracking
   - Progress bars untuk badge
   - Milestone notifications
@@ -423,34 +471,36 @@
   - Payment confirmations
   - Badge earned
   - Event updates
+  - Points earned notifications
   - Mark as read
   - Notification preferences
+- Review Statistics
+  - Average ratings
+  - Review sentiment analysis
 
 **Models & Atribut:**
 
 **Rating**
 ```python
-- event (ForeignKey -> Event)
-- from_user (ForeignKey -> User) # pemberi rating
-- to_user (ForeignKey -> User) # penerima rating
-- overall_score (DecimalField) # 1.0 - 5.0
+- event_id (IntegerField)
+- from_user_id (IntegerField)
+- to_user_id (IntegerField)
+- overall_score (DecimalField)
 - punctuality_score (IntegerField, 1-5)
 - skill_score (IntegerField, 1-5)
 - attitude_score (IntegerField, 1-5)
 - communication_score (IntegerField, 1-5)
 - created_at (DateTimeField)
 - updated_at (DateTimeField)
-
-# Constraint: unique_together = ('event', 'from_user', 'to_user')
 ```
 
 **Review**
 ```python
-- rating (OneToOneField -> Rating)
+- rating_id (IntegerField)
 - comment (TextField)
-- images (ImageField, nullable) # multiple images support
+- images (ImageField, nullable)
 - is_public (BooleanField, default=True)
-- helpful_count (IntegerField, default=0) # upvote review
+- helpful_count (IntegerField, default=0)
 - is_reported (BooleanField, default=False)
 - report_reason (TextField, nullable)
 - created_at (DateTimeField)
@@ -459,47 +509,48 @@
 
 **Badge**
 ```python
-- code (CharField, unique) # weekend_warrior, reliable_player, etc
+- code (CharField, unique)
 - name (CharField)
 - description (TextField)
-- icon (CharField) # emoji
-- category (CharField, choices: attendance, social, performance, achievement)
-- requirement_type (CharField) # event_count, rating_avg, etc
+- icon (CharField)
+- category (CharField, choices)
+- requirement_type (CharField)
 - requirement_value (IntegerField)
-- score_bonus (IntegerField)
+- points_bonus (IntegerField) # NEW: Points given when earned
 - is_active (BooleanField, default=True)
 ```
 
 **UserBadge**
 ```python
-- user (ForeignKey -> User)
-- badge (ForeignKey -> Badge)
+- user_id (IntegerField)
+- badge_id (IntegerField)
 - earned_at (DateTimeField)
-- progress (IntegerField, default=0) # untuk tracking progress
-- is_displayed (BooleanField, default=True) # tampilkan di profile
+- progress (IntegerField, default=0)
+- is_displayed (BooleanField, default=True)
 ```
 
 **Achievement**
 ```python
-- user (ForeignKey -> User)
-- achievement_type (CharField) # first_event, 10_events, etc
+- user_id (IntegerField)
+- achievement_type (CharField)
 - title (CharField)
 - description (TextField)
+- points_earned (IntegerField) # NEW
 - earned_at (DateTimeField)
-- related_event (ForeignKey -> Event, nullable)
+- related_event_id (IntegerField, nullable)
 ```
 
 **Notification**
 ```python
-- user (ForeignKey -> User) # penerima notif
-- notification_type (CharField, choices: event_reminder, connection_request, invitation, payment, badge, event_update, rating_received)
+- user_id (IntegerField)
+- notification_type (CharField, choices)
 - title (CharField)
 - message (TextField)
-- related_event (ForeignKey -> Event, nullable)
-- related_user (ForeignKey -> User, nullable)
+- related_event_id (IntegerField, nullable)
+- related_user_id (IntegerField, nullable)
 - action_url (CharField, nullable)
 - is_read (BooleanField, default=False)
-- is_sent (BooleanField, default=False) # untuk scheduling
+- is_sent (BooleanField, default=False)
 - scheduled_at (DateTimeField, nullable)
 - created_at (DateTimeField)
 - read_at (DateTimeField, nullable)
@@ -507,7 +558,7 @@
 
 **NotificationPreference**
 ```python
-- user (OneToOneField -> User)
+- user_id (IntegerField)
 - email_notifications (BooleanField, default=True)
 - push_notifications (BooleanField, default=True)
 - event_reminders (BooleanField, default=True)
@@ -516,11 +567,12 @@
 - event_updates (BooleanField, default=True)
 - badge_earned (BooleanField, default=True)
 - rating_received (BooleanField, default=True)
+- points_earned (BooleanField, default=True) # NEW
 ```
 
 **API Endpoints:**
 - `POST /ratings/create/`
-- `GET /ratings/user/<user_id>/` # all ratings for user
+- `GET /ratings/user/<user_id>/`
 - `GET /reviews/event/<event_id>/`
 - `POST /reviews/create/`
 - `PUT /reviews/<review_id>/update/`
@@ -529,7 +581,6 @@
 - `GET /badges/`
 - `GET /badges/user/<user_id>/`
 - `GET /achievements/user/<user_id>/`
-- `GET /leaderboard/?type=<>&period=<>`
 - `GET /notifications/`
 - `PUT /notifications/<notification_id>/read/`
 - `PUT /notifications/mark-all-read/`
@@ -538,124 +589,138 @@
 
 ---
 
-## 📊 Dependensi Antar Modul
+## 🎯 Sistem Points
+
+### Formula Perhitungan Points
+
+**Base Points per Activity:**
+
+| Activity | Points | Description |
+|----------|--------|-------------|
+| **Event Join** | +10 | Bergabung dengan event |
+| **Event Complete** | +50 | Menyelesaikan event (hadir) |
+| **Event Organize** | +100 | Berhasil mengorganisir event (min 5 participants) |
+| **Connection Made** | +5 | Membuat koneksi baru (accepted) |
+| **Rating Received (5.0)** | +20 | Mendapat perfect rating |
+| **Rating Received (4.0-4.9)** | +10 | Mendapat rating baik |
+| **Review Given** | +5 | Memberikan review |
+| **Badge Earned** | +10 to +30 | Tergantung badge (lihat badge system) |
+| **Consecutive Attendance** | +25 per streak | Hadir berturut-turut (per 3 events) |
+
+
+### Leaderboard Ranking System
+
+**Ranking Update:**
+- Weekly leaderboard reset (optional)
+- Monthly leaderboard
+- All-time leaderboard (permanent)
+
+---
+
+## 🧮 Algoritma Smart Matching
+
+### Match Score Formula
 
 ```
-Modul 1 (User) ← Modul 2 (Matching) → perlu data user & preferences
-Modul 1 (User) ← Modul 3 (Event Discovery) → perlu data user
-Modul 1 (User) ← Modul 4 (Event Organization) → perlu data user
-Modul 3 (Event) ← Modul 4 (Organization) → CRUD event
-Modul 3 (Event) → Modul 5 (Rating) → rating berdasarkan event
-Modul 1 (User) ← Modul 5 (Rating) → rating untuk user
+Match Score = (W1 × Sport Similarity) + (W2 × Location Proximity) + (W3 × Skill Compatibility) + (W4 × Activity Level)
+
+Weights:
+W1 = 0.35 (Sport Similarity)
+W2 = 0.30 (Location Proximity)
+W3 = 0.20 (Skill Compatibility)
+W4 = 0.15 (Activity Level)
+```
+
+**Components:**
+
+**Sport Similarity:**
+```
+Sport Similarity = {
+  1.0, if primary sports match
+  0.7, if any sport matches
+  0.3, if same sport category (team/individual)
+  0.0, if no match
+}
+```
+
+**Location Proximity:**
+```
+Location Proximity = {
+  1.0, if same city
+  0.0, if different city
+}
+```
+
+**Skill Compatibility:**
+```
+Skill Diff = |User1 Skill Level - User2 Skill Level|
+
+Skill Compatibility = {
+  1.0, if same level
+  0.7, if diff = 1 level
+  0.3, if diff = 2 levels
+  0.0, if diff ≥ 3 levels
+}
+```
+
+**Activity Level:**
+```
+Activity Level = (User's Total Points / 1000) capped at 1.0
 ```
 
 ---
 
-## ⚠️ Catatan Penting
+## 🏆 Badge System Details
 
-> [!WARNING]
-> **Hindari Circular Import:**
-> - Gunakan `get_user_model()` untuk referensi User model
-> - Import model dari app lain hanya di views/serializers, bukan di models.py
-> - Gunakan string reference untuk ForeignKey: `ForeignKey('app.Model')`
+**Updated Badge Requirements:**
+
+| Badge | Requirement | Points Bonus |
+|-------|-------------|--------------|
+| 🏃 **Weekend Warrior** | Join 4 weekend events in 1 month | +15 |
+| ⭐ **Reliable Player** | 95% attendance (min 10 events) | +20 |
+| 🎯 **Perfect Rating** | 5.0 rating average (min 20 reviews) | +30 |
+| 👑 **Top Organizer** | 10+ successful events | +25 |
+| 🤝 **Social Butterfly** | 50+ connections | +15 |
+| 🔥 **On Fire** | 7 consecutive days events | +20 |
+| 💎 **Veteran** | 6+ months active | +30 |
+| 🌟 **Multi-Sport** | 5+ different sports | +15 |
+| 🚀 **Rising Star** | 1000+ points in 1 month | +25 |
+| 👊 **Consistency King** | 20+ events without cancellation | +20 |
+
+---
+
+## 📊 Struktur Modul Independence
+
+```
+Modul 1 (Profile & Leaderboard)
+  ├── Manages: User, Profile, Points, Rankings
+  └── Independent: Self-contained point system
+
+Modul 2 (Matching & Social)
+  ├── Manages: Connections, Matching
+  └── Independent: Uses user_id references
+
+Modul 3 (Event Discovery)
+  ├── Manages: Events, Participation
+  └── Independent: Event viewing & joining
+
+Modul 4 (Event Management)
+  ├── Manages: Event CRUD, Organization
+  └── Independent: Event creation & management
+
+Modul 5 (Rating & Gamification)
+  ├── Manages: Ratings, Badges, Notifications
+  └── Independent: Post-event activities
+```
 
 > [!TIP]
-> **Best Practices:**
-> - Setiap model punya satu PIC yang bertanggung jawab
-> - Koordinasi dengan PIC lain saat butuh akses model mereka
----
-
-## 🧮 Algoritma & Formula Aplikasi
-
-### 1. Smart Matching Score
-
-Formula untuk menghitung compatibility score antara dua user:
-
-```
-Match Score = (W1 × Sport Similarity) + (W2 × Location Proximity) + (W3 × Skill Compatibility)
-
-Dimana:
-- W1, W2, W3 = Bobot (total = 1.0)
-- W1 = 0.4 (Sport Similarity)
-- W2 = 0.4 (Location Proximity)
-- W3 = 0.2 (Skill Compatibility)
-```
----
-
-### 2. Event Recommendation Score
-
-Formula untuk merekomendasikan event ke user:
-
-```
-Event Score = (W1 × Sport Match) + (W2 × Location Match(True/False)) + (W3 × Time Match)
-
-Dimana:
-W1 = 0.4, W2 = 0.2, W3 = 0.4,
-```
-
-**Komponen:**
-
-**Sport Match:**
-```
-Sport Match = {
-  1.0, jika event olahraga = olahraga favorit user
-  0.7, jika event olahraga dalam list interest user
-  0.2, jika tidak ada kecocokan
-}
-```
-
-**Time Match:**
-```
-Time Match = {
-  1.0, jika waktu event sesuai jadwal free time user
-  0.5, jika waktu event di hari yang sama dengan free time
-  0.2, jika tidak ada kecocokan
-}
-```
----
-
-### 3. Badge Achievement System
-
-**Badge Categories & Requirements:**
-
-| Badge | Requirement | Score Bonus |
-|-------|-------------|-------------|
-| 🏃 **Weekend Warrior** | Join 4 events di weekend dalam 1 bulan | +10 |
-| ⭐ **Reliable Player** | Attendance rate ≥ 95% (min 10 events) | +15 |
-| 🎯 **Perfect Rating** | Maintain 5.0 rating (min 20 reviews) | +20 |
-| 👑 **Top Organizer** | Successfully organize 10+ events | +15 |
-| 🤝 **Social Butterfly** | Connect dengan 50+ users | +10 |
-| 🔥 **On Fire** | Join events 7 hari berturut-turut | +15 |
-| 💎 **Veteran** | Active user 6+ bulan | +20 |
-| 🌟 **Multi-Sport** | Participate in 5+ different sports | +10 |
----
-
-### 5. Waiting List Priority
-
-Formula untuk menentukan prioritas dalam waiting list:
-
-```
-Priority Score = (Response Time × 0.3) + (Activity History × 0.3)
-
-Range: 0-100
-```
-
-**Response Time:**
-```
-Response Time Score = {
-  100, jika join dalam 1 jam pertama
-  80,  jika join dalam 6 jam pertama
-  60,  jika join dalam 24 jam pertama
-  40,  jika join setelah 24 jam
-}
-```
-
-**Activity History Score:**
-```
-Activity History Score = Persentasi kehadiran di semua event yang telah dilakukan
-```
+> **Inter-Module Communication:**
+> - Gunakan ID references (user_id, event_id) bukan ForeignKey direct
+> - Setiap modul expose REST API untuk data sharing
+> - Async notifications via message queue (optional)
 
 ---
+
 ## 📥 Clone Repository
 
 1. **Buat direktori lokal** dengan nama `PLACEHOLDER-app`
@@ -692,13 +757,10 @@ Sebelum membuat branch baru, pastikan Anda memiliki versi terbaru dari `main`:
    git checkout -b nama-kalian
    ```
 
-2. **Cek branch aktif** (pastikan berada di branch Anda):
+2. **Cek branch aktif:**
    ```bash
    git branch
    ```
-   
-   > [!TIP]
-   > Branch yang aktif akan ditandai dengan tanda `*`
 
 ---
 
@@ -706,39 +768,16 @@ Sebelum membuat branch baru, pastikan Anda memiliki versi terbaru dari `main`:
 
 > [!WARNING]
 > - **JANGAN commit langsung ke `main`**
-> - **SELALU cek branch sebelum commit** menggunakan `git branch`
-
-> [!NOTE]
-> Kerjakan semua fitur di branch masing-masing untuk menghindari konflik
+> - **SELALU cek branch sebelum commit**
 
 ### 📋 Development Checklist
 
-Sebelum push ke remote, pastikan:
 - [ ] Code sudah ditest di lokal
 - [ ] Tidak ada conflict dengan branch main
-- [ ] Migrations sudah dibuat (jika ada perubahan model)
-- [ ] Requirements.txt sudah diupdate (jika ada library baru)
+- [ ] Migrations sudah dibuat
+- [ ] Requirements.txt sudah diupdate
 - [ ] Commit message jelas dan deskriptif
-
----
-
-## 📚 Referensi
-
-Untuk informasi lebih lengkap, rujuk ke:  
-[PBP Fasilkom UI - Development di Feature Branch](https://pbp-fasilkom-ui.github.io/ganjil-2026/assignments/group/midterm-guide#development-di-feature-branch)
-
----
-
-## 📝 Tips Tambahan
-
-> [!TIP]
-> **Best Practices:**
-> - Commit secara berkala dengan pesan yang jelas dan deskriptif
-> - Pull dari `main` secara rutin untuk menghindari konflik besar
-> - Komunikasikan dengan tim sebelum merge ke `main`
-> - Test fitur Anda sebelum push ke remote
-> - Gunakan virtual environment untuk isolasi dependencies
-> - Dokumentasikan API endpoints yang dibuat
+- [ ] API documentation updated
 
 ---
 
@@ -770,11 +809,12 @@ python manage.py runserver
 
 | Nama | Modul | GitHub |
 |------|-------|--------|
-| [Nama Anggota 1] | Authentication & User Management | [@username1] |
-| [Nama Anggota 2] | Partner Matching System | [@username2] |
-| [Nama Anggota 3] | Event Discovery & Management | [@username3] |
-| [Nama Anggota 4] | Event Creation & Organization | [@username4] |
-| [Nama Anggota 5] | Rating, Review & Gamification | [@username5] |
+| [Nama Anggota 1] | Profile & Leaderboard | [@username1] |
+| [Nama Anggota 2] | Matching & Social | [@username2] |
+| [Nama Anggota 3] | Event Discovery | [@username3] |
+| [Nama Anggota 4] | Event Management | [@username4] |
+| [Nama Anggota 5] | Rating & Gamification | [@username5] |
+
 ---
 
 **Happy Coding! 🚀**
