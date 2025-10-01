@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to Sigma App{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                Find Your Sport Partner
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 text-gray-200">
+                Connect with athletes, join events, and build your sports community in Indonesia
+            </p>
+            <div class="space-x-4">
+                <a href="{% url 'authentication:register' %}" class="bg-white text-gray-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200">
+                    Get Started
+                </a>
+                <a href="{% url 'authentication:login' %}" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-gray-800 transition duration-200">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">How Sigma App Works</h2>
+            <p class="text-lg text-gray-600">Your journey to finding the perfect sport partner starts here</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">👤</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">1. Create Profile</h3>
+                <p class="text-gray-600">Register with your sport preferences and location to get started</p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🔍</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">2. Find Partners</h3>
+                <p class="text-gray-600">Browse and connect with athletes who share your interests</p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🏃</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">3. Play Together</h3>
+                <p class="text-gray-600">Join events or create your own to meet and play with others</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sports Section -->
+<div class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Popular Sports</h2>
+            <p class="text-lg text-gray-600">Find partners for your favorite activities</p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">⚽</div>
+                <h3 class="font-semibold text-gray-900">Football</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🏀</div>
+                <h3 class="font-semibold text-gray-900">Basketball</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🏸</div>
+                <h3 class="font-semibold text-gray-900">Badminton</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🎾</div>
+                <h3 class="font-semibold text-gray-900">Tennis</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🏃</div>
+                <h3 class="font-semibold text-gray-900">Running</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🚴</div>
+                <h3 class="font-semibold text-gray-900">Cycling</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🏊</div>
+                <h3 class="font-semibold text-gray-900">Swimming</h3>
+            </div>
+            <div class="bg-white rounded-lg p-6 text-center shadow-sm hover:shadow-md transition duration-200">
+                <div class="text-4xl mb-2">🏐</div>
+                <h3 class="font-semibold text-gray-900">Volleyball</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="py-16 bg-gray-800 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+        <p class="text-xl text-gray-300 mb-8">Join thousands of athletes already using Sigma App</p>
+        <a href="{% url 'authentication:register' %}" class="bg-white text-gray-800 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200">
+            Create Your Account
+        </a>
+    </div>
+</div>
+{% endblock %}

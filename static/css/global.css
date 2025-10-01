@@ -1,0 +1,65 @@
+/* Custom grayscale theme */
+.bg-primary {
+    background-color: #374151;
+}
+
+.bg-secondary {
+    background-color: #6b7280;
+}
+
+.text-primary {
+    color: #374151;
+}
+
+.text-secondary {
+    color: #6b7280;
+}
+
+.border-primary {
+    border-color: #374151;
+}
+
+.hover\:bg-primary:hover {
+    background-color: #374151;
+}
+
+.focus\:ring-primary:focus {
+    --tw-ring-color: #374151;
+}
+
+/* Custom styles for searchable select (Choices.js) */
+.choices {
+    margin-bottom: 0;
+}
+
+.choices__inner {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    min-height: 3rem;
+}
+
+.choices__inner:focus-within {
+    border-color: #6b7280;
+    box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+}
+
+.choices__list--dropdown {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.choices__item--selectable {
+    padding: 0.5rem 1rem;
+}
+
+.choices__item--selectable:hover {
+    background-color: #f3f4f6;
+}
+
+.choices__item--highlighted {
+    background-color: #374151 !important;
+    color: white !important;
+}

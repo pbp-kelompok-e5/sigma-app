@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - Sigma App{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Profile Header -->
+    <div class="border border-gray-200 rounded-lg overflow-hidden mb-6">
+        <div class="border-b border-gray-200 px-6 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ profile.full_name }}</h1>
+                    <p class="text-gray-600 mt-1">@{{ profile_user.username }}</p>
+                    <p class="text-gray-500 text-sm mt-1">{{ profile.get_city_display }}</p>
+                </div>
+                
+                {% if is_own_profile %}
+                <a href="{% url 'authentication:home' %}" class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors">
+                    Dashboard
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="px-6 py-6">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex space-x-8">
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ profile.total_points }}</div>
+                        <div class="text-sm text-gray-500">Points</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ profile.total_events }}</div>
+                        <div class="text-sm text-gray-500">Events</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-900">{{ sport_preferences.count }}</div>
+                        <div class="text-sm text-gray-500">Sports</div>
+                    </div>
+                </div>
+                
+                {% if is_own_profile %}
+                <div class="flex space-x-3">
+                    <a href="{% url 'authentication:edit_profile' %}" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                        Edit Profile
+                    </a>
+                    <a href="{% url 'authentication:sport_preferences' %}" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors">
+                        Manage Sports
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if profile.bio %}
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">About</h3>
+                <p class="text-gray-700">{{ profile.bio }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sport Preferences -->
+    <div class="border border-gray-200 rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Sport Preferences</h2>
+        </div>
+        
+        <div class="px-6 py-6">
+            {% if sport_preferences %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for preference in sport_preferences %}
+                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <h3 class="font-semibold text-gray-900">{{ preference.get_sport_type_display }}</h3>
+                            <p class="text-sm text-gray-600 mt-1">{{ preference.get_skill_level_display }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray-600 mb-4">
+                        {% if is_own_profile %}
+                            No sport preferences yet
+                        {% else %}
+                            This user hasn't added any sport preferences yet
+                        {% endif %}
+                    </p>
+                    {% if is_own_profile %}
+                        <a href="{% url 'authentication:sport_preferences' %}" class="inline-block bg-gray-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+                            Add Sport Preferences
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
