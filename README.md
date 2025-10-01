@@ -666,11 +666,11 @@ python manage.py runserver
 
 | Nama | Modul |
 |------|-------|
-| [Hariz] | Authentication & Profile, Leaderboard & Points | 
-| [Anggota 2] | Partner Matching | 
-| [Anggota 3] | Event Discovery | 
-| [Anggota 4] | Event Management | 
-| [Anggota 5] | Review & Rating | 
+| Hariz | Authentication & Profile, Leaderboard & Points | 
+| Fini  | Partner Matching | 
+| Farrell| Event Discovery | 
+| Arief | Event Management | 
+| Gerry | Review & Rating | 
 
 ---
 
