@@ -415,36 +415,128 @@
 /* ===== CUSTOM STYLES FOR SEARCHABLE SELECT (Choices.js) ===== */
 .choices {
     margin-bottom: 0;
+    width: 100%;
 }
 
 .choices__inner {
-    background-color: white;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    min-height: 3rem;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid var(--orange-sport);
+    border-radius: 0;
+    padding: 16px 8px;
+    min-height: auto;
+    width: 100%;
 }
 
 .choices__inner:focus-within {
-    border-color: #6b7280;
-    box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+    border-bottom: 2px solid var(--orange-sport-hover);
+    box-shadow: none;
 }
 
+.choices__input {
+    color: var(--orange-sport);
+    font-size: 16px;
+    background-color: transparent !important;
+}
+
+.choices__input::placeholder {
+    color: rgba(242, 100, 25, 0.5);
+}
+
+/* Selected item in the closed dropdown */
+.choices__item--selectable[data-value] {
+    color: var(--orange-sport) !important;
+}
+
+/* Ensure single select shows orange text */
+.choices[data-type*="select-one"] .choices__item {
+    color: var(--orange-sport) !important;
+}
+
+/* Dropdown list container */
 .choices__list--dropdown {
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--orange-sport);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 40, 70, 0.6);
+    background-color: var(--deep-sea) !important;
+    margin-top: 8px;
 }
 
-.choices__item--selectable {
-    padding: 0.5rem 1rem;
+.choices__list--dropdown .choices__list {
+    max-height: 300px;
+    overflow: auto;
 }
 
-.choices__item--selectable:hover {
-    background-color: #f3f4f6;
+/* Dropdown items */
+.choices__list--dropdown .choices__item--selectable {
+    padding: 12px 16px;
+    color: #E0F7FA;
+    background-color: var(--deep-sea);
+    transition: all 0.2s ease;
 }
 
-.choices__item--highlighted {
-    background-color: #374151 !important;
+.choices__list--dropdown .choices__item--selectable:hover {
+    background-color: var(--deep-sea-light) !important;
     color: white !important;
+}
+
+.choices__list--dropdown .choices__item--highlighted {
+    background-color: var(--orange-sport) !important;
+    color: white !important;
+}
+
+/* Search input inside dropdown */
+.choices__list--dropdown .choices__input {
+    background-color: var(--deep-sea-lighter) !important;
+    color: #E0F7FA;
+    border: 1px solid var(--orange-sport);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 8px;
+}
+
+.choices__list--dropdown .choices__input::placeholder {
+    color: rgba(224, 247, 250, 0.5);
+}
+
+/* Selected items for multi-select */
+.choices__item--selected {
+    background-color: var(--orange-sport) !important;
+    color: white !important;
+    border-radius: 16px;
+    padding: 4px 12px;
+    margin: 2px;
+}
+
+.choices[data-type*="select-one"] .choices__input {
+    background-color: transparent;
+    font-size: 16px;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.choices__list--single {
+    padding: 0;
+}
+
+.choices[data-type*="select-one"] .choices__inner {
+    padding-bottom: 8px;
+}
+
+/* Scrollbar styling for dropdown */
+.choices__list--dropdown .choices__list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.choices__list--dropdown .choices__list::-webkit-scrollbar-track {
+    background: var(--deep-sea);
+}
+
+.choices__list--dropdown .choices__list::-webkit-scrollbar-thumb {
+    background: var(--orange-sport);
+    border-radius: 4px;
+}
+
+.choices__list--dropdown .choices__list::-webkit-scrollbar-thumb:hover {
+    background: var(--orange-sport-hover);
 }
