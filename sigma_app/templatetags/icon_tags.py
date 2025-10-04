@@ -74,8 +74,6 @@ class IconRegistry:
         'info': '#3B82F6',
         'white': '#FFFFFF',
         'black': '#000000',
-        'orange': '#F26419',  # Added for dashboard
-        'gray': '#9CA3AF',     # Added for dashboard
     }
 
 
