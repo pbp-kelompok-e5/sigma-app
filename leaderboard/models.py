@@ -52,7 +52,8 @@ class Leaderboard(models.Model):
     rank = models.IntegerField()
 
     # Total poin user dalam periode tersebut
-    total_points = models.IntegerField()
+    # total_points = models.IntegerField()
+    # dipindahkan ke userprofile
 
     # Periode leaderboard
     period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
