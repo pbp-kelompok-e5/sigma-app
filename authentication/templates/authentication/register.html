@@ -4,88 +4,92 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+    <div class="max-w-2xl w-full space-y-8">
+        <!-- Header -->
         <div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 class="text-center text-4xl font-extrabold text-slate-100">
                 Create your account
             </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
+            <p class="mt-2 text-center text-sm text-slate-300">
                 Join Sigma App and find your sport partners
             </p>
         </div>
         
-        <form class="mt-8 space-y-6" method="post">
-            {% csrf_token %}
-            
-            <div class="space-y-4">
-                <!-- Username -->
-                <div>
-                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Username
-                    </label>
-                    {{ form.username }}
-                    {% if form.username.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.username.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+        <!-- Registration Form Card -->
+        <div class="card-deep-sea">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Username -->
+                    <div class="input-group">
+                        <label for="{{ form.username.id_for_label }}" class="input-label">
+                            Username
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="error-message">
+                                {% for error in form.username.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="input-group">
+                        <label for="{{ form.email.id_for_label }}" class="input-label">
+                            Email Address
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="error-message">
+                                {% for error in form.email.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- First Name -->
+                    <div class="input-group">
+                        <label for="{{ form.first_name.id_for_label }}" class="input-label">
+                            First Name
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="error-message">
+                                {% for error in form.first_name.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="input-group">
+                        <label for="{{ form.last_name.id_for_label }}" class="input-label">
+                            Last Name
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="error-message">
+                                {% for error in form.last_name.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
 
-                <!-- Email -->
-                <div>
-                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                    </label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.email.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- First Name -->
-                <div>
-                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
-                    </label>
-                    {{ form.first_name }}
-                    {% if form.first_name.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.first_name.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Last Name -->
-                <div>
-                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
-                    </label>
-                    {{ form.last_name }}
-                    {% if form.last_name.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.last_name.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- City -->
-                <div>
-                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                <!-- City (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.city.id_for_label }}" class="input-label">
                         City
                     </label>
                     {{ form.city }}
                     {% if form.city.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.city.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
@@ -93,14 +97,14 @@
                     {% endif %}
                 </div>
 
-                <!-- Profile Image URL -->
-                <div>
-                    <label for="{{ form.profile_image_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Profile Image URL (Optional)
+                <!-- Profile Image URL (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.profile_image_url.id_for_label }}" class="input-label">
+                        Profile Image URL <span class="text-sm text-slate-300 font-normal">(Optional)</span>
                     </label>
                     {{ form.profile_image_url }}
                     {% if form.profile_image_url.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.profile_image_url.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
@@ -108,14 +112,14 @@
                     {% endif %}
                 </div>
 
-                <!-- Bio -->
-                <div>
-                    <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Bio (Optional)
+                <!-- Bio (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.bio.id_for_label }}" class="input-label">
+                        Bio <span class="text-sm text-slate-300 font-normal">(Optional)</span>
                     </label>
                     {{ form.bio }}
                     {% if form.bio.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.bio.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
@@ -123,52 +127,72 @@
                     {% endif %}
                 </div>
 
-                <!-- Password -->
-                <div>
-                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Password
-                    </label>
-                    {{ form.password1 }}
-                    {% if form.password1.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.password1.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Password -->
+                    <div class="input-group">
+                        <label for="{{ form.password1.id_for_label }}" class="input-label">
+                            Password
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                            <div class="error-message">
+                                {% for error in form.password1.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="input-group">
+                        <label for="{{ form.password2.id_for_label }}" class="input-label">
+                            Confirm Password
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <div class="error-message">
+                                {% for error in form.password2.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
 
-                <!-- Confirm Password -->
-                <div>
-                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Confirm Password
-                    </label>
-                    {{ form.password2 }}
-                    {% if form.password2.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.password2.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                <!-- Submit Button -->
+                <div class="pt-4">
+                    <button type="submit" class="btn btn-full btn-lg">
+                        Create Account
+                    </button>
                 </div>
-            </div>
 
-            <div>
-                <button type="submit" class="btn btn-full">
-                    Create Account
-                </button>
-            </div>
-
-            <div class="text-center">
-                <p class="text-sm text-gray-600">
-                    Already have an account?
-                    <a href="{% url 'authentication:login' %}" class="font-medium text-gray-600 hover:text-gray-800 underline">
-                        Sign in here
-                    </a>
-                </p>
-            </div>
-        </form>
+                <!-- Sign In Link -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a href="{% url 'authentication:login' %}" 
+                           class="font-medium text-gray-600 hover:text-gray-800 underline">
+                            Sign in here
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Choices.js on the city select field
+        const citySelect = document.getElementById('{{ form.city.id_for_label }}');
+        if (citySelect) {
+            new Choices(citySelect, {
+                searchEnabled: true,
+                itemSelectText: '',
+                searchPlaceholderValue: 'Search for a city...',
+                noResultsText: 'No cities found',
+                shouldSort: false
+            });
+        }
+    });
+</script>
 {% endblock %}
