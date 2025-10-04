@@ -3,59 +3,63 @@
 {% block title %}Edit Profile - Sigma App{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-900">Edit Profile</h1>
-                <a href="{% url 'authentication:profile' %}" class="text-gray-600 hover:text-gray-800">
-                    ← Back to Profile
-                </a>
-            </div>
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl w-full space-y-8">
+        <!-- Header -->
+        <div>
+            <h2 class="text-center text-4xl font-extrabold text-slate-100">
+                Edit Profile
+            </h2>
+            <p class="mt-2 text-center text-sm text-slate-300">
+                Update your profile information
+            </p>
         </div>
         
-        <form method="post" class="px-6 py-6">
-            {% csrf_token %}
-            
-            <div class="space-y-6">
-                <!-- First Name -->
-                <div>
-                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
-                    </label>
-                    {{ form.first_name }}
-                    {% if form.first_name.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.first_name.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+        <!-- Edit Profile Form Card -->
+        <div class="card-deep-sea">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- First Name -->
+                    <div class="input-group">
+                        <label for="{{ form.first_name.id_for_label }}" class="input-label">
+                            First Name
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="error-message">
+                                {% for error in form.first_name.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="input-group">
+                        <label for="{{ form.last_name.id_for_label }}" class="input-label">
+                            Last Name
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="error-message">
+                                {% for error in form.last_name.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
 
-                <!-- Last Name -->
-                <div>
-                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
-                    </label>
-                    {{ form.last_name }}
-                    {% if form.last_name.errors %}
-                        <div class="mt-1 text-sm text-red-600">
-                            {% for error in form.last_name.errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Email -->
-                <div>
-                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                <!-- Email (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.email.id_for_label }}" class="input-label">
                         Email Address
                     </label>
                     {{ form.email }}
                     {% if form.email.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.email.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
@@ -64,24 +68,24 @@
                 </div>
 
                 <!-- Full Name (auto-generated, read-only display) -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Display Name (Auto-generated)
+                <div class="input-group">
+                    <label class="input-label">
+                        Display Name <span class="text-sm text-slate-300 font-normal">(Auto-generated)</span>
                     </label>
-                    <div class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600">
+                    <div class="w-full px-4 py-3 border border-slate-600 rounded-lg bg-slate-700/50 text-slate-300">
                         <span id="display-name">{{ form.instance.full_name }}</span>
                     </div>
-                    <p class="mt-1 text-sm text-gray-500">This is automatically generated from your first and last name.</p>
+                    <p class="mt-1 text-sm text-slate-400">This is automatically generated from your first and last name.</p>
                 </div>
 
-                <!-- City -->
-                <div>
-                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                <!-- City (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.city.id_for_label }}" class="input-label">
                         City
                     </label>
                     {{ form.city }}
                     {% if form.city.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.city.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
@@ -89,64 +93,85 @@
                     {% endif %}
                 </div>
 
-                <!-- Profile Image URL -->
-                <div>
-                    <label for="{{ form.profile_image_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Profile Image URL
+                <!-- Profile Image URL (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.profile_image_url.id_for_label }}" class="input-label">
+                        Profile Image URL <span class="text-sm text-slate-300 font-normal">(Optional)</span>
                     </label>
                     {{ form.profile_image_url }}
                     {% if form.profile_image_url.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.profile_image_url.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endif %}
-                    <p class="mt-1 text-sm text-gray-500">Enter a URL to your profile image. Leave blank to use default avatar.</p>
+                    <p class="mt-1 text-sm text-slate-400">Enter a URL to your profile image. Leave blank to use default avatar.</p>
 
                     <!-- Image Preview -->
                     <div class="mt-3">
                         <div id="image-preview" class="hidden">
-                            <p class="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                            <p class="text-sm font-medium text-slate-300 mb-2">Preview:</p>
                             <img id="preview-img" src="" alt="Profile image preview"
-                                 class="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                 class="w-20 h-20 rounded-full object-cover border-2 border-slate-600"
                                  onerror="document.getElementById('image-preview').classList.add('hidden');">
                         </div>
                     </div>
                 </div>
 
-                <!-- Bio -->
-                <div>
-                    <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Bio
+                <!-- Bio (Full Width) -->
+                <div class="input-group">
+                    <label for="{{ form.bio.id_for_label }}" class="input-label">
+                        Bio <span class="text-sm text-slate-300 font-normal">(Optional)</span>
                     </label>
                     {{ form.bio }}
                     {% if form.bio.errors %}
-                        <div class="mt-1 text-sm text-red-600">
+                        <div class="error-message">
                             {% for error in form.bio.errors %}
                                 <p>{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endif %}
-                    <p class="mt-1 text-sm text-gray-500">Tell others about yourself and your sports interests.</p>
+                    <p class="mt-1 text-sm text-slate-400">Tell others about yourself and your sports interests.</p>
                 </div>
-            </div>
 
-            <div class="mt-8 flex justify-end space-x-3">
-                <a href="{% url 'authentication:profile' %}" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition duration-200">
-                    Cancel
-                </a>
-                <button type="submit" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition duration-200">
-                    Save Changes
-                </button>
-            </div>
-        </form>
+                <!-- Action Buttons -->
+                <div class="pt-4 flex flex-col sm:flex-row gap-3">
+                    <button type="submit" class="btn btn-lg flex-1">
+                        Save Changes
+                    </button>
+                    <a href="{% url 'authentication:profile' %}" class="btn btn-secondary btn-lg flex-1 text-center">
+                        Cancel
+                    </a>
+                </div>
+
+                <!-- Back to Profile Link -->
+                <div class="text-center">
+                    <a href="{% url 'authentication:profile' %}" 
+                       class="text-sm font-medium text-gray-600 hover:text-gray-800 underline">
+                        ← Back to Profile
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-    // Update display name in real-time
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Choices.js on the city select field
+        const citySelect = document.getElementById('{{ form.city.id_for_label }}');
+        if (citySelect) {
+            new Choices(citySelect, {
+                searchEnabled: true,
+                itemSelectText: '',
+                searchPlaceholderValue: 'Search for a city...',
+                noResultsText: 'No cities found',
+                shouldSort: false
+            });
+        }
+
+        // Update display name in real-time
         const firstNameField = document.getElementById('{{ form.first_name.id_for_label }}');
         const lastNameField = document.getElementById('{{ form.last_name.id_for_label }}');
         const displayNameSpan = document.getElementById('display-name');

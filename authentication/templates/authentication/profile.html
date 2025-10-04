@@ -1,164 +1,147 @@
-{% extends 'base.html' %}
-{% load icon_tags %}
+    {% extends 'base.html' %}
+    {% load icon_tags %}
 
-{% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - Sigma App{% endblock %}
+    {% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - Sigma App{% endblock %}
 
-{% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Profile Header -->
-    <div class="border border-gray-200 rounded-lg overflow-hidden mb-6">
-        <div class="border-b border-gray-200 px-6 py-8">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <!-- Profile Image -->
-                    <div class="flex-shrink-0">
-                        {% if profile.profile_image_url %}
-                            <img src="{{ profile.profile_image_url }}"
-                                 alt="{{ profile.full_name }}'s profile picture"
-                                 class="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center" style="display: none;">
-                                {% icon 'user' size='lg' color='gray' %}
-                            </div>
-                        {% else %}
-                            <div class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                                {% icon 'user' size='lg' color='gray' %}
-                            </div>
-                        {% endif %}
+    {% block content %}
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Profile Header -->
+        <div class="card-deep-sea mb-6">
+            <div class="border-b border-white/20 pb-6 mb-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <!-- Profile Image -->
+                        <div class="flex-shrink-0">
+                            {% if profile.profile_image_url %}
+                                <img src="{{ profile.profile_image_url }}"
+                                    alt="{{ profile.full_name }}'s profile picture"
+                                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white/30">
+                                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 flex items-center justify-center hidden">
+                                    {% icon 'user' size='lg' color='white' %}
+                                </div>
+                            {% else %}
+                                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 flex items-center justify-center">
+                                    {% icon 'user' size='lg' color='white' %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Profile Info -->
+                        <div class="min-w-0 flex-1">
+                            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2 truncate">{{ profile.full_name }}</h1>
+                            <p class="text-white/80 text-sm sm:text-base mt-1 truncate">@{{ profile_user.username }}</p>
+                            <p class="text-white/60 text-xs sm:text-sm mt-1">{{ profile.get_city_display }}</p>
+                        </div>
                     </div>
 
-                    <!-- Profile Info -->
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ profile.full_name }}</h1>
-                        <p class="text-gray-600 mt-1">@{{ profile_user.username }}</p>
-                        <p class="text-gray-500 text-sm mt-1">{{ profile.get_city_display }}</p>
+                    {% if is_own_profile %}
+                    <!-- Logout Button -->
+                    <form action="{% url 'authentication:logout' %}" method="post" class="w-full sm:w-auto sm:ml-auto">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline btn-sm text-red-400 border-red-400 hover:bg-red-400/10 w-full sm:w-auto">
+                            {% icon 'log-out' size='sm' color='#f87171' %}
+                            Logout
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-6">
+                    <div class="flex flex-wrap gap-4 sm:gap-6 lg:gap-8 w-full lg:w-auto">
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <div class="text-xl sm:text-2xl font-bold text-white">{{ profile.total_points }}</div>
+                                <div class="text-xs sm:text-sm text-white/60">Points</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <div class="text-xl sm:text-2xl font-bold text-white">{{ profile.total_events }}</div>
+                                <div class="text-xs sm:text-sm text-white/60">Events</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <div class="text-xl sm:text-2xl font-bold text-white">{{ sport_preferences.count }}</div>
+                                <div class="text-xs sm:text-sm text-white/60">Sports</div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    {% if is_own_profile %}
+                    <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <a href="{% url 'authentication:edit_profile' %}" class="btn btn-primary btn-sm w-full sm:w-auto">
+                            {% icon 'user' size='sm' color='white' %}
+                            Edit Profile
+                        </a>
+                        <a href="{% url 'authentication:sport_preferences' %}" class="btn btn-outline btn-sm text-white border-white hover:bg-white/10 w-full sm:w-auto">
+                            {% icon 'plus' size='sm' color='white' %}
+                            Manage Sports
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
                 
-                {% if is_own_profile %}
-                <a href="{% url 'authentication:home' %}" class="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors">
-                    {% icon 'home' size='sm' color='#374151' %}
-                    Dashboard
+                {% if profile.bio %}
+                <div class="border-t border-white/20 pt-6">
+                    <h3 class="text-base sm:text-lg font-semibold text-white mb-2">About</h3>
+                    <p class="text-sm sm:text-base text-white/80 leading-relaxed">{{ profile.bio }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sport Preferences -->
+        <div class="card-deep-sea">
+            <div class="border-b border-white/20 pb-4 mb-6 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    {% icon 'filter' size='md' color='#F26419' %}
+                    <h2 class="text-xl font-semibold text-white">Sport Preferences</h2>
+                </div>
+                
+                {% if is_own_profile and sport_preferences %}
+                <a href="{% url 'authentication:sport_preferences' %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20">
+                    {% icon 'plus' size='sm' color='white' %}
+                    Add More
                 </a>
                 {% endif %}
             </div>
-        </div>
-        
-        <div class="px-6 py-6">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex space-x-8">
-                    <div class="flex items-center gap-2">
-                        <div>
-                            <div class="text-2xl font-bold text-gray-900">{{ profile.total_points }}</div>
-                            <div class="text-sm text-gray-500">Points</div>
-                        </div>
+            
+            <div>
+                {% if sport_preferences %}
+                    <div class="chip-group">
+                        {% for preference in sport_preferences %}
+                            <div class="chip chip-filled chip-md">
+                                <span class="font-semibold">{{ preference.get_sport_type_display }}</span>
+                                <span class="text-sm opacity-80"> • {{ preference.get_skill_level_display }}</span>
+                            </div>
+                        {% endfor %}
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div>
-                            <div class="text-2xl font-bold text-gray-900">{{ profile.total_events }}</div>
-                            <div class="text-sm text-gray-500">Events</div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="flex justify-center mb-4">
+                            {% icon 'search' size='xl' color='white' %}
                         </div>
+                        <p class="text-white/80 mb-4">
+                            {% if is_own_profile %}
+                                No sport preferences yet
+                            {% else %}
+                                This user hasn't added any sport preferences yet
+                            {% endif %}
+                        </p>
+                        {% if is_own_profile %}
+                            <a href="{% url 'authentication:sport_preferences' %}" class="btn btn-primary btn-md">
+                                {% icon 'plus' size='sm' color='white' %}
+                                Add Sport Preferences
+                            </a>
+                        {% endif %}
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div>
-                            <div class="text-2xl font-bold text-gray-900">{{ sport_preferences.count }}</div>
-                            <div class="text-sm text-gray-500">Sports</div>
-                        </div>
-                    </div>
-                </div>
-                
-                {% if is_own_profile %}
-                <div class="flex space-x-3">
-                    <a href="{% url 'authentication:edit_profile' %}" class="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
-                        {% icon 'user' size='sm' color='white' %}
-                        Edit Profile
-                    </a>
-                    <a href="{% url 'authentication:sport_preferences' %}" class="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors">
-                        {% icon 'plus' size='sm' color='#374151' %}
-                        Manage Sports
-                    </a>
-                </div>
                 {% endif %}
             </div>
-            
-            {% if profile.bio %}
-            <div class="border-t border-gray-200 pt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">About</h3>
-                <p class="text-gray-700">{{ profile.bio }}</p>
-            </div>
-            {% endif %}
         </div>
     </div>
 
-    <!-- Sport Preferences -->
-    <div class="border border-gray-200 rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                {% icon 'filter' size='md' color='primary' %}
-                <h2 class="text-xl font-semibold text-gray-900">Sport Preferences</h2>
-            </div>
-            
-            {% if is_own_profile and sport_preferences %}
-            <a href="{% url 'authentication:sport_preferences' %}" class="inline-flex items-center gap-2 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                {% icon 'plus' size='sm' color='#374151' %}
-                Add More
-            </a>
-            {% endif %}
-        </div>
-        
-        <div class="px-6 py-6">
-            {% if sport_preferences %}
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {% for preference in sport_preferences %}
-                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <h3 class="font-semibold text-gray-900">{{ preference.get_sport_type_display }}</h3>
-                                    <p class="text-sm text-gray-600 mt-1">{{ preference.get_skill_level_display }}</p>
-                                </div>
-                                {% if is_own_profile %}
-                                <button type="button" class="text-gray-400 hover:text-red-600 transition-colors p-1 rounded hover:bg-white">
-                                    {% icon 'trash' size='sm' color='currentColor' %}
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-8">
-                    <div class="flex justify-center mb-4">
-                        {% icon 'search' size='xl' color='#9CA3AF' %}
-                    </div>
-                    <p class="text-gray-600 mb-4">
-                        {% if is_own_profile %}
-                            No sport preferences yet
-                        {% else %}
-                            This user hasn't added any sport preferences yet
-                        {% endif %}
-                    </p>
-                    {% if is_own_profile %}
-                        <a href="{% url 'authentication:sport_preferences' %}" class="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
-                            {% icon 'plus' size='sm' color='white' %}
-                            Add Sport Preferences
-                        </a>
-                    {% endif %}
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
 
-<!-- Optional: Add this script for delete functionality -->
-<script>
-document.querySelectorAll('[data-delete-sport]').forEach(button => {
-    button.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (confirm('Are you sure you want to remove this sport preference?')) {
-            // Handle delete action here
-            console.log('Delete sport:', this.dataset.deleteSport);
-        }
-    });
-});
-</script>
-{% endblock %}
+    {% endblock %}

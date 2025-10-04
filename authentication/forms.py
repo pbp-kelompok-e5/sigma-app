@@ -3,84 +3,52 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from .models import UserProfile, SportPreference
 from sigma_app.constants import CITY_CHOICES
-
+from django.core.validators import MaxLengthValidator
 
 class CustomUserCreationForm(UserCreationForm):
     """Custom registration form with additional profile fields"""
     
     email = forms.EmailField(
         required=True,
-        widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your email'
-        })
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email'})
     )
-    
     first_name = forms.CharField(
         max_length=30,
         required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your first name'
-        })
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your first name'})
     )
-    
     last_name = forms.CharField(
         max_length=30,
         required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your last name'
-        })
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your last name'})
     )
-    
     city = forms.ChoiceField(
         choices=CITY_CHOICES,
         required=True,
-        widget=forms.Select(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent searchable-select',
-            'data-placeholder': 'Search and select your city'
-        })
+        widget=forms.Select(attrs={'data-placeholder': 'Search and select your city'})
     )
-    
     bio = forms.CharField(
+        validators=[MaxLengthValidator(200)],
         required=False,
-        widget=forms.Textarea(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Tell us about yourself (optional)',
-            'rows': 3
-        })
+        widget=forms.Textarea(attrs={'placeholder': 'Tell us about yourself (optional)', 'rows': 3})
     )
-
     profile_image_url = forms.URLField(
         required=False,
-        widget=forms.URLInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter profile image URL (optional)'
-        })
+        widget=forms.URLInput(attrs={'placeholder': 'Enter profile image URL (optional)'})
     )
 
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
         widgets = {
-            'username': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-                'placeholder': 'Choose a username'
-            }),
+            'username': forms.TextInput(attrs={'placeholder': 'Choose a username'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Apply styling to password fields
-        self.fields['password1'].widget.attrs.update({
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your password'
-        })
-        self.fields['password2'].widget.attrs.update({
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Confirm your password'
-        })
+        # Apply placeholders to password fields
+        self.fields['password1'].widget.attrs.update({'placeholder': 'Enter your password'})
+        self.fields['password2'].widget.attrs.update({'placeholder': 'Confirm your password'})
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -102,18 +70,12 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomAuthenticationForm(AuthenticationForm):
-    """Custom login form with styling"""
+    """Custom login form"""
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your username'
-        })
-        self.fields['password'].widget.attrs.update({
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your password'
-        })
+        self.fields['username'].widget.attrs.update({'placeholder': 'Enter your username'})
+        self.fields['password'].widget.attrs.update({'placeholder': 'Enter your password'})
 
 
 class UserProfileForm(forms.ModelForm):
@@ -122,58 +84,25 @@ class UserProfileForm(forms.ModelForm):
     first_name = forms.CharField(
         max_length=30,
         required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your first name'
-        })
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your first name'})
     )
-    
     last_name = forms.CharField(
         max_length=30,
         required=True,
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your last name'
-        })
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your last name'})
     )
-    
     email = forms.EmailField(
         required=True,
-        widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter your email'
-        })
-    )
-
-    profile_image_url = forms.URLField(
-        required=False,
-        widget=forms.URLInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            'placeholder': 'Enter profile image URL (optional)'
-        })
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email'})
     )
 
     class Meta:
         model = UserProfile
-        fields = ['full_name', 'bio', 'city', 'profile_image_url']
+        fields = ['bio', 'city', 'profile_image_url']
         widgets = {
-            'full_name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-                'placeholder': 'Enter your full name'
-            }),
-            'bio': forms.Textarea(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-                'placeholder': 'Tell us about yourself',
-                'rows': 4
-            }),
-            'city': forms.Select(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent searchable-select',
-                'data-placeholder': 'Search and select your city'
-            }),
-            'profile_image_url': forms.URLInput(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-                'placeholder': 'Enter profile image URL (optional)'
-            })
+            'bio': forms.Textarea(attrs={'placeholder': 'Tell us about yourself', 'rows': 4}),
+            'city': forms.Select(attrs={'data-placeholder': 'Search and select your city'}),
+            'profile_image_url': forms.URLInput(attrs={'placeholder': 'Enter profile image URL (optional)'})
         }
 
     def __init__(self, *args, **kwargs):
@@ -210,14 +139,6 @@ class SportPreferenceForm(forms.ModelForm):
     class Meta:
         model = SportPreference
         fields = ['sport_type', 'skill_level']
-        widgets = {
-            'sport_type': forms.Select(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            }),
-            'skill_level': forms.Select(attrs={
-                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
-            })
-        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
