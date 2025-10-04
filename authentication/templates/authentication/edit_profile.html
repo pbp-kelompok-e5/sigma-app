@@ -89,6 +89,32 @@
                     {% endif %}
                 </div>
 
+                <!-- Profile Image URL -->
+                <div>
+                    <label for="{{ form.profile_image_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Profile Image URL
+                    </label>
+                    {{ form.profile_image_url }}
+                    {% if form.profile_image_url.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.profile_image_url.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">Enter a URL to your profile image. Leave blank to use default avatar.</p>
+
+                    <!-- Image Preview -->
+                    <div class="mt-3">
+                        <div id="image-preview" class="hidden">
+                            <p class="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+                            <img id="preview-img" src="" alt="Profile image preview"
+                                 class="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                 onerror="document.getElementById('image-preview').classList.add('hidden');">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Bio -->
                 <div>
                     <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
@@ -124,16 +150,38 @@
         const firstNameField = document.getElementById('{{ form.first_name.id_for_label }}');
         const lastNameField = document.getElementById('{{ form.last_name.id_for_label }}');
         const displayNameSpan = document.getElementById('display-name');
-        
+
         function updateDisplayName() {
             const firstName = firstNameField.value.trim();
             const lastName = lastNameField.value.trim();
             const displayName = firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName || 'Your Name');
             displayNameSpan.textContent = displayName;
         }
-        
+
         firstNameField.addEventListener('input', updateDisplayName);
         lastNameField.addEventListener('input', updateDisplayName);
+
+        // Image preview functionality
+        const imageUrlField = document.getElementById('{{ form.profile_image_url.id_for_label }}');
+        const imagePreview = document.getElementById('image-preview');
+        const previewImg = document.getElementById('preview-img');
+
+        function updateImagePreview() {
+            const url = imageUrlField.value.trim();
+            if (url) {
+                previewImg.src = url;
+                imagePreview.classList.remove('hidden');
+            } else {
+                imagePreview.classList.add('hidden');
+            }
+        }
+
+        // Show preview on page load if URL exists
+        updateImagePreview();
+
+        // Update preview when URL changes
+        imageUrlField.addEventListener('input', updateImagePreview);
+        imageUrlField.addEventListener('blur', updateImagePreview);
     });
 </script>
 {% endblock %}

@@ -73,10 +73,11 @@ class UserProfile(models.Model):
     full_name = models.CharField(max_length=100)
     bio = models.TextField(blank=True, null=True)
     city = models.CharField(max_length=50)
+    profile_image_url = models.URLField(blank=True, null=True) 
     total_points = models.IntegerField(default=0)
     total_events = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return self.full_name
 ```
@@ -273,7 +274,7 @@ class EventParticipant(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants')
+    event = models.ForeignKey(event_discovery.Event, on_delete=models.CASCADE, related_name='participants')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='joined_events')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='joined')
     joined_at = models.DateTimeField(auto_now_add=True)
@@ -367,7 +368,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Review(models.Model):
-    event = models.ForeignKey('events.Event', on_delete=models.CASCADE, related_name='reviews')
+    event = models.ForeignKey('event_discovery.Event', on_delete=models.CASCADE, related_name='reviews')
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
@@ -452,7 +453,7 @@ class PointTransaction(models.Model):
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_CHOICES)
     points = models.IntegerField()
     description = models.TextField()
-    related_event = models.ForeignKey('events.Event', on_delete=models.SET_NULL, null=True, blank=True)
+    related_event = models.ForeignKey('event_discovery.Event', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -470,7 +471,6 @@ class Leaderboard(models.Model):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leaderboard_entries')
     rank = models.IntegerField()
-    total_points = models.IntegerField()
     period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
     sport_type = models.CharField(max_length=20, blank=True, null=True)
     last_updated = models.DateTimeField(auto_now=True)
@@ -602,11 +602,6 @@ git clone https://github.com/pbp-kelompok-e5/sigma-app.git
 cd sigma-app
 ```
 ---
-## Sumber Dataset
-https://www.kaggle.com/datasets/arindamsahoo/social-media-users
-https://id.wikipedia.org/wiki/Daftar_kota_di_Indonesia_menurut_provinsi
-
----
 
 ## 🔄 Update ke Main Terbaru
 
@@ -668,13 +663,52 @@ python manage.py runserver
 
 ## 👥 Tim Pengembang
 
-| Nama | Modul |
-|------|-------|
-| Hariz | Authentication & Profile, Leaderboard & Points | 
-| Fini  | Partner Matching | 
-| Farrell| Event Discovery | 
-| Arief | Event Management | 
-| Gerry | Review & Rating | 
+| Nama | NPM | Modul |
+|------|-----|-------|
+| Muhammad Hariz Albaari | 2406428775 | Authentication & Profile, Leaderboard & Points | 
+| Tsaniya Fini Ardiyanti | 2406437893 | Partner Matching | 
+| Farrell Bagoes Rahmantyo | 2406420596 | Event Discovery | 
+| Muhammad Arief Solomon |  2406343092 | Event Management | 
+| Gerry | 2406495464 | Review & Rating |
+
+---
+## Sumber Dataset
+https://www.kaggle.com/datasets/arindamsahoo/social-media-users
+https://id.wikipedia.org/wiki/Daftar_kota_di_Indonesia_menurut_provinsi
+
+---
+## 👤 Role Pengguna
+
+### 1. Registered User (Pengguna Terdaftar)
+Pengguna utama yang sudah registrasi dan dapat mengakses semua fitur aplikasi.
+
+**Hak Akses:**
+- Kelola profil dan preferensi olahraga
+- Browse dan connect dengan pengguna lain
+- Join event olahraga yang tersedia
+- Membuat dan kelola event sendiri (sebagai organizer)
+- Berikan review dan rating
+- Tracking points dan leaderboard
+- Manage participants pada event yang dibuat
+
+### 2. Guest/Visitor (Pengunjung)
+Pengguna yang belum registrasi, hanya dapat melihat landing page dan informasi umum aplikasi.
+
+**Hak Akses:**
+- Lihat landing page dan deskripsi fitur
+- Akses halaman register dan login
+
+
+**Catatan:**
+- Tidak ada role admin (sistem peer-to-peer)
+- Setiap registered user bisa menjadi organizer dengan membuat event
+- Trust-based system melalui review dan rating
+
+---
+## 🔗 Deployment & Design
+
+- **Deployment PWS**: https://farrell-bagoes-sigmaapp.pbp.cs.ui.ac.id/
+- **Design Figma**: https://www.figma.com/design/FyD4mI3SwzVciuyidRCaim/Desain--Nama-Web-App-?fuid=1150424300719245753
 
 ---
 

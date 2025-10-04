@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'event_management',
     'reviews',
     'leaderboard',
+    'sigma_app',
 ]
 
 MIDDLEWARE = [

@@ -52,6 +52,14 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
 
+    profile_image_url = forms.URLField(
+        required=False,
+        widget=forms.URLInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
+            'placeholder': 'Enter profile image URL (optional)'
+        })
+    )
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
@@ -87,6 +95,7 @@ class CustomUserCreationForm(UserCreationForm):
             profile.full_name = f"{user.first_name} {user.last_name}"
             profile.city = self.cleaned_data['city']
             profile.bio = self.cleaned_data['bio']
+            profile.profile_image_url = self.cleaned_data['profile_image_url']
             profile.save()
         
         return user
@@ -136,9 +145,17 @@ class UserProfileForm(forms.ModelForm):
         })
     )
 
+    profile_image_url = forms.URLField(
+        required=False,
+        widget=forms.URLInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
+            'placeholder': 'Enter profile image URL (optional)'
+        })
+    )
+
     class Meta:
         model = UserProfile
-        fields = ['full_name', 'bio', 'city']
+        fields = ['full_name', 'bio', 'city', 'profile_image_url']
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
@@ -152,6 +169,10 @@ class UserProfileForm(forms.ModelForm):
             'city': forms.Select(attrs={
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent searchable-select',
                 'data-placeholder': 'Search and select your city'
+            }),
+            'profile_image_url': forms.URLInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent',
+                'placeholder': 'Enter profile image URL (optional)'
             })
         }
 

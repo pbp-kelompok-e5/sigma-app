@@ -93,6 +93,21 @@
                     {% endif %}
                 </div>
 
+                <!-- Profile Image URL -->
+                <div>
+                    <label for="{{ form.profile_image_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Profile Image URL (Optional)
+                    </label>
+                    {{ form.profile_image_url }}
+                    {% if form.profile_image_url.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.profile_image_url.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
                 <!-- Bio -->
                 <div>
                     <label for="{{ form.bio.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
@@ -140,7 +155,7 @@
             </div>
 
             <div>
-                <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-200">
+                <button type="submit" class="btn btn-full">
                     Create Account
                 </button>
             </div>

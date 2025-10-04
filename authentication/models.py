@@ -20,6 +20,9 @@ class UserProfile(models.Model):
     # Lokasi user (pilihan dari daftar CITY_CHOICES)
     city = models.CharField(max_length=50, choices=CITY_CHOICES)
 
+    # URL gambar profil user (opsional, user akan memberikan URL)
+    profile_image_url = models.URLField(blank=True, null=True)
+
     # Total poin user (misal dari leaderboard / aktivitas event)
     total_points = models.IntegerField(default=0)
 
