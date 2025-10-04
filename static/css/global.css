@@ -329,6 +329,89 @@
     gap: 12px;
 }
 
+/* ===== INPUT DESIGN SYSTEM ===== */
+
+/* Input group container */
+.input-group {
+    display: flex;
+    width: 100%;
+    max-width: 652px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+/* Input label */
+.input-label {
+    color: var(--orange-sport);
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+/* Base input styles */
+.input-group input,
+.input-group textarea,
+.input-group select {
+    display: flex;
+    padding: 16px 8px;
+    align-items: center;
+    gap: 10px;
+    align-self: stretch;
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--orange-sport);
+    border-radius: 0;
+    background: transparent;
+    color: var(--orange-sport);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+/* Focus state */
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    border-bottom: 2px solid var(--orange-sport-hover);
+}
+
+/* Placeholder styling */
+.input-group input::placeholder,
+.input-group textarea::placeholder {
+    color: rgba(242, 100, 25, 0.5);
+}
+
+/* Disabled state */
+.input-group input:disabled,
+.input-group textarea:disabled,
+.input-group select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Textarea specific */
+.input-group textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Error state */
+.input-group .input-error {
+    border-bottom-color: #dc2626;
+    color: #dc2626;
+}
+
+.input-group .error-message {
+    color: #dc2626;
+    font-size: 14px;
+    margin-top: -8px;
+}
+
 /* ===== CUSTOM STYLES FOR SEARCHABLE SELECT (Choices.js) ===== */
 .choices {
     margin-bottom: 0;
