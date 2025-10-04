@@ -1,33 +1,335 @@
-/* Custom grayscale theme */
-.bg-primary {
-    background-color: #374151;
+/* ===== GLOBAL COLOR PALETTE ===== */
+
+:root {
+    /* ===== BRAND COLORS ===== */
+    /* Orange Sport - Primary Brand Color */
+    --orange-sport: #F26419;
+    --orange-sport-hover: #d94f0f;
+    --orange-sport-active: #c0430d;
+    
+    /* Deep Sea - Secondary Brand Color */
+    --deep-sea: #00063D;
+    --deep-sea-light: #1a1f5c;
+    --deep-sea-lighter: #2a2f6c;
 }
 
-.bg-secondary {
-    background-color: #6b7280;
+/* ===== BUTTON DESIGN SYSTEM ===== */
+
+/* Base button styles */
+.btn {
+    display: inline-flex;
+    padding: 16px 40px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border-radius: 24px;
+    background: var(--orange-sport);
+    color: white;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 1rem;
+    line-height: 1.5;
 }
 
-.text-primary {
+.btn:hover:not(:disabled) {
+    background: var(--orange-sport-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(242, 100, 25, 0.3);
+}
+
+.btn:active:not(:disabled) {
+    background: var(--orange-sport-active);
+    transform: translateY(0);
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(242, 100, 25, 0.2);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Button sizes */
+.btn-sm {
+    padding: 12px 32px;
+    font-size: 0.875rem;
+}
+
+.btn-md {
+    padding: 16px 40px;
+    font-size: 1rem;
+}
+
+.btn-lg {
+    padding: 20px 48px;
+    font-size: 1.125rem;
+}
+
+/* Button variants */
+.btn-primary {
+    background: var(--orange-sport);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--orange-sport-hover);
+}
+
+.btn-secondary {
+    background: #6b7280;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #4b5563;
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--orange-sport);
+    border: 2px solid var(--orange-sport);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: rgba(242, 100, 25, 0.1);
+    box-shadow: 0 4px 12px rgba(242, 100, 25, 0.2);
+}
+
+.btn-danger {
+    background: #dc2626;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-success {
+    background: #16a34a;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #15803d;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}
+
+/* Button width */
+.btn-full {
+    width: 100%;
+}
+
+.btn-block {
+    width: 100%;
+    display: flex;
+}
+
+/* Button with icon */
+.btn > svg,
+.btn > img {
+    width: 20px;
+    height: 20px;
+}
+
+/* ===== CHIP DESIGN SYSTEM ===== */
+
+/* Base chip styles */
+.chip {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    border-radius: 360px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* Chip Primary - Bold bordered variant */
+.chip-primary {
+    padding: 12px 24px;
+    border: 4px solid var(--orange-sport);
+    background: transparent;
+    color: var(--orange-sport);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.chip-primary:hover:not(.chip-disabled) {
+    background: rgba(242, 100, 25, 0.1);
+    border-color: var(--orange-sport-hover);
+    color: var(--orange-sport-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(242, 100, 25, 0.2);
+}
+
+.chip-primary:active:not(.chip-disabled) {
+    background: rgba(242, 100, 25, 0.15);
+    transform: translateY(0);
+}
+
+/* Chip Secondary Light - Subtle variant */
+.chip-secondary {
+    padding: 8px 20px;
+    border: 2px solid #e5e7eb;
+    background: #f9fafb;
     color: #374151;
+    font-size: 0.875rem;
 }
 
-.text-secondary {
-    color: #6b7280;
+.chip-secondary:hover:not(.chip-disabled) {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.border-primary {
-    border-color: #374151;
+.chip-secondary:active:not(.chip-disabled) {
+    background: #e5e7eb;
+    transform: translateY(0);
 }
 
-.hover\:bg-primary:hover {
-    background-color: #374151;
+/* Chip Filled - Solid background variant */
+.chip-filled {
+    padding: 8px 20px;
+    border: 2px solid var(--orange-sport);
+    background: var(--orange-sport);
+    color: white;
+    font-size: 0.875rem;
 }
 
-.focus\:ring-primary:focus {
-    --tw-ring-color: #374151;
+.chip-filled:hover:not(.chip-disabled) {
+    background: var(--orange-sport-hover);
+    border-color: var(--orange-sport-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(242, 100, 25, 0.3);
 }
 
-/* Custom styles for searchable select (Choices.js) */
+.chip-filled:active:not(.chip-disabled) {
+    background: var(--orange-sport-active);
+    border-color: var(--orange-sport-active);
+    transform: translateY(0);
+}
+
+/* Chip sizes */
+.chip-sm {
+    padding: 6px 16px;
+    font-size: 0.75rem;
+}
+
+.chip-md {
+    padding: 8px 20px;
+    font-size: 0.875rem;
+}
+
+.chip-lg {
+    padding: 12px 24px;
+    font-size: 1rem;
+}
+
+/* Chip states */
+.chip-active {
+    background: var(--orange-sport);
+    color: white;
+    border-color: var(--orange-sport);
+}
+
+.chip-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Chip with icon */
+.chip > svg,
+.chip > img {
+    width: 16px;
+    height: 16px;
+}
+
+.chip-lg > svg,
+.chip-lg > img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Chip with close button */
+.chip-close {
+    margin-left: 4px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.chip-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.chip-primary .chip-close:hover {
+    background: rgba(242, 100, 25, 0.2);
+}
+
+/* Chip group */
+.chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+/* ===== DEEP SEA CARD ===== */
+.card-deep-sea {
+    background-color: var(--deep-sea);
+    color: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 6, 61, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effect */
+.card-deep-sea:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 6, 61, 0.5);
+}
+
+/* Card header */
+.card-deep-sea .card-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* Card body */
+.card-deep-sea .card-body {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Card footer (optional) */
+.card-deep-sea .card-footer {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* ===== CUSTOM STYLES FOR SEARCHABLE SELECT (Choices.js) ===== */
 .choices {
     margin-bottom: 0;
 }

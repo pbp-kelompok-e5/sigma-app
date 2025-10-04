@@ -7,9 +7,33 @@
     <!-- Welcome Section -->
     <div class="border-b border-gray-200 pb-8 mb-8">
         <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user.first_name|default:user.username }}</h1>
-                <p class="text-gray-600 mt-2">Ready for your next sport adventure?</p>
+            <div class="flex items-center gap-4">
+                <!-- Profile Image -->
+                <div class="flex-shrink-0">
+                    {% if profile.profile_image_url %}
+                        <img src="{{ profile.profile_image_url }}"
+                             alt="{{ profile.full_name }}'s profile picture"
+                             class="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center" style="display: none;">
+                            <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    {% else %}
+                        <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Welcome Text -->
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user.first_name|default:user.username }}</h1>
+                    <p class="text-gray-600 mt-2">Ready for your next sport adventure?</p>
+                </div>
             </div>
             <a href="{% url 'authentication:logout' %}" class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-gray-400 transition-colors">
                 Logout
