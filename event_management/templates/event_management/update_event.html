@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Edit Event - Sigma App{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="max-w-2xl w-full space-y-8">
+    <div>
+    <h2 class="text-center text-4xl font-extrabold text-slate-100">Edit Event</h2>
+    <p class="mt-2 text-center text-sm text-slate-300">Update your event details below</p>
+    </div>
+
+    <div class="card-deep-sea">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="pt-4">
+        <button type="submit" class="btn btn-full btn-lg">Save Changes</button>
+        </div>
+        <div class="text-center">
+        <a href="{% url 'event_management:my_events' %}" class="font-medium text-gray-600 hover:text-gray-800 underline">
+            Back to My Events
+        </a>
+        </div>
+    </form>
+    </div>
+</div>
+</div>
+{% endblock %}

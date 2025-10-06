@@ -1,3 +1,11 @@
-from django.db import models
+"""
+Event Management module
 
-# Model ambil dari event_discovery
+Note:
+This module does not define its own models.
+It reuses Event and EventParticipant from event_discovery.models
+to ensure shared database tables and consistent event data.
+"""
+
+from django.db import models
+from event_discovery.models import Event, EventParticipant

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Manage Participants - Sigma App{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 text-slate-100">
+<div class="max-w-5xl mx-auto space-y-8">
+    <div class="flex items-center justify-between">
+    <h2 class="text-4xl font-extrabold">Manage Participants</h2>
+    <a href="{% url 'event_management:my_events' %}" class="btn btn-secondary">Back to My Events</a>
+    </div>
+
+    <div class="card-deep-sea p-6">
+    <h3 class="text-2xl font-bold mb-4">{{ event.title }}</h3>
+    <table class="min-w-full divide-y divide-slate-700">
+        <thead>
+        <tr class="text-slate-300">
+            <th class="px-4 py-2 text-left">Username</th>
+            <th class="px-4 py-2 text-left">Status</th>
+            <th class="px-4 py-2 text-left">Actions</th>
+        </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-700">
+        {% for p in participants %}
+        <tr>
+            <td class="px-4 py-2">{{ p.user.username }}</td>
+            <td class="px-4 py-2">{{ p.status }}</td>
+            <td class="px-4 py-2">
+            <form method="post" class="inline-flex gap-2">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ p.user.id }}">
+                <button type="submit" name="action" value="mark_attended" class="btn btn-sm btn-success">Mark Attended</button>
+                <button type="submit" name="action" value="remove" class="btn btn-sm btn-danger">Remove</button>
+            </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="px-4 py-2 text-slate-400">No participants yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+</div>
+{% endblock %}

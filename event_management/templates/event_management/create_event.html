@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Event - Sigma App{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+<div class="max-w-2xl w-full space-y-8">
+    
+    <!-- Header -->
+    <div>
+    <h2 class="text-center text-4xl font-extrabold text-slate-100">
+        Create New Event
+    </h2>
+    <p class="mt-2 text-center text-sm text-slate-300">
+        Organize your next sport activity with Sigma App
+    </p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card-deep-sea">
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Event Title & Sport Type -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="input-group">
+            <label for="{{ form.title.id_for_label }}" class="input-label">Event Title</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+            <div class="error-message">
+                {% for error in form.title.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="input-group">
+            <label for="{{ form.sport_type.id_for_label }}" class="input-label">Sport Type</label>
+            {{ form.sport_type }}
+            {% if form.sport_type.errors %}
+            <div class="error-message">
+                {% for error in form.sport_type.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        </div>
+
+        <!-- Location & City -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="input-group">
+            <label for="{{ form.location.id_for_label }}" class="input-label">Location</label>
+            {{ form.location }}
+            {% if form.location.errors %}
+            <div class="error-message">
+                {% for error in form.location.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="input-group">
+            <label for="{{ form.city.id_for_label }}" class="input-label">City</label>
+            {{ form.city }}
+            {% if form.city.errors %}
+            <div class="error-message">
+                {% for error in form.city.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        </div>
+
+        <!-- Event Date & Time -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="input-group">
+            <label for="{{ form.event_date.id_for_label }}" class="input-label">Event Date</label>
+            {{ form.event_date }}
+            {% if form.event_date.errors %}
+            <div class="error-message">
+                {% for error in form.event_date.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="input-group">
+            <label for="{{ form.event_time.id_for_label }}" class="input-label">Event Time</label>
+            {{ form.event_time }}
+            {% if form.event_time.errors %}
+            <div class="error-message">
+                {% for error in form.event_time.errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        </div>
+
+        <!-- Capacity -->
+        <div class="input-group">
+        <label for="{{ form.capacity.id_for_label }}" class="input-label">Participant Capacity</label>
+        {{ form.capacity }}
+        {% if form.capacity.errors %}
+            <div class="error-message">
+            {% for error in form.capacity.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+            </div>
+        {% endif %}
+        </div>
+
+        <!-- Description -->
+        <div class="input-group">
+        <label for="{{ form.description.id_for_label }}" class="input-label">Event Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}
+            <div class="error-message">
+            {% for error in form.description.errors %}
+                <p>{{ error }}</p>
+            {% endfor %}
+            </div>
+        {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4">
+        <button type="submit" class="btn btn-full btn-lg">Create Event</button>
+        </div>
+
+        <!-- Back Link -->
+        <div class="text-center">
+        <p class="text-sm text-gray-600">
+            Changed your mind?
+            <a href="{% url 'event_management:my_events' %}" 
+            class="font-medium text-gray-600 hover:text-gray-800 underline">
+            Back to My Events
+            </a>
+        </p>
+        </div>
+    </form>
+    </div>
+</div>
+</div>
+
+<!-- Initialize Choices.js if you have dropdowns -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const sportSelect = document.getElementById('{{ form.sport_type.id_for_label }}');
+if (sportSelect) {
+    new Choices(sportSelect, {
+    searchEnabled: true,
+    itemSelectText: '',
+    shouldSort: false
+    });
+}
+});
+</script>
+{% endblock %}
