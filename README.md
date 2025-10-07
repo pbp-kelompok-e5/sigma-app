@@ -1,11 +1,11 @@
 # Panduan Git Workflow - PLACEHOLDER App
 
 > [!IMPORTANT]
-> **Setiap anggota tim mengerjakan fitur di branch masing-masing!**
+> **Setiap anggota tim mengerjakan fitur di branch masing-masing! (/name)**
 
 ---
 
-## 🏃‍♂️ Tentang PLACEHOLDER App
+## 🏃‍♂️ Tentang PLACEHOLDER App 
 
 **PLACEHOLDER App** adalah platform berbasis web yang menggabungkan konsep **Sport Meetup** dan **Tinder for Friends** — membantu pengguna menemukan teman berolahraga dan mengikuti event olahraga lokal di Indonesia.
 
@@ -30,9 +30,6 @@
 ---
 
 ## 📦 Pembagian Modul (6 Modul dengan Relasi)
-
-> [!NOTE]
-> **Setiap modul tetap fokus pada tanggung jawabnya, tetapi menggunakan Foreign Key untuk relasi yang efisien**
 
 ---
 
@@ -553,46 +550,6 @@ class Achievement(models.Model):
 | ⭐ **Highly Rated** | Get 10 five-star reviews | +25 |
 | 🤝 **Social Butterfly** | Make 20 connections | +15 |
 | 🌅 **Early Bird** | Join 5 morning events | +10 |
-
----
-
-## 📊 Struktur Database dengan Relasi
-
-```
-User (Django Auth)
-  │
-  ├─── OneToOne ──> UserProfile (Modul 1)
-  │                     └─── total_points (updated by Modul 6)
-  │
-  ├─── ForeignKey ──> SportPreference (Modul 1)
-  │                     └─── Multiple sports per user
-  │
-  ├─── ForeignKey ──> Connection (Modul 2)
-  │                     ├─── from_user (connections sent)
-  │                     └─── to_user (connections received)
-  │
-  ├─── ForeignKey ──> Event (Modul 3/4)
-  │                     ├─── organizer (who created)
-  │                     └─── ForeignKey ──> EventParticipant (Modul 3)
-  │                                           └─── user (who joined)
-  │
-  ├─── ForeignKey ──> Review (Modul 5)
-  │                     ├─── from_user (reviewer)
-  │                     ├─── to_user (reviewed)
-  │                     └─── event (context)
-  │
-  ├─── OneToOne ──> UserRating (Modul 5)
-  │                     └─── aggregate review data
-  │
-  ├─── ForeignKey ──> PointTransaction (Modul 6)
-  │                     └─── history of points earned
-  │
-  ├─── ForeignKey ──> Leaderboard (Modul 6)
-  │                     └─── ranking per period/sport
-  │
-  └─── ForeignKey ──> Achievement (Modul 6)
-                        └─── earned achievements
-```
 ---
 
 ## 📥 Clone Repository
@@ -663,18 +620,43 @@ python manage.py runserver
 
 ## 👥 Tim Pengembang
 
-| Nama | NPM | Modul |
-|------|-----|-------|
-| Muhammad Hariz Albaari | 2406428775 | Authentication & Profile, Leaderboard & Points | 
-| Tsaniya Fini Ardiyanti | 2406437893 | Partner Matching | 
-| Farrell Bagoes Rahmantyo | 2406420596 | Event Discovery | 
-| Muhammad Arief Solomon |  2406343092 | Event Management | 
-| Gerry | 2406495464 | Review & Rating |
+| Nama | NPM | Modul | Design |
+|------|-----|-------|--------------|
+| Muhammad Hariz Albaari | 2406428775 | Authentication & Profile, Leaderboard & Points | Struktur Database | 
+| Tsaniya Fini Ardiyanti | 2406437893 | Partner Matching | Partner Matching | 
+| Farrell Bagoes Rahmantyo | 2406420596 | Event Discovery | Event Discovery | 
+| Muhammad Arief Solomon | 2406343092 | Event Management | Event Management, Auth & Leaderboard | 
+| Gerry | 2406495464 | Review & Rating | Review & Rating |
+
+## 📅 Timeline Pengembangan
+
+| Milestone | Tanggal | Deskripsi |
+|-----------|---------|-----------|
+| **MVP Modul & Design Figma** | 8 Oktober 2025 | Penyelesaian desain UI/UX di Figma dan prototype MVP semua modul |
+| **Finalisasi Modul** | 22 Oktober 2025 | Penyelesaian pengembangan dan integrasi semua modul |
+| **Testing & Review** | 23 Oktober 2025 | Pengujian fungsionalitas, bug fixing, dan code review |
+| **Pengumpulan** | 24 Oktober 2025 | Submission final project |
 
 ---
 ## Sumber Dataset
-https://www.kaggle.com/datasets/arindamsahoo/social-media-users
-https://id.wikipedia.org/wiki/Daftar_kota_di_Indonesia_menurut_provinsi
+
+1. Data Kota Indonesia:
+- Sumber: Wikipedia - "Daftar kota di Indonesia menurut provinsi"
+- Link: https://id.wikipedia.org/wiki/Daftar_kota_di_Indonesia_menurut_provinsi
+- Lisensi: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+- Digunakan untuk mengisi kolom: city
+
+2. Foto Profil:
+- Sumber: Unsplash
+- Link: https://unsplash.com
+- Digunakan untuk mengisi kolom: profile_image_url
+- Catatan: Menggunakan credit global untuk seluruh foto
+
+3. Data Pengguna:
+- Sumber: Kaggle – “Social Media Users” oleh Arindam Sahoo
+- Link: https://www.kaggle.com/datasets/arindamsahoo/social-media-users
+- Lisensi: Database: Open Database License
+- Digunakan untuk mengisi kolom: username, full_name, user_id
 
 ---
 ## 👤 Role Pengguna
@@ -708,10 +690,9 @@ Pengguna yang belum registrasi, hanya dapat melihat landing page dan informasi u
 ## 🔗 Deployment & Design
 
 - **Deployment PWS**: https://farrell-bagoes-sigmaapp.pbp.cs.ui.ac.id/
-- **Design Figma**: https://www.figma.com/design/FyD4mI3SwzVciuyidRCaim/Desain--Nama-Web-App-?fuid=1150424300719245753
-
+- **Design Figma**: https://www.figma.com/design/FyD4mI3SwzVciuyidRCaim/Desain--Nama-Web-App-?node-id=0-1&t=sEvdR4GK5FUhPnUp-1
 ---
 
 **Happy Coding! 🚀**
 
-*Questions? Check Django docs or ask in team chat!*
+*Questions? Check Django docs or ask in team chat (discord)!*
