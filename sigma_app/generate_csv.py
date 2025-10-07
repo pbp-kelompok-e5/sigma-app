@@ -1,4 +1,4 @@
-# sigma_app/scripts/generate_seeding_csvs.py
+# sigma_app/generate_csv.py
 """
 Generate CSV files for seeding Django with multiple sport preferences per user.
 Source dataset: https://www.kaggle.com/datasets/andradaolteanu/socialmedia-profiles
@@ -13,17 +13,27 @@ from constants import CITY_CHOICES, SPORT_CHOICES, SKILL_CHOICES
 # Set random seed for reproducibility
 random.seed(42)
 
-# Define output paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Define paths (auto-resolve to where this script lives)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-os.makedirs(DATA_DIR, exist_ok=True)
+# Source file path (original Kaggle dataset)
+SOURCE_PATH = os.path.join(DATA_DIR, "users.csv")
 
+# Output file paths (results stored in same folder)
 USERS_CSV_PATH = os.path.join(DATA_DIR, "users_seeding.csv")
 SPORT_PREFS_CSV_PATH = os.path.join(DATA_DIR, "sport_preferences_seeding.csv")
 
-# Read source CSV
-SOURCE_PATH = os.path.join(DATA_DIR, "users.csv")
+# Ensure data folder exists
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Check source CSV
+if not os.path.exists(SOURCE_PATH):
+    print(f"Source file not found: {SOURCE_PATH}")
+    print("Please download the Kaggle CSV and place it there.")
+    exit(1)
+
+print(f"Reading source data from: {SOURCE_PATH}")
 df_old = pd.read_csv(SOURCE_PATH)
 
 # ========== GENERATE USERS CSV ==========
@@ -38,9 +48,8 @@ for _, row in df_old.iterrows():
     bio = f"Halo, saya {full_name}"
     city = random.choice(CITY_CHOICES)[0]
     profile_image_url = (
-        "https://images.unsplash.com/photo-1759354001829-233b2025c6b2"
-        "?q=80&w=687&auto=format&fit=crop"
-    )
+        "https://images.unsplash.com/photo-1759354001829-233b2025c6b2?q=80&w=687&auto=format&fit=crop"
+        )
     total_points = 0
     total_events = 0
 
@@ -60,7 +69,7 @@ for _, row in df_old.iterrows():
 
 df_users = pd.DataFrame(users_data)
 df_users.to_csv(USERS_CSV_PATH, index=False)
-print(f"✓ Users CSV created: {USERS_CSV_PATH}")
+print(f"Users CSV created: {USERS_CSV_PATH}")
 
 # ========== GENERATE SPORT PREFERENCES CSV ==========
 sport_preferences_data = []
@@ -85,10 +94,11 @@ for _, row in df_old.iterrows():
 
 df_sport_prefs = pd.DataFrame(sport_preferences_data)
 df_sport_prefs.to_csv(SPORT_PREFS_CSV_PATH, index=False)
-print(f"✓ Sport preferences CSV created: {SPORT_PREFS_CSV_PATH}")
+print(f"Sport preferences CSV created: {SPORT_PREFS_CSV_PATH}")
 
 # ========== SUMMARY ==========
 print("\n=== SUMMARY ===")
 print(f"Total users: {len(df_users)}")
 print(f"Total sport preferences: {len(df_sport_prefs)}")
 print(f"Average preferences per user: {len(df_sport_prefs)/len(df_users):.2f}")
+print(f"\nAll files saved to: {DATA_DIR}")

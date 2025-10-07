@@ -24,7 +24,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             for _, row in users_df.iterrows():
                 if pd.isna(row["username"]) or pd.isna(row["email"]):
-                    self.stdout.write(self.style.WARNING(f"⚠️ Skipping invalid row: {row}"))
+                    self.stdout.write(self.style.WARNING(f"Skipping invalid row: {row}"))
                     continue
 
                 user, created = User.objects.get_or_create(
@@ -67,4 +67,4 @@ class Command(BaseCommand):
                     defaults={"skill_level": row["skill_level"]},
                 )
 
-        self.stdout.write(self.style.SUCCESS("✅ Done seeding all users and sport preferences."))
+        self.stdout.write(self.style.SUCCESS("Done seeding all users and sport preferences."))
