@@ -25,7 +25,7 @@ def leaderboard_page(request):
             'username': profile.user.username,
             'total_points': profile.total_points,
             'total_events': profile.total_events,
-            'city': profile.city,
+            'city': profile.get_city_display(),
             'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
             'tier': get_tier(profile.total_points),
             'badge': get_badge(profile.total_points),
