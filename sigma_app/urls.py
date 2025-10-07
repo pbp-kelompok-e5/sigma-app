@@ -20,4 +20,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('authentication.urls')),  # Include authentication URLs at root
+    path('matching/', include('partner_matching.urls'))
 ]
