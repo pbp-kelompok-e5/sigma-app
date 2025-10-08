@@ -1,13 +1,17 @@
-# Panduan Git Workflow - PLACEHOLDER App
+# Panduan Git Workflow - BondUp
 
 > [!IMPORTANT]
 > **Setiap anggota tim mengerjakan fitur di branch masing-masing! (/name)**
 
 ---
 
-## 🏃‍♂️ Tentang PLACEHOLDER App 
+## 🏃‍♂️ Tentang BondUp
 
-**PLACEHOLDER App** adalah platform berbasis web yang menggabungkan konsep **Sport Meetup** dan **Tinder for Friends** — membantu pengguna menemukan teman berolahraga dan mengikuti event olahraga lokal di Indonesia.
+**BondUp** adalah platform berbasis web yang menggabungkan konsep Sport Meetup dan Tinder for Friends, dirancang untuk membantu kamu membangun koneksi yang lebih kuat melalui olahraga.
+
+Setiap interaksi, pertandingan, dan event di BondUp bukan hanya tentang bermain — tapi tentang terhubung, berkembang, dan menikmati energi positif bersama orang-orang dengan minat yang sama.
+
+✨ “Where connections grow stronger through play.”
 
 ### 🎯 Fitur Utama
 
