@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load icon_tags %}
+
+{% block title %}Review - Sigma App{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-10">
+
+  <h2 class="text-3xl font-bold text-gray-900 mb-6">Reviews for: 
+    <span class="text-indigo-600">{{ event.title }}</span>
+  </h2>
+
+  <!-- SUBMIT MULTIPLE REVIEWS -->
+  <form method="POST" class="space-y-6">
+    {% csrf_token %}
+    <h3 class="text-xl font-semibold mb-4">Submit Reviews</h3>
+
+    <div class="space-y-6">
+      {% for user in participants %}
+        <div class="bg-white border rounded-lg p-4 shadow-sm">
+          <p class="font-semibold text-gray-900 mb-2">{{ user.username }}</p>
+
+          <label class="block text-sm text-gray-600">Rating</label>
+          <input type="number" name="rating_{{ user.id }}" min="1" max="5"
+                 class="w-20 border rounded p-1 mb-2" />
+
+          <label class="block text-sm text-gray-600">Comment</label>
+          <textarea name="comment_{{ user.id }}" rows="2"
+                    class="w-full border rounded p-2"></textarea>
+        </div>
+      {% empty %}
+        <p class="text-gray-500 italic">No participants to review.</p>
+      {% endfor %}
+    </div>
+
+    <button type="submit"
+      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all">
+      Submit All Reviews
+    </button>
+  </form>
+
+  <hr class="my-8">
+
+  <!-- REVIEW LIST -->
+  <h3 class="text-2xl font-semibold text-gray-800 mb-4">All Reviews</h3>
+
+  {% for review in reviews %}
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-4 shadow-sm">
+      <p class="font-semibold text-gray-900">
+        {{ review.from_user.username }} → {{ review.to_user.username }}
+      </p>
+
+      <p class="text-yellow-500 font-bold mt-1">
+        {{ review.rating }} ⭐
+      </p>
+
+      <p class="text-gray-700 mt-2">
+        <em>{{ review.comment }}</em>
+      </p>
+
+      <p class="text-xs text-gray-500 mt-3">
+        {{ review.created_at }}
+      </p>
+    </div>
+  {% empty %}
+    <p class="text-gray-500 italic">No reviews yet.</p>
+  {% endfor %}
+
+</div>
+{% endblock %}
