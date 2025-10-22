@@ -1,70 +1,115 @@
 {% extends 'base.html' %}
-{% load icon_tags %}
-
+{% load static %}
 {% block title %}Review - Sigma App{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto my-10">
+<link rel="stylesheet" href="{% static 'css/global.css' %}">
 
-  <h2 class="text-3xl font-bold text-gray-900 mb-6">Reviews for: 
-    <span class="text-indigo-600">{{ event.title }}</span>
-  </h2>
+<div class="container mx-auto" style="max-width: 900px; padding: 40px 16px;">
+  <div class="card-deep-sea">
+    <div class="flex justify-center">
+      <h1 class="text-[#F26419] my-2" style="font-size: 1.5rem;">
+      <span class="text-4xl font-bold">{{ event.title }}</span>
+         - submit reviews
+    </h1>
+    </div>
 
-  <!-- SUBMIT MULTIPLE REVIEWS -->
-  <form method="POST" class="space-y-6">
-    {% csrf_token %}
-    <h3 class="text-xl font-semibold mb-4">Submit Reviews</h3>
+    <div class="card-body">
+      <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        {% if participants %}
+        <!-- ✅ GRID 2 COLUMNS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% for user in participants %}
+          <div class="card-deep-sea" style="background-color: var(--deep-sea-light); padding: 20px; text-align:center;">
 
-    <div class="space-y-6">
-      {% for user in participants %}
-        <div class="bg-white border rounded-lg p-4 shadow-sm">
-          <p class="font-semibold text-gray-900 mb-2">{{ user.username }}</p>
+            <!-- ✅ PROFILE -->
+            <img
+              src="{{ user.profile.profile_image_url|default:'https://ui-avatars.com/api/?name='|add:user.username }}"
+              alt="{{ user.username }}"
+              class="w-20 h-20 rounded-full object-cover border-2 border-slate-600 inline-block mb-2"
+            >
 
-          <label class="block text-sm text-gray-600">Rating</label>
-          <input type="number" name="rating_{{ user.id }}" min="1" max="5"
-                 class="w-20 border rounded p-1 mb-2" />
+            <!-- ✅ USERNAME -->
+            <div class="card-header" style="font-size: 1.25rem; margin-bottom: 10px;">
+              {{ user.username }}
+            </div>
 
-          <label class="block text-sm text-gray-600">Comment</label>
-          <textarea name="comment_{{ user.id }}" rows="2"
-                    class="w-full border rounded p-2"></textarea>
+            <!-- ✅ STAR RATING (CENTERED) -->
+            <div style="margin-bottom: 14px;">
+              <div class="flex justify-center gap-1 rating-stars" data-user="{{ user.id }}">
+                {% for i in "12345" %}
+                  <button type="button"
+                    class="star-btn text-gray-300 hover:text-yellow-400 transition text-4xl"
+                    data-value="{{ forloop.counter }}">★</button>
+                {% endfor %}
+                <input type="hidden" name="rating_{{ user.id }}" />
+              </div>
+            </div>
+
+            <!-- ✅ COMMENT (CENTERED INPUT GROUP) -->
+            <div class="input-group" style="margin-top: 12px; text-align:left; width: 100%;">
+              <label class="input-label">Comment</label>
+              <textarea name="comment_{{ user.id }}" placeholder="Write your comment..."></textarea>
+            </div>
+
+          </div>
+          {% endfor %}
         </div>
-      {% empty %}
-        <p class="text-gray-500 italic">No participants to review.</p>
+        {% endif %}
+
+        <!-- SUBMIT BUTTON -->
+        <div class="card-footer" style="margin-top: 24px;">
+          <button type="submit" class="btn btn-primary btn-full">
+            Submit All Reviews
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <hr style="margin: 40px 0; border-color: rgba(255,255,255,0.1);" />
+
+  <!-- EXISTING REVIEWS -->
+  <div class="card-deep-sea">
+    <div class="card-header">All Reviews</div>
+    <div class="card-body">
+      {% for review in reviews %}
+        <div style="background: var(--deep-sea-light); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <p><strong>{{ review.from_user.username }}</strong> → {{ review.to_user.username }}</p>
+          <p style="color: var(--orange-sport); font-weight: 600;">{{ review.rating }} ⭐</p>
+          <p><em>{{ review.comment }}</em></p>
+          <p style="font-size: 0.875rem; opacity: 0.7;">{{ review.created_at }}</p>
+        </div>
       {% endfor %}
     </div>
-
-    <button type="submit"
-      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all">
-      Submit All Reviews
-    </button>
-  </form>
-
-  <hr class="my-8">
-
-  <!-- REVIEW LIST -->
-  <h3 class="text-2xl font-semibold text-gray-800 mb-4">All Reviews</h3>
-
-  {% for review in reviews %}
-    <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-4 shadow-sm">
-      <p class="font-semibold text-gray-900">
-        {{ review.from_user.username }} → {{ review.to_user.username }}
-      </p>
-
-      <p class="text-yellow-500 font-bold mt-1">
-        {{ review.rating }} ⭐
-      </p>
-
-      <p class="text-gray-700 mt-2">
-        <em>{{ review.comment }}</em>
-      </p>
-
-      <p class="text-xs text-gray-500 mt-3">
-        {{ review.created_at }}
-      </p>
-    </div>
-  {% empty %}
-    <p class="text-gray-500 italic">No reviews yet.</p>
-  {% endfor %}
-
+  </div>
 </div>
+
+<!-- ✅ STAR SCRIPT -->
+<script>
+document.querySelectorAll('.rating-stars').forEach(container => {
+  const userId = container.dataset.user;
+  const stars = container.querySelectorAll('.star-btn');
+  const hiddenInput = container.querySelector(`input[name="rating_${userId}"]`);
+
+  stars.forEach(star => {
+    star.addEventListener('click', () => {
+      const rating = star.dataset.value;
+      hiddenInput.value = rating;
+
+      stars.forEach(s => {
+        if (s.dataset.value <= rating) {
+          s.classList.remove("text-gray-300");
+          s.classList.add("text-yellow-400");
+        } else {
+          s.classList.add("text-gray-300");
+          s.classList.remove("text-yellow-400");
+        }
+      });
+    });
+  });
+});
+</script>
 {% endblock %}

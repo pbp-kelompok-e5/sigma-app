@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from .models import Review, UserRating
 from event_discovery.models import Event, EventParticipant
 from django.db.models import Avg, Count
+from authentication.models import UserProfile
 
 @login_required
 def event_reviews(request, event_id):
@@ -13,9 +14,9 @@ def event_reviews(request, event_id):
 
     # Ambil peserta attended (kecuali diri sendiri)
     participants = User.objects.filter(
-        joined_events__event=event,
-        joined_events__status='attended'
-    ).exclude(id=request.user.id)
+    joined_events__event=event,
+    joined_events__status='attended'
+).exclude(id=request.user.id).select_related('profile')
 
     # Submit Multiple Reviews
     if request.method == 'POST':
