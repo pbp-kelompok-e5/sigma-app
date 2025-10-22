@@ -36,12 +36,12 @@ def event_reviews(request, event_id):
                 continue
 
             Review.objects.create(
-                event=event,
-                from_user=from_user,
-                to_user=to_user,
-                rating=rating,
-                comment=comment
-            )
+            event=event,
+            from_user=from_user,
+            to_user=to_user,
+            rating=rating,
+            comment=comment or "No comment"
+        )
 
             update_user_rating(to_user)
             created_any = True
@@ -49,7 +49,8 @@ def event_reviews(request, event_id):
         if created_any:
             messages.success(request, "All reviews submitted successfully!")
         else:
-            messages.warning(request, "No reviews were submitted.")
+            messages.warning(request, "No reviews were submitted. Please rate at least one participant.")
+
 
         return redirect('reviews:event-reviews', event_id=event.id)
 
@@ -80,3 +81,13 @@ def update_user_rating(user):
         if rating == 5: user_rating.five_star = count
 
     user_rating.save()
+
+@login_required
+def user_reviews(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    reviews = Review.objects.filter(to_user=user).select_related('from_user').order_by('-created_at')
+
+    return render(request, 'reviews/user_reviews.html', {
+        'reviewed_user': user,
+        'reviews': reviews
+    })
