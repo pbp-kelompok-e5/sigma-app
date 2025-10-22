@@ -18,6 +18,9 @@ class Event(models.Model):
     # Judul dan deskripsi dari event
     title = models.CharField(max_length=200)
     description = models.TextField()
+    
+    # Thumbnail atau gambar representasi event
+    thumbnail_url = models.URLField(blank=True, null=True)
 
     # Jenis olahraga yang dipilih dari SPORT_CHOICES
     sport_type = models.CharField(max_length=20, choices=SPORT_CHOICES)

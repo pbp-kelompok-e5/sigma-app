@@ -1,0 +1,33 @@
+{% load static %}
+{% load icon_tags %}
+<article class='bg-[#00063D] rounded-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden w-[420px] h-[614px]'>
+
+  <!-- Thumbnail  -->
+  <div class='flex items-center justify-center mt-12'>
+    <div class='h-[200px] w-[348px] rounded-lg overflow-hidden '>
+      <img src="{{event.thumbnail}}" class='w-full h-full object-cover hover:scale-105 transition-transform duration-300'>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class='flex items-center justify-center'>
+    <div class='mt-4 inline-flex flex-col items-center text-center'>
+      <span class='text-[#F26419] font-bold text-3xl truncate w-[300px]  my-4'>{{event.title}}</span>
+      <span class='text-[#F26419] my-4'>📍{{event.location_name}}</span>
+      <span class='text-[#F26419] my-4'>{{event.sport_type}}</span>
+    </div>
+  </div>
+
+  <!--Button-->
+  <div class='flex items-center justify-center mt-4'>
+    <div class='inline-flex flex-row items-center'>
+      <button>
+        <a href='' class='bg-[#F26419] text-[#00063D] font-bold w-[120px] h-[48px] flex items-center justify-center mx-2 rounded-3xl border-3 border-[#9FFFAD]'> Join </a>
+      </button>
+      <button>
+        <a href='' class='bg-[#F26419] text-[#00063D] font-bold w-[120px] h-[48px] flex items-center justify-center mx-2 rounded-3xl'> Detail </a>
+      </button>
+    </div>
+  </div>
+    
+</article>
