@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Review - Sigma App{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/global.css' %}">
+
+<div class="container mx-auto" style="max-width: 900px; padding: 40px 16px;">
+  <div class="card-deep-sea">
+    <div class="flex justify-center">
+      <h1 class="text-[#F26419] my-2" style="font-size: 1.5rem;">
+      <span class="text-4xl font-bold">{{ event.title }}</span>
+         - submit reviews
+    </h1>
+    </div>
+
+    <div class="card-body">
+      <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        {% if participants %}
+        <!-- ✅ GRID 2 COLUMNS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% for user in participants %}
+          <div class="card-deep-sea" style="background-color: var(--deep-sea-light); padding: 20px; text-align:center;">
+
+            <!-- ✅ PROFILE -->
+            <img
+              src="{{ user.profile.profile_image_url|default:'https://ui-avatars.com/api/?name='|add:user.username }}"
+              alt="{{ user.username }}"
+              class="w-20 h-20 rounded-full object-cover border-2 border-slate-600 inline-block mb-2"
+            >
+
+            <!-- ✅ USERNAME -->
+            <div class="card-header" style="font-size: 1.25rem; margin-bottom: 10px;">
+              {{ user.username }}
+            </div>
+
+            <!-- ✅ STAR RATING (CENTERED) -->
+            <div style="margin-bottom: 14px;">
+              <div class="flex justify-center gap-1 rating-stars" data-user="{{ user.id }}">
+                {% for i in "12345" %}
+                  <button type="button"
+                    class="star-btn text-gray-300 hover:text-yellow-400 transition text-4xl"
+                    data-value="{{ forloop.counter }}">★</button>
+                {% endfor %}
+                <input type="hidden" name="rating_{{ user.id }}" />
+              </div>
+            </div>
+
+            <!-- ✅ COMMENT (CENTERED INPUT GROUP) -->
+            <div class="input-group" style="margin-top: 12px; text-align:left; width: 100%;">
+              <label class="input-label">Comment</label>
+              <textarea name="comment_{{ user.id }}" placeholder="Write your comment..."></textarea>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- SUBMIT BUTTON -->
+        <div class="card-footer" style="margin-top: 24px;">
+          <button type="submit" class="btn btn-primary btn-full">
+            Submit All Reviews
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <hr style="margin: 40px 0; border-color: rgba(255,255,255,0.1);" />
+
+  <!-- EXISTING REVIEWS -->
+  <div class="card-deep-sea">
+    <div class="card-header">All Reviews</div>
+    <div class="card-body">
+      {% for review in reviews %}
+        <div style="background: var(--deep-sea-light); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+          <p><strong>{{ review.from_user.username }}</strong> → {{ review.to_user.username }}</p>
+          <p style="color: var(--orange-sport); font-weight: 600;">{{ review.rating }} ⭐</p>
+          <p><em>{{ review.comment }}</em></p>
+          <p style="font-size: 0.875rem; opacity: 0.7;">{{ review.created_at }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ✅ STAR SCRIPT -->
+<script>
+document.querySelectorAll('.rating-stars').forEach(container => {
+  const userId = container.dataset.user;
+  const stars = container.querySelectorAll('.star-btn');
+  const hiddenInput = container.querySelector(`input[name="rating_${userId}"]`);
+
+  stars.forEach(star => {
+    star.addEventListener('click', () => {
+      const rating = star.dataset.value;
+      hiddenInput.value = rating;
+
+      stars.forEach(s => {
+        if (s.dataset.value <= rating) {
+          s.classList.remove("text-gray-300");
+          s.classList.add("text-yellow-400");
+        } else {
+          s.classList.add("text-gray-300");
+          s.classList.remove("text-yellow-400");
+        }
+      });
+    });
+  });
+});
+</script>
+{% endblock %}
