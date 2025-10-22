@@ -13,7 +13,7 @@ from .models import UserProfile, SportPreference
 def home_view(request):
     """Home page view"""
     if request.user.is_authenticated:
-        # Show dashboard for authenticated users
+        # Show profile (TODO: Change when events module is ready) for authenticated users
         try:
             profile = request.user.profile
         except UserProfile.DoesNotExist:
@@ -28,7 +28,7 @@ def home_view(request):
             'profile': profile,
             'sport_preferences': sport_preferences,
         }
-        return render(request, 'authentication/dashboard.html', context)
+        return render(request, 'authentication/profile.html', context)
     else:
         # Show landing page for anonymous users
         return render(request, 'authentication/home.html')

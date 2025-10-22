@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 # Model untuk menyimpan transaksi poin tiap user
@@ -12,7 +14,7 @@ class PointTransaction(models.Model):
         ('review_given', 'Review Given'),         # Memberi review
         ('five_star_received', 'Five Star Received'), # Mendapat review bintang lima
     ]
-    
+
     # User yang mendapatkan transaksi poin
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='point_transactions')
 
@@ -30,7 +32,10 @@ class PointTransaction(models.Model):
 
     # Waktu transaksi dibuat secara otomatis
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         # Representasi string menampilkan username, aktivitas, dan poin
         return f"{self.user.username} - {self.activity_type} (+{self.points})"
@@ -44,7 +49,7 @@ class Leaderboard(models.Model):
         ('monthly', 'Monthly'),
         ('all_time', 'All Time'),
     ]
-    
+
     # User yang masuk leaderboard
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leaderboard_entries')
 
@@ -52,8 +57,7 @@ class Leaderboard(models.Model):
     rank = models.IntegerField()
 
     # Total poin user dalam periode tersebut
-    # total_points = models.IntegerField()
-    # dipindahkan ke userprofile
+    total_points = models.IntegerField(default=0)
 
     # Periode leaderboard
     period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
@@ -63,14 +67,14 @@ class Leaderboard(models.Model):
 
     # Waktu update terakhir secara otomatis
     last_updated = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         # Kombinasi user, periode, dan sport_type harus unik
         unique_together = ['user', 'period', 'sport_type']
 
         # Default pengurutan berdasarkan peringkat
         ordering = ['rank']
-    
+
     def __str__(self):
         # Representasi string menampilkan peringkat, username, dan total poin
         return f"#{self.rank} - {self.user.username} ({self.total_points} pts)"
@@ -87,7 +91,7 @@ class Achievement(models.Model):
         ('social_butterfly', 'Social Butterfly'), # Aktif berinteraksi sosial
         ('early_bird', 'Early Bird'),         # Bergabung lebih awal
     ]
-    
+
     # User yang mendapatkan achievement
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
 
@@ -105,11 +109,30 @@ class Achievement(models.Model):
 
     # Waktu pencapaian dicatat secara otomatis
     earned_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         # Kombinasi user dan achievement_code harus unik supaya tidak duplikat
         unique_together = ['user', 'achievement_code']
-    
+        ordering = ['-earned_at']
+
     def __str__(self):
         # Representasi string menampilkan username dan judul achievement
         return f"{self.user.username} - {self.title}"
+
+
+# Signal untuk update total_points di UserProfile ketika PointTransaction dibuat
+@receiver(post_save, sender=PointTransaction)
+def update_user_points(sender, instance, created, **kwargs):
+    """Update total points di UserProfile ketika PointTransaction dibuat"""
+    if created:
+        from authentication.models import UserProfile
+        try:
+            profile = UserProfile.objects.get(user=instance.user)
+            # Hitung total poin dari semua transaksi
+            total = PointTransaction.objects.filter(user=instance.user).aggregate(
+                models.Sum('points')
+            )['points__sum'] or 0
+            profile.total_points = total
+            profile.save()
+        except UserProfile.DoesNotExist:
+            pass
