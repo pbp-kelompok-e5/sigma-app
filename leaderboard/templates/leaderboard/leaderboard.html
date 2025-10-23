@@ -1,0 +1,172 @@
+<!-- TODO: Finish this page, this is just a placeholder to show user list -hariz -->
+{% extends 'base.html' %}
+{% load icon_tags %}
+
+{% block title %}Leaderboard - Sigma App{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            {% icon 'trophy' size='xl' color='#F26419' %}
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">Leaderboard</h1>
+        </div>
+        <p class="text-white/80 text-base sm:text-lg">Kompetisi sehat melalui ranking points</p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card-deep-sea mb-6">
+        <form method="GET" class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-white/80 mb-2">Period</label>
+                <select name="period" class="w-full px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#F26419] focus:border-transparent">
+                    <option value="all_time" {% if current_filter == 'all_time' %}selected{% endif %}>All Time</option>
+                    <option value="monthly" {% if current_filter == 'monthly' %}selected{% endif %}>This Month</option>
+                    <option value="weekly" {% if current_filter == 'weekly' %}selected{% endif %}>This Week</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="btn btn-primary w-full sm:w-auto">
+                    {% icon 'filter' size='sm' color='white' %}
+                    Apply Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="card-deep-sea overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="border-b border-white/20">
+                    <tr>
+                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Rank</th>
+                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">User</th>
+                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80 hidden sm:table-cell">City</th>
+                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80 hidden md:table-cell">Events</th>
+                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Points</th>
+                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Tier</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for user in users %}
+                    <tr class="hover:bg-white/5 transition-colors {% if user.rank <= 3 %}bg-[#F26419]/10{% endif %}">
+                        <!-- Rank -->
+                        <td class="px-4 sm:px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">{{ user.badge }}</span>
+                                <span class="text-lg font-bold text-white">#{{ user.rank }}</span>
+                            </div>
+                        </td>
+                        
+                        <!-- User Info -->
+                        <td class="px-4 sm:px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                {% if user.profile_image_url %}
+                                    <img src="{{ user.profile_image_url }}" 
+                                         alt="{{ user.full_name }}"
+                                         class="w-10 h-10 rounded-full object-cover border-2 border-white/30 flex-shrink-0">
+                                {% else %}
+                                    <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                                        {% icon 'user' size='sm' color='white' %}
+                                    </div>
+                                {% endif %}
+                                <div class="min-w-0">
+                                    <div class="font-semibold text-white truncate">{{ user.full_name }}</div>
+                                    <div class="text-sm text-white/60 truncate">@{{ user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        
+                        <!-- City -->
+                        <td class="px-4 sm:px-6 py-4 hidden sm:table-cell">
+                            <span class="text-white/80">{{ user.city }}</span>
+                        </td>
+                        
+                        <!-- Total Events -->
+                        <td class="px-4 sm:px-6 py-4 hidden md:table-cell">
+                            <span class="text-white/80 font-medium">{{ user.total_events }}</span>
+                        </td>
+                        
+                        <!-- Points -->
+                        <td class="px-4 sm:px-6 py-4">
+                            <span class="text-[#F26419] font-bold text-lg">{{ user.total_points }}</span>
+                        </td>
+                        
+                        <!-- Tier Badge -->
+                        <td class="px-4 sm:px-6 py-4">
+                            {% if user.tier == 'Master' %}
+                                <span class="chip chip-filled chip-sm bg-yellow-500/20 text-yellow-300 border-yellow-400/30">
+                                    {{ user.tier }}
+                                </span>
+                            {% elif user.tier == 'Expert' %}
+                                <span class="chip chip-filled chip-sm bg-gray-500/20 text-gray-300 border-gray-400/30">
+                                    {{ user.tier }}
+                                </span>
+                            {% elif user.tier == 'Advanced' %}
+                                <span class="chip chip-filled chip-sm bg-orange-500/20 text-orange-300 border-orange-400/30">
+                                    {{ user.tier }}
+                                </span>
+                            {% elif user.tier == 'Intermediate' %}
+                                <span class="chip chip-filled chip-sm bg-blue-500/20 text-blue-300 border-blue-400/30">
+                                    {{ user.tier }}
+                                </span>
+                            {% else %}
+                                <span class="chip chip-filled chip-sm bg-green-500/20 text-green-300 border-green-400/30">
+                                    {{ user.tier }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-4">
+                                {% icon 'trophy' size='xl' color='white' %}
+                                <p class="text-white/60">No users found in leaderboard yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tier Legend -->
+    <div class="card-deep-sea mt-6">
+        <div class="border-b border-white/20 pb-4 mb-6 flex items-center gap-2">
+            {% icon 'award' size='md' color='#F26419' %}
+            <h3 class="text-xl font-semibold text-white">Ranking Tiers</h3>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div class="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                <div class="text-3xl mb-2">🥇</div>
+                <div class="font-semibold text-yellow-300 mb-1">Master</div>
+                <div class="text-sm text-white/60">1000+ points</div>
+            </div>
+            <div class="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                <div class="text-3xl mb-2">🥈</div>
+                <div class="font-semibold text-gray-300 mb-1">Expert</div>
+                <div class="text-sm text-white/60">500-999 points</div>
+            </div>
+            <div class="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                <div class="text-3xl mb-2">🥉</div>
+                <div class="font-semibold text-orange-300 mb-1">Advanced</div>
+                <div class="text-sm text-white/60">200-499 points</div>
+            </div>
+            <div class="text-center p-4 bg-white/5 rounded-lg border border-white/10">
+                <div class="text-3xl mb-2">⭐</div>
+                <div class="font-semibold text-blue-300 mb-1">Intermediate</div>
+                <div class="text-sm text-white/60">50-199 points</div>
+            </div>
+            <div class="text-center p-4 bg-white/5 rounded-lg border border-white/10 col-span-2 sm:col-span-1">
+                <div class="text-3xl mb-2">🔰</div>
+                <div class="font-semibold text-green-300 mb-1">Beginner</div>
+                <div class="text-sm text-white/60">0-49 points</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
