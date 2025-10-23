@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile.full_name }}'s Profile - Sigma App{% endblock %}
+
+{% block extra_css %}
+<style>
+.connection-btn {
+    transition: all 0.3s ease;
+}
+.button-text, .button-loading {
+    transition: opacity 0.3s ease;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Profile Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <!-- Profile Image -->
+                    <div class="flex-shrink-0">
+                        {% if profile.profile_image_url %}
+                            <img src="{{ profile.profile_image_url }}"
+                                alt="{{ profile.full_name }}'s profile picture"
+                                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-300">
+                        {% else %}
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Profile Info -->
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{{ profile.full_name }}</h1>
+                        <p class="text-gray-600 text-base">@{{ profile_user.username }}</p>
+                        <p class="text-gray-500 text-sm mt-1">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            {{ profile.city }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Connection Button -->
+                {% if not is_own_profile %}
+                <div class="w-full sm:w-auto">
+                    <div id="connection-section">
+                        {% if connection_status == 'pending' %}
+                            <button class="connection-btn px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors w-full sm:w-auto min-w-[140px] min-h-[42px]">
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Request Sent
+                            </button>
+                        {% elif connection_status == 'accepted' %}
+                            <button class="connection-btn px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors w-full sm:w-auto min-w-[140px] min-h-[42px]">
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Connected
+                            </button>
+                        {% elif connection_status == 'incoming' %}
+                            <div class="flex gap-2">
+                                <button class="connection-btn px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center min-w-[100px] min-h-[42px]"
+                                    data-action="accept" data-user-id="{{ profile_user.id }}">
+                                    <span class="button-text">Accept</span>
+                                    <div class="button-loading hidden">
+                                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white border-t-transparent"></div>
+                                    </div>
+                                </button>
+                                <button class="connection-btn px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center min-w-[100px] min-h-[42px]"
+                                    data-action="reject" data-user-id="{{ profile_user.id }}">
+                                    <span class="button-text">Reject</span>
+                                    <div class="button-loading hidden">
+                                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white border-t-transparent"></div>
+                                    </div>
+                                </button>
+                            </div>
+                        {% else %}
+                            <button class="connection-btn px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto flex items-center justify-center min-w-[140px] min-h-[42px]"
+                                data-action="connect" data-user-id="{{ profile_user.id }}">
+                                <span class="button-text">
+                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                                    </svg>
+                                    Add Friend
+                                </span>
+                                <div class="button-loading hidden">
+                                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white border-t-transparent"></div>
+                                </div>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-4 border-t border-gray-200 pt-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ profile.total_points }}</div>
+                    <div class="text-sm text-gray-500">Points</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ profile.total_events }}</div>
+                    <div class="text-sm text-gray-500">Events</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">{{ sport_preferences.count }}</div>
+                    <div class="text-sm text-gray-500">Sports</div>
+                </div>
+            </div>
+            
+            <!-- Bio -->
+            {% if profile.bio %}
+            <div class="border-t border-gray-200 pt-6 mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">About</h3>
+                <p class="text-gray-700 leading-relaxed">{{ profile.bio }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sport Preferences -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Sport Preferences</h2>
+            
+            {% if sport_preferences %}
+                <div class="flex flex-wrap gap-2">
+                    {% for preference in sport_preferences %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            {{ preference.get_sport_type_display }} • {{ preference.get_skill_level_display }}
+                        </span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <p>No sport preferences added yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function handleConnection(action, userId, event) {
+    // VALIDATION: Check if parameters are valid
+    if (!action || !userId) {
+        console.error('Action or User ID missing', { action, userId });
+        alert('An error occurred');
+        return;
+    }
+
+    const clickedBtn = event.currentTarget;
+    const buttonText = clickedBtn.querySelector('.button-text');
+    const buttonLoading = clickedBtn.querySelector('.button-loading');
+    const connectionSection = document.getElementById('connection-section');
+
+    // Store original button dimensions
+    const originalWidth = clickedBtn.offsetWidth;
+    const originalHeight = clickedBtn.offsetHeight;
+    
+    // Apply fixed dimensions to prevent size change
+    clickedBtn.style.minWidth = originalWidth + 'px';
+    clickedBtn.style.minHeight = originalHeight + 'px';
+
+    // Show loading, hide text
+    if (buttonText && buttonLoading) {
+        buttonText.classList.add('hidden');
+        buttonLoading.classList.remove('hidden');
+    }
+
+    // Disable button during request
+    clickedBtn.disabled = true;
+    clickedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+    const url = `/matching/connection/${action}/${userId}/`;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            if (action === 'connect') {
+                connectionSection.innerHTML = `
+                <button class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors w-full sm:w-auto cursor-not-allowed" disabled style="min-width: ${originalWidth}px; min-height: ${originalHeight}px">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Request Sent
+                </button>
+                `;
+            } else if (action === 'accept') {
+                connectionSection.innerHTML = `
+                <button class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors w-full sm:w-auto cursor-not-allowed" disabled style="min-width: ${originalWidth}px; min-height: ${originalHeight}px">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Connected
+                </button>
+                `;
+            } else if (action === 'reject') {
+                connectionSection.innerHTML = `
+                <button class="connection-btn px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto flex items-center justify-center"
+                    data-action="connect" data-user-id="${userId}" style="min-width: ${originalWidth}px; min-height: ${originalHeight}px">
+                    <span class="button-text flex items-center">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                        </svg>
+                        Add Friend
+                    </span>
+                    <div class="button-loading hidden">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white border-t-transparent"></div>
+                    </div>
+                </button>
+                `;
+
+                // Re-attach event listener
+                setTimeout(() => {
+                    const newButton = connectionSection.querySelector('.connection-btn');
+                    if (newButton) {
+                        newButton.addEventListener('click', function(event) {
+                            const action = this.getAttribute('data-action');
+                            const userId = this.getAttribute('data-user-id');
+                            handleConnection(action, userId, event);
+                        });
+                    }
+                }, 100);
+            }
+        } else {
+            // Error handling - restore button state
+            restoreButtonState(clickedBtn, buttonText, buttonLoading);
+            alert('Error: ' + (data.error || 'Unknown error occurred'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Error handling - restore button state
+        restoreButtonState(clickedBtn, buttonText, buttonLoading);
+        alert('An error occurred. Please check your connection and try again.');
+    });
+}
+
+// Helper function to restore button state
+function restoreButtonState(button, buttonText, buttonLoading) {
+    if (buttonText && buttonLoading) {
+        buttonText.classList.remove('hidden');
+        buttonLoading.classList.add('hidden');
+    }
+    button.disabled = false;
+    button.classList.remove('opacity-50', 'cursor-not-allowed');
+    button.style.minWidth = '';
+    button.style.minHeight = '';
+}
+
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const connectionBtns = document.querySelectorAll('.connection-btn[data-action]'); 
+
+    connectionBtns.forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            const action = this.getAttribute('data-action');
+            const userId = this.getAttribute('data-user-id');
+            handleConnection(action, userId, event);
+        });
+    });
+});
+
+function showNotification(message, type = 'info') {
+    const bgColor = type === 'success' ? 'bg-green-500' : 
+                   type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // auto remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

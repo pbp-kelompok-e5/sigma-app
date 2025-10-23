@@ -1,0 +1,18 @@
+<div class="user-list">
+    {% for user in  users %}
+    <div class="user-card" data-user-id="{{ user.id }}">
+        <div class="user-info">
+            <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}'s profile picture" class="user-avatar"/>
+            <div class="user-details">
+                <h3>{{ user.get_full_name }}</h3>
+                <p>@{{ user.username }}</p>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-button">
+            {% if action_type == "remove" %}
+                <button class="btn-remove" 
+        </div>
+    </div>
+</div>
