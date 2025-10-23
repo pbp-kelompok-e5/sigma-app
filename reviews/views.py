@@ -135,21 +135,6 @@ def edit_review(request, review_id):
     return render(request, 'reviews/edit_review.html', {'review': review})
 
 @login_required
-def delete_review(request, review_id):
-    review = get_object_or_404(Review, id=review_id)
-
-    if review.from_user != request.user:
-        messages.error(request, "You cannot delete this review.")
-        return redirect('/')
-
-    to_user = review.to_user
-    review.delete()
-    update_user_rating(to_user)
-
-    messages.success(request, "Review deleted.")
-    return redirect('reviews:user-written-reviews', user_id=request.user.id)
-
-@login_required
 @require_POST
 def ajax_update_review(request, review_id):
     review = get_object_or_404(Review, id=review_id)
