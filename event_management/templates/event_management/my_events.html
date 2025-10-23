@@ -1,44 +1,101 @@
-{% extends 'base.html' %}
-{% block title %}My Events - Sigma App{% endblock %}
+{% extends "base.html" %}
+{% block title %}My Events{% endblock %}
 
 {% block content %}
-<div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 text-slate-100">
-<div class="max-w-5xl mx-auto space-y-8">
-    <div class="flex items-center justify-between">
-    <h2 class="text-4xl font-extrabold">My Organized Events</h2>
-    <a href="{% url 'event_management:create_event' %}" class="btn btn-full btn-lg">+ Create Event</a>
-    </div>
+<div class="max-w-4xl mx-auto mt-8">
+    <h1 class="text-2xl font-semibold text-white mb-6">My Events</h1>
 
-    <div>
-    <h3 class="text-2xl font-bold mb-4">Upcoming Events</h3>
+    <!-- Upcoming Events -->
+    <h2 class="text-xl text-gray-200 mb-3">Upcoming Events</h2>
     {% for event in upcoming_events %}
-    <div class="card-deep-sea p-6 mb-4">
-        <h4 class="text-xl font-semibold">{{ event.title }}</h4>
-        <p class="text-slate-300">{{ event.sport_type }} • {{ event.city }} • {{ event.event_date }}</p>
-        <div class="mt-4 flex gap-2">
-        <a href="{% url 'event_management:update_event' event.id %}" class="btn btn-sm btn-warning">Edit</a>
-        <a href="{% url 'event_management:manage_participants' event.id %}" class="btn btn-sm btn-info">Participants</a>
-        <a href="{% url 'event_management:cancel_event' event.id %}" class="btn btn-sm btn-secondary">Cancel</a>
-        <a href="{% url 'event_management:delete_event' event.id %}" class="btn btn-sm btn-danger">Delete</a>
+    <div class="bg-gray-900 p-4 mb-4 rounded-lg shadow-md flex justify-between items-center event-item" data-event-id="{{ event.id }}">
+        <div>
+            <h2 class="text-lg font-bold text-white">{{ event.name }}</h2>
+            <p class="text-gray-400">{{ event.event_date }}</p>
+            <p class="text-gray-400">Status: {{ event.status }}</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'event_management:update_event' event.id %}"
+               class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Edit</a>
+            <button data-event-id="{{ event.id }}"
+                    class="cancel-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded">
+                Cancel
+            </button>
+            <button data-event-id="{{ event.id }}"
+                    class="delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
+                Delete
+            </button>
         </div>
     </div>
     {% empty %}
-    <p class="text-slate-400">No upcoming events.</p>
+    <p class="text-gray-400 mb-6">You have no upcoming events.</p>
     {% endfor %}
-    </div>
 
-    <div>
-    <h3 class="text-2xl font-bold mt-8 mb-4">Past Events</h3>
+    <!-- Past Events -->
+    <h2 class="text-xl text-gray-200 mt-8 mb-3">Past Events</h2>
     {% for event in past_events %}
-    <div class="card-deep-sea p-6 mb-4">
-        <h4 class="text-xl font-semibold">{{ event.title }}</h4>
-        <p class="text-slate-300">{{ event.sport_type }} • {{ event.city }} • {{ event.event_date }}</p>
-        <p>Status: {{ event.status }}</p>
+    <div class="bg-gray-900 p-4 mb-4 rounded-lg shadow-md flex justify-between items-center">
+        <div>
+            <h2 class="text-lg font-bold text-white">{{ event.name }}</h2>
+            <p class="text-gray-400">{{ event.event_date }}</p>
+            <p class="text-gray-400">Status: {{ event.status }}</p>
+        </div>
+        <a href="{% url 'event_management:update_event' event.id %}"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">View</a>
     </div>
     {% empty %}
-    <p class="text-slate-400">No past events.</p>
+    <p class="text-gray-400">You have no past events.</p>
     {% endfor %}
-    </div>
 </div>
-</div>
+
+{% include "components/modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// === DELETE EVENT ===
+document.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const eventId = btn.dataset.eventId;
+        openModal("Delete Event", "Are you sure you want to permanently delete this event?", async () => {
+            try {
+                const res = await ajaxDelete(`/event_management/${eventId}/delete/`);
+                if (res.success) {
+                    showSuccessToast(res.message);
+                    document.querySelector(`.event-item[data-event-id="${eventId}"]`).remove();
+                } else {
+                    showErrorToast(res.message || "Failed to delete event.");
+                }
+            } catch (err) {
+                handleAjaxError(err);
+            }
+        });
+    });
+});
+
+// === CANCEL EVENT ===
+document.querySelectorAll(".cancel-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const eventId = btn.dataset.eventId;
+        openModal("Cancel Event", "Are you sure you want to cancel this event? It will no longer be open for participants.", async () => {
+            try {
+                const res = await ajaxPatch(`/event_management/${eventId}/cancel/`);
+                if (res.success) {
+                    showInfoToast(res.message);
+                    // Update the event card’s status text dynamically
+                    const card = document.querySelector(`.event-item[data-event-id="${eventId}"]`);
+                    if (card) {
+                        const statusEl = card.querySelector("p.text-gray-400:nth-child(3)");
+                        if (statusEl) statusEl.textContent = "Status: cancelled";
+                    }
+                } else {
+                    showErrorToast(res.message || "Failed to cancel event.");
+                }
+            } catch (err) {
+                handleAjaxError(err);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
