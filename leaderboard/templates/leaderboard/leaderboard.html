@@ -26,6 +26,17 @@
                     <option value="weekly" {% if current_filter == 'weekly' %}selected{% endif %}>This Week</option>
                 </select>
             </div>
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-white/80 mb-2">Sport</label>
+                <select name="sport" class="w-full px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#F26419] focus:border-transparent">
+                    <option value="">All Sports</option>
+                    {% for sport_value, sport_label in sport_choices %}
+                        <option value="{{ sport_value }}" {% if sport_filter == sport_value %}selected{% endif %}>
+                            {{ sport_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="flex items-end">
                 <button type="submit" class="btn btn-primary w-full sm:w-auto">
                     {% icon 'filter' size='sm' color='white' %}
