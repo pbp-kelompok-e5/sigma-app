@@ -1,7 +1,135 @@
-{%extends base.html %}
+{% extends "base.html" %}
 {% load icon_tags %}
-{% block title %}Create Event{% endblock %}
+{% block title %}My Event{% endblock %}
 
 {% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">My Events</h1>
+        </div>
+        <p class="text-white/80 text-base sm:text-lg">Perjalanan Event Anda</p>
+    </div>
+
+    <!-- Filter -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div class="flex space-x-3 mb-4 sm:mb-0">
+            <button>
+                <a id='futureEvents' class="chip-primary rounded-xl">
+                    Upcoming Events
+                </a>
+            </button>
+            <button>
+                <a id='pastEvents' class="chip-primary rounded-xl">
+                    Past Events
+                </a>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+     <div id="loading" class="bg-[#00063D] rounded-lg border border-gray-800 p-12 text-center hidden">
+      <svg class="animate-spin h-8 w-8 text-[#F26419] inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-white mt-3">Loading Events...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden"></div>
+
+    <!-- Events Grid -->
+    <div id='grid' class="hidden"></div>
+    
+    <!-- Empty State -->
+    <div id="empty" class="card-deep-sea text-center text-white">
+        <h3 class="text-lg font-medium font-bold mb-2">Tidak ada event yang berlangsung</h3>
+        <p>Cek kembali untuk menemukan event seru lainnya!</p>     
+    </div>
+    
+</div>
+
+<script>
+    const Event_API_URL = "{% url 'event_discovery:show_json' %}";
+    const CURRENT_USER_ID = "{{ user.id|default_if_none:"" }}";
+
+    // DOM Elements
+    const gridContainer = document.getElementById('grid');
+    const loadingIndicator = document.getElementById('loading');
+    const errorContainer = document.getElementById('error');
+    const emptyState = document.getElementById('empty');
+  
+    let allEvents = []; // To store all fetched events
+    let activeFilter = 'future'
+
+    // Function to display different sections
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+        loadingIndicator.classList.toggle('hidden', !showLoading); 
+        errorContainer.classList.toggle('hidden', !showError);
+        emptyState.classList.toggle('hidden', !showEmpty);
+        gridContainer.classList.toggle('hidden', !showGrid);
+
+        // Add Grid Class when showing grid
+        if (showGrid) {
+            gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-6');
+        }
+    }
+
+    // Filtered Events
+    function filteredEvents(){
+        let filteredEvents;
+        // Add Filter Logic TODO
+        if (activeFilter == 'future') {
+            filteredEvents = allEvents
+        }
+
+        if (filteredEvents.length === 0) {
+            displayPageSection({ showEmpty: true });
+        } else {
+            displayPageSection({ showGrid: true });
+        }
+    }
+
+
+    // Fetch Events from API
+    async function fetchEvents() {
+        try{
+            displayPageSection({ showLoading: true });
+
+            const response = await fetch(Event_API_URL, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }); 
+            if (!response.ok) {
+                throw new Error('Failed to fetch events');
+            }
+            const events = await response.json();
+            allEvents = events || []; // Store fetched events
+
+            // Call Filter and Render after fetching
+            filteredEvents();
+
+        }
+        catch (error) {
+            // Show Error Message
+            // To be Changed
+            errorContainer.innerHTML = `<div class="card-deep-sea p-4 text-red-500">Error loading events. Please try again later.</div>`; // TODO
+            console.error('Error fetching events:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+
+    function InitializeEventPage() {
+
+        // Fetch Events on Page Load
+        fetchEvents();
+    }
+
+    InitializeEventPage();
+</script>
+
 
 {% endblock content %}
