@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, SportPreferenceForm
 from .models import UserProfile, SportPreference
 
-
 def home_view(request):
     """Home page view"""
     if request.user.is_authenticated:
@@ -108,11 +107,24 @@ def profile_view(request, user_id=None):
 
     sport_preferences = profile_user.sport_preferences.all()
 
+    # Get reviews data
+    from reviews.models import Review
+    from django.db.models import Avg
+
+    reviews_written = profile_user.reviews_given.all().select_related('to_user', 'event').order_by('-created_at')
+    reviews_received = profile_user.reviews_received.all().select_related('from_user', 'event').order_by('-created_at')
+
+    # Calculate average rating
+    average_rating = reviews_received.aggregate(Avg('rating'))['rating__avg'] or 0
+
     context = {
         'profile_user': profile_user,
         'profile': profile,
         'sport_preferences': sport_preferences,
         'is_own_profile': is_own_profile,
+        'reviews_written': reviews_written,
+        'reviews_received': reviews_received,
+        'average_rating': average_rating,
     }
 
     return render(request, 'authentication/profile.html', context)
@@ -189,4 +201,3 @@ def delete_sport_preference_view(request, sport_id):
             return JsonResponse({'success': False, 'message': 'Error removing sport preference.'})
         else:
             messages.error(request, 'Error removing sport preference.')
-            return redirect('authentication:sport_preferences')
