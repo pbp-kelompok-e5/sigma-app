@@ -170,7 +170,7 @@
                 <div class="text-center">
                     <p class="text-sm text-gray-600">
                         Already have an account?
-                        <a href="{% url 'authentication:login' %}" 
+                        <a href="{% url 'authentication:login' %}"
                            class="font-medium text-gray-600 hover:text-gray-800 underline">
                             Sign in here
                         </a>
@@ -180,6 +180,20 @@
         </div>
     </div>
 </div>
+
+<!-- Toast Messages -->
+{% if messages %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+            const messageType = '{{ message.tags }}' || 'info';
+            const messageText = '{{ message|escapejs }}';
+            showToast(messageText, messageType, 4000);
+        {% endfor %}
+    });
+</script>
+{% endif %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize Choices.js on the city select field

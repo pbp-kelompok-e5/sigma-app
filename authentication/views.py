@@ -34,19 +34,41 @@ def home_view(request):
 
 
 def register_view(request):
-    """User registration view"""
+    """User registration view - supports both form and AJAX"""
     if request.user.is_authenticated:
         return redirect('authentication:profile')
 
     if request.method == 'POST':
+        # Check if it's an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}! You can now log in.')
-            return redirect('authentication:login')
+            message = f'Account created for {username}! You can now log in.'
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': message,
+                    'redirect': '/auth/login/'
+                })
+            else:
+                messages.success(request, message, extra_tags='success')
+                return redirect('authentication:login')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            error_message = 'Please correct the errors below.'
+            errors = {field: form[field].errors for field in form.fields if form[field].errors}
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': error_message,
+                    'errors': errors
+                }, status=400)
+            else:
+                messages.error(request, error_message, extra_tags='error')
     else:
         form = CustomUserCreationForm()
 
@@ -54,11 +76,14 @@ def register_view(request):
 
 
 def login_view(request):
-    """User login view"""
+    """User login view - supports both form and AJAX"""
     if request.user.is_authenticated:
         return redirect('authentication:profile')
 
     if request.method == 'POST':
+        # Check if it's an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
@@ -66,11 +91,27 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f'Welcome back, {user.first_name or user.username}!')
-                next_url = request.GET.get('next', 'authentication:profile')
-                return redirect(next_url)
+                message = f'Welcome back, {user.first_name or user.username}!'
+
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'message': message,
+                        'redirect': '/profile/'
+                    })
+                else:
+                    messages.success(request, message, extra_tags='success')
+                    next_url = request.GET.get('next', 'authentication:profile')
+                    return redirect(next_url)
+
+        error_message = 'Invalid username or password.'
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': error_message
+            }, status=401)
         else:
-            messages.error(request, 'Invalid username or password.')
+            messages.error(request, error_message, extra_tags='error')
     else:
         form = CustomAuthenticationForm()
 
@@ -80,7 +121,7 @@ def login_view(request):
 def logout_view(request):
     """User logout view"""
     logout(request)
-    messages.success(request, 'You have been logged out successfully.')
+    messages.success(request, 'You have been logged out successfully.', extra_tags='success')
     return redirect('authentication:login')
 
 
@@ -132,7 +173,7 @@ def profile_view(request, user_id=None):
 
 @login_required
 def edit_profile_view(request):
-    """Edit user profile view"""
+    """Edit user profile view - supports both form and AJAX"""
     try:
         profile = request.user.profile
     except UserProfile.DoesNotExist:
@@ -142,13 +183,39 @@ def edit_profile_view(request):
         )
 
     if request.method == 'POST':
+        # Check if it's an AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
         form = UserProfileForm(request.POST, instance=profile, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Your profile has been updated successfully!')
-            return redirect('authentication:profile')
+            message = 'Your profile has been updated successfully!'
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': message,
+                    'profile': {
+                        'full_name': profile.full_name,
+                        'email': request.user.email,
+                        'city': profile.get_city_display(),
+                    }
+                })
+            else:
+                messages.success(request, message, extra_tags='success')
+                return redirect('authentication:profile')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            error_message = 'Please correct the errors below.'
+            errors = {field: form[field].errors for field in form.fields if form[field].errors}
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': error_message,
+                    'errors': errors
+                }, status=400)
+            else:
+                messages.error(request, error_message, extra_tags='error')
     else:
         form = UserProfileForm(instance=profile, user=request.user)
 
@@ -165,12 +232,12 @@ def sport_preferences_view(request):
         if form.is_valid():
             try:
                 form.save()
-                messages.success(request, 'Sport preference added successfully!')
+                messages.success(request, 'Sport preference added successfully!', extra_tags='success')
                 return redirect('authentication:sport_preferences')
             except ValidationError as e:
-                messages.error(request, f'Error: {e.message}')
+                messages.error(request, f'Error: {e.message}', extra_tags='error')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            messages.error(request, 'Please correct the errors below.', extra_tags='error')
     else:
         form = SportPreferenceForm(user=request.user)
 
@@ -194,10 +261,10 @@ def delete_sport_preference_view(request, sport_id):
         if request.headers.get('Content-Type') == 'application/json':
             return JsonResponse({'success': True, 'message': f'{sport_name} preference removed successfully!'})
         else:
-            messages.success(request, f'{sport_name} preference removed successfully!')
+            messages.success(request, f'{sport_name} preference removed successfully!', extra_tags='success')
             return redirect('authentication:sport_preferences')
     except Exception:
         if request.headers.get('Content-Type') == 'application/json':
             return JsonResponse({'success': False, 'message': 'Error removing sport preference.'})
         else:
-            messages.error(request, 'Error removing sport preference.')
+            messages.error(request, 'Error removing sport preference.', extra_tags='error')

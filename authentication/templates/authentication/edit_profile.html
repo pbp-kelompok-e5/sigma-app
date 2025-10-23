@@ -157,6 +157,19 @@
     </div>
 </div>
 
+<!-- Toast Messages -->
+{% if messages %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+            const messageType = '{{ message.tags }}' || 'info';
+            const messageText = '{{ message|escapejs }}';
+            showToast(messageText, messageType, 4000);
+        {% endfor %}
+    });
+</script>
+{% endif %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize Choices.js on the city select field
