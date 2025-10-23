@@ -1,82 +1,88 @@
-    {% extends 'base.html' %}
-    {% load icon_tags %}
+{% extends 'base.html' %}
+{% load icon_tags %}
 
-    {% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - Sigma App{% endblock %}
+{% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - Sigma App{% endblock %}
 
-    {% block content %}
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Profile Header -->
-        <div class="card-deep-sea mb-6">
-            <div class="border-b border-white/20 pb-6 mb-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                        <!-- Profile Image -->
-                        <div class="flex-shrink-0">
-                            {% if profile.profile_image_url %}
-                                <img src="{{ profile.profile_image_url }}"
-                                    alt="{{ profile.full_name }}'s profile picture"
-                                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white/30">
-                                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 flex items-center justify-center hidden">
-                                    {% icon 'user' size='lg' color='white' %}
-                                </div>
-                            {% else %}
-                                <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/10 flex items-center justify-center">
-                                    {% icon 'user' size='lg' color='white' %}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Profile Info -->
-                        <div class="min-w-0 flex-1">
-                            <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2 truncate">{{ profile.full_name }}</h1>
-                            <p class="text-white/80 text-sm sm:text-base mt-1 truncate">@{{ profile_user.username }}</p>
-                            <p class="text-white/60 text-xs sm:text-sm mt-1">{{ profile.get_city_display }}</p>
-                        </div>
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <!-- Profile Header -->
+    <div class="card-deep-sea mb-6 overflow-hidden">
+        <!-- Decorative Background -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-500/10 to-transparent rounded-full blur-3xl -z-10"></div>
+        
+        <div class="relative">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-4 w-full sm:w-auto">
+                    <!-- Profile Image with Ring -->
+                    <div class="flex-shrink-0 relative">
+                        {% if profile.profile_image_url %}
+                            <div class="absolute inset-0 bg-gradient-to-tr from-orange-400 to-orange-600 rounded-full blur-md opacity-50"></div>
+                            <img src="{{ profile.profile_image_url }}"
+                                alt="{{ profile.full_name }}'s profile picture"
+                                class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-3 border-white/30 shadow-xl ring-4 ring-orange-400/20">
+                        {% else %}
+                            <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-orange-400/20 to-orange-600/20 flex items-center justify-center border-2 border-orange-400/30 ring-4 ring-orange-400/10">
+                                {% icon 'user' size='lg' color='#F26419' %}
+                            </div>
+                        {% endif %}
                     </div>
 
-                    {% if is_own_profile %}
-                    <!-- Logout Button -->
-                    <form action="{% url 'authentication:logout' %}" method="post" class="w-full sm:w-auto sm:ml-auto">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline btn-sm text-red-400 border-red-400 hover:bg-red-400/10 w-full sm:w-auto">
-                            {% icon 'log-out' size='sm' color='#f87171' %}
-                            Logout
-                        </button>
-                    </form>
-                    {% endif %}
+                    <!-- Profile Info -->
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-1 truncate">{{ profile.full_name }}</h1>
+                        <p class="text-white/70 text-base sm:text-lg mb-2 truncate">@{{ profile_user.username }}</p>
+                        <div class="flex flex-wrap items-center gap-3 text-white/50 text-sm">
+                            <div class="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-full">
+                                {% icon 'map-pin' size='sm' color='rgba(255,255,255,0.5)' %}
+                                <span>{{ profile.get_city_display }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-full">
+                                {% icon 'calendar' size='sm' color='rgba(255,255,255,0.5)' %}
+                                <span>Joined {{ profile_user.date_joined|date:"M Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                {% if is_own_profile %}
+                <!-- Logout Button -->
+                <form action="{% url 'authentication:logout' %}" method="post" class="w-full sm:w-auto">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline btn-sm text-red-400 border-red-400 hover:bg-red-400/10 w-full sm:w-auto transition-all hover:scale-105">
+                        {% icon 'log-out' size='sm' color='#f87171' %}
+                        Logout
+                    </button>
+                </form>
+                {% endif %}
             </div>
-            
-            <div>
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-6">
-                    <div class="flex flex-wrap gap-4 sm:gap-6 lg:gap-8 w-full lg:w-auto">
-                        <div class="flex items-center gap-2">
-                            <div>
-                                <div class="text-xl sm:text-2xl font-bold text-white">{{ profile.total_points }}</div>
-                                <div class="text-xs sm:text-sm text-white/60">Points</div>
-                            </div>
+
+            <!-- Stats & Actions -->
+            <div class="border-t border-white/10 pt-6">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+                    <!-- Stats with gradient cards -->
+                    <div class="grid grid-cols-3 gap-3 sm:gap-4 w-full lg:w-auto">
+                        <div class="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-400/20 rounded-xl p-4 text-center lg:text-left hover:from-orange-500/15 transition-all">
+                            <div class="text-3xl sm:text-4xl font-bold text-orange-400 mb-1">{{ profile.total_points }}</div>
+                            <div class="text-xs sm:text-sm text-white/50 font-medium">Points</div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div>
-                                <div class="text-xl sm:text-2xl font-bold text-white">{{ profile.total_events }}</div>
-                                <div class="text-xs sm:text-sm text-white/60">Events</div>
-                            </div>
+                        <div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-400/20 rounded-xl p-4 text-center lg:text-left hover:from-blue-500/15 transition-all">
+                            <div class="text-3xl sm:text-4xl font-bold text-blue-400 mb-1">{{ profile.total_events }}</div>
+                            <div class="text-xs sm:text-sm text-white/50 font-medium">Events</div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div>
-                                <div class="text-xl sm:text-2xl font-bold text-white">{{ sport_preferences.count }}</div>
-                                <div class="text-xs sm:text-sm text-white/60">Sports</div>
-                            </div>
+                        <div class="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-400/20 rounded-xl p-4 text-center lg:text-left hover:from-green-500/15 transition-all">
+                            <div class="text-3xl sm:text-4xl font-bold text-green-400 mb-1">{{ sport_preferences.count }}</div>
+                            <div class="text-xs sm:text-sm text-white/50 font-medium">Sports</div>
                         </div>
                     </div>
                     
+                    <!-- Action Buttons -->
                     {% if is_own_profile %}
                     <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                        <a href="{% url 'authentication:edit_profile' %}" class="btn btn-primary btn-sm w-full sm:w-auto">
+                        <a href="{% url 'authentication:edit_profile' %}" class="btn btn-primary btn-sm w-full sm:w-auto hover:scale-105 transition-transform">
                             {% icon 'user' size='sm' color='white' %}
                             Edit Profile
                         </a>
-                        <a href="{% url 'authentication:sport_preferences' %}" class="btn btn-outline btn-sm text-white border-white hover:bg-white/10 w-full sm:w-auto">
+                        <a href="{% url 'authentication:sport_preferences' %}" class="btn btn-outline btn-sm text-white border-white hover:bg-white/10 w-full sm:w-auto hover:scale-105 transition-transform">
                             {% icon 'plus' size='sm' color='white' %}
                             Manage Sports
                         </a>
@@ -84,64 +90,242 @@
                     {% endif %}
                 </div>
                 
+                <!-- Bio -->
                 {% if profile.bio %}
-                <div class="border-t border-white/20 pt-6">
-                    <h3 class="text-base sm:text-lg font-semibold text-white mb-2">About</h3>
-                    <p class="text-sm sm:text-base text-white/80 leading-relaxed">{{ profile.bio }}</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Sport Preferences -->
-        <div class="card-deep-sea">
-            <div class="border-b border-white/20 pb-4 mb-6 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    {% icon 'filter' size='md' color='#F26419' %}
-                    <h2 class="text-xl font-semibold text-white">Sport Preferences</h2>
-                </div>
-                
-                {% if is_own_profile and sport_preferences %}
-                <a href="{% url 'authentication:sport_preferences' %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20">
-                    {% icon 'plus' size='sm' color='white' %}
-                    Add More
-                </a>
-                {% endif %}
-            </div>
-            
-            <div>
-                {% if sport_preferences %}
-                    <div class="chip-group">
-                        {% for preference in sport_preferences %}
-                            <div class="chip chip-filled chip-md">
-                                <span class="font-semibold">{{ preference.get_sport_type_display }}</span>
-                                <span class="text-sm opacity-80"> • {{ preference.get_skill_level_display }}</span>
-                            </div>
-                        {% endfor %}
+                <div class="border-t border-white/10 pt-6">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-5">
+                        <h3 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                            {% icon 'info' size='sm' color='#F26419' %}
+                            About
+                        </h3>
+                        <p class="text-base text-white/70 leading-relaxed">{{ profile.bio }}</p>
                     </div>
-                {% else %}
-                    <div class="text-center py-8">
-                        <div class="flex justify-center mb-4">
-                            {% icon 'search' size='xl' color='white' %}
-                        </div>
-                        <p class="text-white/80 mb-4">
-                            {% if is_own_profile %}
-                                No sport preferences yet
-                            {% else %}
-                                This user hasn't added any sport preferences yet
-                            {% endif %}
-                        </p>
-                        {% if is_own_profile %}
-                            <a href="{% url 'authentication:sport_preferences' %}" class="btn btn-primary btn-md">
-                                {% icon 'plus' size='sm' color='white' %}
-                                Add Sport Preferences
-                            </a>
-                        {% endif %}
-                    </div>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
+    <!-- Sport Preferences & My Connections - 2 Kolom -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Sport Preferences -->
+        <div class="card-deep-sea hover:shadow-2xl transition-all">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
+                        {% icon 'filter' size='md' color='#F26419' %}
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Sport Preferences</h2>
+                </div>
 
-    {% endblock %}
+                {% if is_own_profile and sport_preferences %}
+                <a href="{% url 'authentication:sport_preferences' %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
+                    {% icon 'plus' size='sm' color='white' %}
+                    Add
+                </a>
+                {% endif %}
+            </div>
+
+            {% if sport_preferences %}
+                <div class="flex flex-wrap gap-2">
+                    {% for preference in sport_preferences %}
+                        <div class="chip chip-filled chip-md hover:scale-105 transition-transform cursor-default">
+                            <span class="font-semibold">{{ preference.get_sport_type_display }}</span>
+                            <span class="text-sm opacity-70"> • {{ preference.get_skill_level_display }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/5 mb-3">
+                        {% icon 'search' size='lg' color='rgba(255,255,255,0.3)' %}
+                    </div>
+                    <p class="text-white/60 mb-3 text-sm">
+                        {% if is_own_profile %}
+                            No sport preferences yet
+                        {% else %}
+                            No sport preferences added
+                        {% endif %}
+                    </p>
+                    {% if is_own_profile %}
+                        <a href="{% url 'authentication:sport_preferences' %}" class="btn btn-primary btn-sm hover:scale-105 transition-transform">
+                            {% icon 'plus' size='sm' color='white' %}
+                            Add Sports
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- My Connections -->
+        <div class="card-deep-sea hover:shadow-2xl transition-all">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center">
+                        {% icon 'users' size='md' color='#60A5FA' %}
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Connections</h2>
+                </div>
+                <a href="{% url 'partner_matching:my_connections' %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
+                    {% icon 'arrow-right' size='sm' color='white' %}
+                    View
+                </a>
+            </div>
+
+            <div class="text-center py-8">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-500/10 to-blue-600/5 mb-3">
+                    {% icon 'users' size='lg' color='#60A5FA' %}
+                </div>
+                <p class="text-white/60 mb-3 text-sm">Connect with sports enthusiasts</p>
+                <a href="{% url 'partner_matching:my_connections' %}" class="btn btn-primary btn-sm bg-blue-500 hover:bg-blue-600 hover:scale-105 transition-all">
+                    {% icon 'arrow-right' size='sm' color='white' %}
+                    Explore
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Reviews & Reputation - 2 Kolom -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- My Reviews (Written) -->
+        <div class="card-deep-sea hover:shadow-2xl transition-all">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/10 flex items-center justify-center">
+                        {% icon 'edit' size='md' color='#A78BFA' %}
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">My Reviews</h2>
+                </div>
+                {% if reviews_written %}
+                <a href="{% url 'reviews:written' profile_user.id %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
+                    {% icon 'arrow-right' size='sm' color='white' %}
+                    All
+                </a>
+                {% endif %}
+            </div>
+
+            {% if reviews_written %}
+                <div class="space-y-3">
+                    {% for review in reviews_written|slice:":3" %}
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 hover:border-purple-400/30 transition-all group">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white font-semibold text-sm truncate group-hover:text-purple-400 transition-colors">{{ review.to_user.username }}</p>
+                                    <p class="text-white/50 text-xs mt-0.5 truncate">{{ review.event.title }}</p>
+                                </div>
+                                <div class="flex items-center gap-1 bg-orange-400/20 px-2.5 py-1 rounded-lg ml-2 flex-shrink-0">
+                                    <span class="text-orange-400 font-bold text-sm">{{ review.rating }}</span>
+                                    <span class="text-orange-400 text-xs">★</span>
+                                </div>
+                            </div>
+                            <p class="text-white/70 text-xs leading-relaxed mb-2">{{ review.comment|truncatewords:15 }}</p>
+                            <p class="text-white/40 text-xs">{{ review.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if reviews_written|length > 3 %}
+                <div class="mt-4 text-center">
+                    <a href="{% url 'reviews:written' profile_user.id %}" class="btn btn-outline btn-sm text-white border-white hover:bg-white/10 hover:scale-105 transition-all">
+                        Show More
+                    </a>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-8">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/5 mb-3">
+                        {% icon 'edit' size='lg' color='rgba(255,255,255,0.3)' %}
+                    </div>
+                    <p class="text-white/60 text-sm">No reviews written yet</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Reputation (Reviews Received) -->
+        <div class="card-deep-sea hover:shadow-2xl transition-all">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 flex items-center justify-center">
+                        {% icon 'star' size='md' color='#FBBF24' %}
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-white">Reputation</h2>
+                </div>
+                {% if reviews_received %}
+                <a href="{% url 'reviews:user-reviews' profile_user.id %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
+                    {% icon 'arrow-right' size='sm' color='white' %}
+                    All
+                </a>
+                {% endif %}
+            </div>
+
+            {% if reviews_received %}
+                <!-- Rating Summary -->
+                <div class="bg-gradient-to-r from-orange-400/10 to-orange-600/10 border border-orange-400/20 rounded-xl p-5 mb-4 hover:border-orange-400/30 transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="text-5xl font-bold text-orange-400">{{ average_rating|floatformat:1 }}</div>
+                        <div class="flex-1">
+                            <div class="flex gap-0.5 mb-2">
+                                {% for i in "12345" %}
+                                    {% if i|add:"0" <= average_rating %}
+                                        <span class="text-orange-400 text-lg">★</span>
+                                    {% else %}
+                                        <span class="text-white/20 text-lg">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span class="text-white/60 text-xs">{{ reviews_received|length }} review{{ reviews_received|length|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews List -->
+                <div class="space-y-3">
+                    {% for review in reviews_received|slice:":3" %}
+                        <div class="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 hover:border-yellow-400/30 transition-all group">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-white font-semibold text-sm truncate group-hover:text-yellow-400 transition-colors">{{ review.from_user.username }}</p>
+                                    <p class="text-white/50 text-xs mt-0.5 truncate">{{ review.event.title }}</p>
+                                </div>
+                                <div class="flex items-center gap-1 bg-orange-400/20 px-2.5 py-1 rounded-lg ml-2 flex-shrink-0">
+                                    <span class="text-orange-400 font-bold text-sm">{{ review.rating }}</span>
+                                    <span class="text-orange-400 text-xs">★</span>
+                                </div>
+                            </div>
+                            <p class="text-white/70 text-xs leading-relaxed mb-2">{{ review.comment|truncatewords:15 }}</p>
+                            <p class="text-white/40 text-xs">{{ review.created_at|date:"M d, Y" }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if reviews_received|length > 3 %}
+                <div class="mt-4 text-center">
+                    <a href="{% url 'reviews:user-reviews' profile_user.id %}" class="btn btn-outline btn-sm text-white border-white hover:bg-white/10 hover:scale-105 transition-all">
+                        Show More
+                    </a>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-8">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/5 mb-3">
+                        {% icon 'star' size='lg' color='rgba(255,255,255,0.3)' %}
+                    </div>
+                    <p class="text-white/60 text-sm">No reviews received yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Toast Messages -->
+{% if messages %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for message in messages %}
+            const messageType = '{{ message.tags }}' || 'info';
+            const messageText = '{{ message|escapejs }}';
+            showToast(messageText, messageType, 4000);
+        {% endfor %}
+    });
+</script>
+{% endif %}
+
+{% endblock %}

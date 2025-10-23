@@ -27,6 +27,12 @@
 <body class="bg-gray-800 min-h-screen">
     {% block content %}{% endblock %}
 
+    <!-- Modal and Toast Utilities -->
+    <script src="{% static 'js/modal-toast.js' %}"></script>
+
+    <!-- AJAX Utilities -->
+    <script src="{% static 'js/ajax-utils.js' %}"></script>
+
     {% block extra_js %}{% endblock %}
 </body>
 

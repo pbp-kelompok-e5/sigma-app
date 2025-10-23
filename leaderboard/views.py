@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from django.http import JsonResponse
 from authentication.models import UserProfile
-from leaderboard.models import PointTransaction, Achievement
+from leaderboard.models import PointTransaction, Achievement, Leaderboard
+from sigma_app.constants import SPORT_CHOICES
 
 
 def leaderboard_page(request):
@@ -15,23 +17,31 @@ def leaderboard_page(request):
     period_filter = request.GET.get('period', 'all_time')
     sport_filter = request.GET.get('sport', '')
 
-    # Query users dengan points, diurutkan descending
-    users_list = UserProfile.objects.select_related('user').order_by('-total_points')
+    # Query leaderboard dengan filter period dan sport
+    leaderboard_query = Leaderboard.objects.select_related('user').filter(period=period_filter)
 
-    # Add ranking ke setiap user
+    # Apply sport filter if provided
+    if sport_filter:
+        leaderboard_query = leaderboard_query.filter(sport_type=sport_filter)
+
+    # Order by rank
+    leaderboard_query = leaderboard_query.order_by('rank')
+
+    # Build ranked users list
     ranked_users = []
-    for idx, profile in enumerate(users_list, start=1):
+    for entry in leaderboard_query:
+        profile = entry.user.userprofile
         ranked_users.append({
-            'rank': idx,
-            'user_id': profile.user.id,
+            'rank': entry.rank,
+            'user_id': entry.user.id,
             'full_name': profile.full_name,
-            'username': profile.user.username,
-            'total_points': profile.total_points,
+            'username': entry.user.username,
+            'total_points': entry.total_points,
             'total_events': profile.total_events,
             'city': profile.get_city_display() if profile.city else 'Unknown',
             'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
-            'tier': get_tier(profile.total_points),
-            'badge': get_badge(profile.total_points),
+            'tier': get_tier(entry.total_points),
+            'badge': get_badge(entry.total_points),
         })
 
     # Get current user's rank if logged in
@@ -46,10 +56,72 @@ def leaderboard_page(request):
         'users': ranked_users,
         'current_filter': period_filter,
         'sport_filter': sport_filter,
+        'sport_choices': SPORT_CHOICES,
         'current_user_rank': current_user_rank,
     }
 
     return render(request, 'leaderboard/leaderboard.html', context)
+
+
+def leaderboard_api(request):
+    """
+    AJAX API endpoint for leaderboard data
+    Supports filtering by period and sport
+    """
+    # Get filter dari query params
+    period_filter = request.GET.get('period', 'all_time')
+    sport_filter = request.GET.get('sport', '')
+    page = int(request.GET.get('page', 1))
+    per_page = int(request.GET.get('per_page', 20))
+
+    # Query leaderboard dengan filter period dan sport
+    leaderboard_query = Leaderboard.objects.select_related('user').filter(period=period_filter)
+
+    # Apply sport filter if provided
+    if sport_filter:
+        leaderboard_query = leaderboard_query.filter(sport_type=sport_filter)
+
+    # Order by rank
+    leaderboard_query = leaderboard_query.order_by('rank')
+
+    # Build ranked users list
+    ranked_users = []
+    for entry in leaderboard_query:
+        profile = entry.user.userprofile
+        ranked_users.append({
+            'rank': entry.rank,
+            'user_id': entry.user.id,
+            'full_name': profile.full_name,
+            'username': entry.user.username,
+            'total_points': entry.total_points,
+            'total_events': profile.total_events,
+            'city': profile.get_city_display() if profile.city else 'Unknown',
+            'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
+            'tier': get_tier(entry.total_points),
+            'badge': get_badge(entry.total_points),
+        })
+
+    # Pagination
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_users = ranked_users[start:end]
+
+    # Get current user's rank if logged in
+    current_user_rank = None
+    if request.user.is_authenticated:
+        for user_data in ranked_users:
+            if user_data['user_id'] == request.user.id:
+                current_user_rank = user_data['rank']
+                break
+
+    return JsonResponse({
+        'success': True,
+        'users': paginated_users,
+        'total_count': len(ranked_users),
+        'page': page,
+        'per_page': per_page,
+        'current_user_rank': current_user_rank,
+    })
 
 
 @login_required(login_url='login')
