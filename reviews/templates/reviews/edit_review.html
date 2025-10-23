@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Review{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/global.css' %}">
+
+<div class="container mx-auto" style="max-width: 600px; padding: 40px 16px;">
+  <div class="card-deep-sea">
+
+    <!-- Header -->
+    <div class="card-header">
+      Edit Review for: {{ review.to_user.username }} <br/>
+       <span class="text-md">Event: {{ review.event.title }}<span/>
+    </div>
+
+    <div class="card-body" style="text-align:center;">
+
+      <!-- Event Name -->
+      <p style="opacity: .9; margin-bottom: 14px;">
+        
+      </p>
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <!-- STAR RATING -->
+        <div class="flex justify-center gap-1 rating-stars mb-6" data-review="{{ review.id }}">
+          {% for i in "12345" %}
+            <button type="button"
+              class="star-btn text-[--orange-sport] transition text-4xl"
+              data-value="{{ forloop.counter }}">☆
+            </button>
+          {% endfor %}
+          <input type="hidden" name="rating" value="{{ review.rating }}">
+        </div>
+
+        <!-- COMMENT -->
+        <div class="input-group" style="text-align:left;">
+          <label class="input-label">Comment</label>
+          <textarea name="comment" rows="4">{{ review.comment }}</textarea>
+        </div>
+
+        <!-- Buttons -->
+        <div class="card-footer" style="margin-top: 24px; display:flex; gap:10px;">
+          <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+          <a href="{% url 'reviews:user-written-reviews' request.user.id %}" class="btn btn-secondary btn-full">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ STAR SCRIPT (same behavior as give-review page) -->
+<script>
+document.querySelectorAll('.rating-stars').forEach(container => {
+  const hiddenInput = container.querySelector('input[name="rating"]');
+  const stars = container.querySelectorAll('.star-btn');
+  let selectedRating = hiddenInput.value || 0;
+
+  function renderStars(rating) {
+    stars.forEach(s => {
+      if (s.dataset.value <= rating) {
+        s.textContent = '★';
+        s.style.color = 'var(--orange-sport)';
+      } else {
+        s.textContent = '☆';
+        s.style.color = 'var(--orange-sport)';
+      }
+    });
+  }
+
+  stars.forEach(star => {
+    star.addEventListener('mouseenter', () => renderStars(star.dataset.value));
+    star.addEventListener('mouseleave', () => renderStars(selectedRating));
+    star.addEventListener('click', () => {
+      selectedRating = star.dataset.value;
+      hiddenInput.value = selectedRating;
+      renderStars(selectedRating);
+    });
+  });
+
+  renderStars(selectedRating);
+});
+</script>
+
+{% endblock %}

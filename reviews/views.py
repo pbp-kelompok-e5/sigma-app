@@ -6,6 +6,9 @@ from .models import Review, UserRating
 from event_discovery.models import Event, EventParticipant
 from django.db.models import Avg, Count
 from authentication.models import UserProfile
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
 
 @login_required
 def event_reviews(request, event_id):
@@ -91,3 +94,57 @@ def user_reviews(request, user_id):
         'reviewed_user': user,
         'reviews': reviews
     })
+
+@login_required
+def user_written_reviews(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    # hanya user yg sama boleh akses halaman ini
+    if request.user != user:
+        messages.error(request, "You are not allowed to view this page.")
+        return redirect('/')
+
+    reviews = Review.objects.filter(from_user=user).select_related('to_user', 'event').order_by('-created_at')
+    return render(request, 'reviews/user_written_reviews.html', {
+        'writer': user,
+        'reviews': reviews
+    })
+
+
+@login_required
+def edit_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+
+    # hanya penulisnya yg boleh edit
+    if review.from_user != request.user:
+        messages.error(request, "You cannot edit someone else's review.")
+        return redirect('/')
+
+    if request.method == "POST":
+        rating = request.POST.get("rating")
+        comment = request.POST.get("comment", "No comment")
+
+        review.rating = rating
+        review.comment = comment
+        review.save()
+
+        update_user_rating(review.to_user)
+        messages.success(request, "Review updated successfully!")
+        return redirect('reviews:user-written-reviews', user_id=request.user.id)
+
+    return render(request, 'reviews/edit_review.html', {'review': review})
+
+@login_required
+def delete_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+
+    if review.from_user != request.user:
+        messages.error(request, "You cannot delete this review.")
+        return redirect('/')
+
+    to_user = review.to_user
+    review.delete()
+    update_user_rating(to_user)
+
+    messages.success(request, "Review deleted.")
+    return redirect('reviews:user-written-reviews', user_id=request.user.id)
