@@ -9,9 +9,9 @@ class EventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = [
-            'title', 'description', 'sport_type', 'thumbnail',  'event_date',
+            'title', 'description', 'sport_type', 'thumbnail', 'event_date',
             'start_time', 'end_time', 'city', 'location_name',
-            'max_participants'
+            'max_participants',
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),

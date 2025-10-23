@@ -4,6 +4,9 @@ from django.contrib import messages
 from event_discovery.models import Event, EventParticipant
 from .forms import EventForm
 from datetime import date
+from django.http import JsonResponse
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 @login_required
 def create_event(request):
@@ -82,3 +85,97 @@ def manage_participants(request, event_id):
         'event': event,
         'participants': participants
     })
+
+# ----------------------------
+# AJAX endpoints (JSON)
+# ----------------------------
+
+@login_required
+@require_POST
+def delete_event_ajax(request, event_id):
+    """
+    Delete event (AJAX). Returns JSON {'success': True, 'event_id': id}.
+    """
+    event = get_object_or_404(Event, id=event_id, organizer=request.user)
+    event.delete()
+    return JsonResponse({'success': True, 'event_id': event_id, 'message': 'Event deleted successfully.'})
+
+
+@login_required
+@require_POST
+def cancel_event_ajax(request, event_id):
+    """
+    Cancel event (AJAX) - set status='cancelled'.
+    """
+    event = get_object_or_404(Event, id=event_id, organizer=request.user)
+    event.status = 'cancelled'
+    event.save()
+    return JsonResponse({'success': True, 'event_id': event_id, 'message': 'Event cancelled.'})
+
+
+@login_required
+@require_POST
+def manage_participant_ajax(request, event_id):
+    """
+    Manage participants by action via AJAX.
+    Expects form-encoded POST with:
+    - action: 'remove' or 'mark_attended'
+    - user_id: id of the user to act on
+    """
+    event = get_object_or_404(Event, id=event_id, organizer=request.user)
+    action = request.POST.get('action')
+    user_id = request.POST.get('user_id')
+
+    if not action or not user_id:
+        return JsonResponse({'success': False, 'message': 'Missing parameters.'}, status=400)
+
+    if action == 'remove':
+        deleted, _ = EventParticipant.objects.filter(event=event, user_id=user_id).delete()
+        if deleted:
+            return JsonResponse({'success': True, 'action': 'remove', 'user_id': int(user_id), 'message': 'Participant removed.'})
+        return JsonResponse({'success': False, 'message': 'Participant not found.'}, status=404)
+
+    elif action == 'mark_attended':
+        participant = EventParticipant.objects.filter(event=event, user_id=user_id).first()
+        if participant:
+            participant.status = 'attended'
+            participant.save()
+            return JsonResponse({'success': True, 'action': 'mark_attended', 'user_id': int(user_id), 'message': 'Attendance marked.'})
+        return JsonResponse({'success': False, 'message': 'Participant not found.'}, status=404)
+
+    return JsonResponse({'success': False, 'message': 'Invalid action.'}, status=400)
+
+
+@login_required
+def create_event_ajax(request):
+    """
+    Create event (AJAX). Accepts form-data via fetch(FormData).
+    On success returns {'success': True, 'redirect_url': ...}
+    On form error returns {'success': False, 'errors': {...}} (400)
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method.'}, status=405)
+
+    form = EventForm(request.POST)
+    if form.is_valid():
+        event = form.save(commit=False)
+        event.organizer = request.user
+        event.save()
+        return JsonResponse({'success': True, 'redirect_url': reverse('event_management:my_events'), 'message': 'Event created.'})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+
+@login_required
+def update_event_ajax(request, event_id):
+    """
+    Update event (AJAX).
+    """
+    event = get_object_or_404(Event, id=event_id, organizer=request.user)
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid method.'}, status=405)
+
+    form = EventForm(request.POST, instance=event)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'success': True, 'redirect_url': reverse('event_management:my_events'), 'message': 'Event updated.'})
+    return JsonResponse({'success': False, 'errors': form.errors}, status=400)
