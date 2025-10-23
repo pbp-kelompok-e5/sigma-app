@@ -99,11 +99,6 @@ def user_reviews(request, user_id):
 def user_written_reviews(request, user_id):
     user = get_object_or_404(User, id=user_id)
 
-    # hanya user yg sama boleh akses halaman ini
-    if request.user != user:
-        messages.error(request, "You are not allowed to view this page.")
-        return redirect('/')
-
     reviews = Review.objects.filter(from_user=user).select_related('to_user', 'event').order_by('-created_at')
     return render(request, 'reviews/user_written_reviews.html', {
         'writer': user,
