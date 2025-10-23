@@ -11,17 +11,12 @@
     <!-- Header -->
     <div class="card-header">
       Edit Review for: {{ review.to_user.username }} <br/>
-       <span class="text-md">Event: {{ review.event.title }}<span/>
+      <span class="text-md">Event: {{ review.event.title }}</span>
     </div>
 
     <div class="card-body" style="text-align:center;">
 
-      <!-- Event Name -->
-      <p style="opacity: .9; margin-bottom: 14px;">
-        
-      </p>
-
-      <form method="POST">
+      <form id="editReviewForm">
         {% csrf_token %}
 
         <!-- STAR RATING -->
@@ -36,25 +31,40 @@
         </div>
 
         <!-- COMMENT -->
-        <div class="input-group" style="text-align:left;">
+        <div class="input-group" style="text-align:left; margin-bottom: 24px;">
           <label class="input-label">Comment</label>
           <textarea name="comment" rows="4">{{ review.comment }}</textarea>
         </div>
 
         <!-- Buttons -->
-        <div class="card-footer" style="margin-top: 24px; display:flex; gap:10px;">
-          <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
-          <a href="{% url 'reviews:user-written-reviews' request.user.id %}" class="btn btn-secondary btn-full">
+        <div class="card-footer" style="margin-top: 10px; display:flex; gap:10px;">
+          <button id="saveBtn" type="button" class="btn btn-primary btn-full">Save Changes</button>
+
+          <a href="{% url 'reviews:user-written-reviews' request.user.id %}" 
+             class="btn btn-secondary btn-full">
             Cancel
           </a>
         </div>
       </form>
+
     </div>
   </div>
 </div>
 
-<!-- ✅ STAR SCRIPT (same behavior as give-review page) -->
+<!-- ✅ TOAST CONTAINER -->
+<div id="toast-container" class="fixed top-5 right-5 z-50"></div>
+
+<!-- ✅ STAR + AJAX SCRIPT -->
 <script>
+// CSRF helper
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+const CSRF_TOKEN = getCookie('csrftoken');
+
+// STAR LOGIC
 document.querySelectorAll('.rating-stars').forEach(container => {
   const hiddenInput = container.querySelector('input[name="rating"]');
   const stars = container.querySelectorAll('.star-btn');
@@ -64,10 +74,8 @@ document.querySelectorAll('.rating-stars').forEach(container => {
     stars.forEach(s => {
       if (s.dataset.value <= rating) {
         s.textContent = '★';
-        s.style.color = 'var(--orange-sport)';
       } else {
         s.textContent = '☆';
-        s.style.color = 'var(--orange-sport)';
       }
     });
   }
@@ -84,6 +92,58 @@ document.querySelectorAll('.rating-stars').forEach(container => {
 
   renderStars(selectedRating);
 });
+
+// AJAX UPDATE SUBMIT
+document.getElementById('saveBtn')?.addEventListener('click', async () => {
+  const rating = document.querySelector('input[name="rating"]').value;
+  const comment = document.querySelector('textarea[name="comment"]').value;
+  const reviewId = "{{ review.id }}";
+
+  if (!rating) {
+    showToast('Please select a rating.', 'error');
+    return;
+  }
+
+  const form = new FormData();
+  form.append('rating', rating);
+  form.append('comment', comment || 'No comment');
+
+  try {
+    const res = await fetch(`/reviews/ajax/review/${reviewId}/update/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': CSRF_TOKEN },
+      body: form
+    });
+
+    const data = await res.json();
+
+    if (data.ok) {
+      showToast('Review updated!', 'success');
+
+      // ✅ redirect back to written reviews page
+      setTimeout(() => {
+        window.location.href = "{% url 'reviews:user-written-reviews' request.user.id %}";
+      }, 800);
+
+    } else {
+      showToast(data.error || 'Update failed.', 'error');
+    }
+
+  } catch (e) {
+    showToast('Network error.', 'error');
+  }
+});
+
+// Toast
+function showToast(msg, type='success') {
+  const wrap = document.createElement('div');
+  wrap.className = `px-4 py-3 rounded-lg shadow-lg text-white mb-3 ${
+    type === 'success' ? 'bg-green-600' : 'bg-red-600'
+  }`;
+  wrap.innerText = msg;
+  document.getElementById('toast-container').appendChild(wrap);
+  setTimeout(() => wrap.remove(), 2300);
+}
 </script>
 
 {% endblock %}

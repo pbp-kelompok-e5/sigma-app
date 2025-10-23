@@ -18,7 +18,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {% for review in reviews %}
-        <div style="background: var(--deep-sea-light); border-radius: 12px; padding: 16px;">
+        <div id="review-card-{{ review.id }}" style="background: var(--deep-sea-light); border-radius: 12px; padding: 16px;">
+
           <p><strong>You</strong> → {{ review.to_user.username }}</p>
 
           <p style="color: var(--orange-sport); font-weight: 600;">
@@ -59,11 +60,10 @@
   </div>
 </div>
 
-<!-- ✅ DELETE CONFIRM MODAL -->
+<!-- ✅ MODAL DELETE -->
 <div id="deleteModal"
      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="card-deep-sea" style="max-width: 400px; padding: 24px; text-align:center;">
-
     <h3 class="card-header" id="modalEventName">Confirm Delete</h3>
 
     <p style="margin-top: 10px; opacity: .85;">
@@ -71,33 +71,68 @@
     </p>
 
     <div class="card-footer" style="margin-top: 20px; display:flex; gap:12px;">
-      <form id="deleteForm" method="POST">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger btn-full">Delete</button>
-      </form>
-
-      <button onclick="closeDeleteModal()" class="btn btn-secondary btn-full">
-        Cancel
-      </button>
+      <button id="confirmDeleteBtn" class="btn btn-danger btn-full">Delete</button>
+      <button onclick="closeDeleteModal()" class="btn btn-secondary btn-full">Cancel</button>
     </div>
 
   </div>
 </div>
 
-<!-- ✅ MODAL SCRIPT -->
-<script>
-function openDeleteModal(reviewId, eventTitle) {
-  const modal = document.getElementById('deleteModal');
-  const form = document.getElementById('deleteForm');
-  const title = document.getElementById('modalEventName');
+<!-- ✅ TOAST CONTAINER -->
+<div id="toast-container" class="fixed top-5 right-5 z-50"></div>
 
-  modal.classList.remove('hidden');
-  title.innerText = `Delete Review for: ${eventTitle}`;
-  form.action = `/reviews/delete/${reviewId}/`;  // URL delete
+<!-- ✅ AJAX DELETE SCRIPT -->
+<script>
+// CSRF helper
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+const CSRF_TOKEN = getCookie('csrftoken');
+
+let deleteTargetId = null;
+
+function openDeleteModal(reviewId, eventTitle) {
+  deleteTargetId = reviewId;
+  document.getElementById('modalEventName').innerText = `Delete Review for: ${eventTitle}`;
+  document.getElementById('deleteModal').classList.remove('hidden');
 }
 
 function closeDeleteModal() {
+  deleteTargetId = null;
   document.getElementById('deleteModal').classList.add('hidden');
+}
+
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () => {
+  if (!deleteTargetId) return;
+  try {
+    const res = await fetch(`/reviews/ajax/review/${deleteTargetId}/delete/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF_TOKEN},
+    });
+    const data = await res.json();
+    if (data.ok) {
+      const card = document.getElementById(`review-card-${deleteTargetId}`);
+      if (card) card.remove();
+      closeDeleteModal();
+      showToast('Review deleted.', 'success');
+    } else {
+      showToast(data.error || 'Failed to delete review.', 'error');
+    }
+  } catch (e) {
+    showToast('Network error.', 'error');
+  }
+});
+
+function showToast(msg, type='success') {
+  const wrap = document.createElement('div');
+  wrap.className = `px-4 py-3 rounded-lg shadow-lg text-white mb-3 ${
+    type === 'success' ? 'bg-green-600' : 'bg-red-600'
+  }`;
+  wrap.innerText = msg;
+  document.getElementById('toast-container').appendChild(wrap);
+  setTimeout(() => wrap.remove(), 2500);
 }
 </script>
 

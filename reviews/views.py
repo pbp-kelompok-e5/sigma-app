@@ -148,3 +148,117 @@ def delete_review(request, review_id):
 
     messages.success(request, "Review deleted.")
     return redirect('reviews:user-written-reviews', user_id=request.user.id)
+
+@login_required
+@require_POST
+def ajax_update_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+
+    if review.from_user != request.user:
+        return JsonResponse({'ok': False, 'error': "Forbidden"}, status=403)
+
+    rating = request.POST.get('rating')
+    comment = request.POST.get('comment', 'No comment')
+
+    if not rating:
+        return JsonResponse({'ok': False, 'error': "Rating is required"}, status=400)
+
+    try:
+        rating_int = int(rating)
+        if not (1 <= rating_int <= 5):
+            raise ValueError()
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': "Rating must be 1-5"}, status=400)
+
+    review.rating = rating_int
+    review.comment = comment or "No comment"
+    review.save()
+    update_user_rating(review.to_user)
+
+    return JsonResponse({
+        'ok': True,
+        'review': {
+            'id': review.id,
+            'to_user': review.to_user.username,
+            'event_title': review.event.title,
+            'rating': review.rating,
+            'comment': review.comment,
+            'created_at': review.created_at.strftime('%Y-%m-%d %H:%M')
+        }
+    })
+
+
+@login_required
+@require_POST
+def ajax_delete_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+
+    if review.from_user != request.user:
+        return JsonResponse({'ok': False, 'error': "Forbidden"}, status=403)
+
+    to_user = review.to_user
+    review_id_copy = review.id
+    review.delete()
+    update_user_rating(to_user)
+
+    return JsonResponse({'ok': True, 'deleted_id': review_id_copy})
+
+
+@login_required
+@require_POST
+def ajax_create_event_reviews(request, event_id):
+    """
+    Terima form dari event_reviews (rating_{user_id}, comment_{user_id})
+    Buat banyak review sekaligus (skip yang kosong), return ringkasan JSON.
+    """
+    event = get_object_or_404(Event, id=event_id)
+    from_user = request.user
+
+    # Peserta attended (kecuali diri sendiri)
+    participants = User.objects.filter(
+        joined_events__event=event,
+        joined_events__status='attended'
+    ).exclude(id=from_user.id)
+
+    created = []
+    skipped = []
+
+    for to_user in participants:
+        rating = request.POST.get(f'rating_{to_user.id}')
+        comment = request.POST.get(f'comment_{to_user.id}', 'No comment')
+
+        if not rating:
+            skipped.append(to_user.id)
+            continue
+
+        if Review.objects.filter(event=event, from_user=from_user, to_user=to_user).exists():
+            skipped.append(to_user.id)
+            continue
+
+        try:
+            rating_int = int(rating)
+            if not (1 <= rating_int <= 5):
+                raise ValueError()
+        except ValueError:
+            skipped.append(to_user.id)
+            continue
+
+        review = Review.objects.create(
+            event=event,
+            from_user=from_user,
+            to_user=to_user,
+            rating=rating_int,
+            comment=comment or "No comment"
+        )
+        update_user_rating(to_user)
+        created.append({
+            'id': review.id,
+            'to_user': to_user.username,
+            'rating': review.rating,
+            'comment': review.comment,
+            'event_title': event.title,
+            'created_at': review.created_at.strftime('%Y-%m-%d %H:%M')
+        })
+
+    return JsonResponse({'ok': True, 'created': created, 'skipped': skipped})
+
