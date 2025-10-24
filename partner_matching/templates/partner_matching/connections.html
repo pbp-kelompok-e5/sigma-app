@@ -577,9 +577,9 @@
                             {% for user in my_friends %}
                             <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                                 <div class="flex items-center space-x-3">
-                                    <a href="{% url 'partner_matching:user_profile' user.id %}?from=connections" class="flex items-center space-x-3">
-                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
-                                            alt="{{ user.profile.full_name }}" 
+                                    <a href="{% url 'authentication:profile_public' user.id %}?from=connections" class="flex items-center space-x-3">
+                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}"
+                                            alt="{{ user.profile.full_name }}"
                                             class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
                                         <div>
                                             <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
@@ -611,9 +611,9 @@
                             <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                                 <div class="flex items-center space-x-3">
 
-                                    <a href="{% url 'partner_matching:user_profile' user.id %}?from=connections" class="flex items-center space-x-3">
-                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
-                                            alt="{{ user.profile.full_name }}" 
+                                    <a href="{% url 'authentication:profile_public' user.id %}?from=connections" class="flex items-center space-x-3">
+                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}"
+                                            alt="{{ user.profile.full_name }}"
                                             class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
                                         <div>
                                             <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
@@ -650,9 +650,9 @@
                             <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                                 <div class="flex items-center space-x-3">
 
-                                    <a href="{% url 'partner_matching:user_profile' user.id %}?from=connections" class="flex items-center space-x-3">
-                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
-                                            alt="{{ user.profile.full_name }}" 
+                                    <a href="{% url 'authentication:profile_public' user.id %}?from=connections" class="flex items-center space-x-3">
+                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}"
+                                            alt="{{ user.profile.full_name }}"
                                             class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
                                         <div>
                                             <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
@@ -727,7 +727,7 @@
                                 <!-- Action Buttons -->
                                 <div class="flex space-x-2">
                                     <button class="btn btn-outline btn-sm"
-                                            onclick="window.location.href='{% url 'partner_matching:user_profile' recommendation.user.id %}?from=connections'">
+                                            onclick="window.location.href='{% url 'authentication:profile_public' recommendation.user.id %}?from=connections'">
                                         View Profile
                                     </button>
                                 </div>
@@ -751,7 +751,7 @@
         {% else %}
         <div class="card-deep-sea">
             <div class="p-6 border-b border-white-60">
-                <a href="{% url 'partner_matching:user_profile' target_user.id %}{% if request.GET.from %}?from={{ request.GET.from }}{% endif %}" 
+                <a href="{% url 'authentication:profile_public' target_user.id %}{% if request.GET.from %}?from={{ request.GET.from }}{% endif %}"
                     class="btn btn-outline btn-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>

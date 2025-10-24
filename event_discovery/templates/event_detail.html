@@ -135,7 +135,7 @@ function renderEventDetail(event) {
                     `}
                 ` : ''}
 
-                ${hasAttendedParticipants && !hasReviewed ? `
+                ${attended && hasAttendedParticipants && !hasReviewed ? `
                 <a href="/reviews/${EVENT_ID}/" class="inline-block p-2 ml-2 mb-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                     Review Participants
                 </a>
