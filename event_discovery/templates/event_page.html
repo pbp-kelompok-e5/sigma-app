@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load icon_tags %}
+{% block title %}Events Discovery{% endblock %}
+
+
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">Event Discovery</h1>
+        </div>
+        <p class="text-white/80 text-base sm:text-lg">Temukan event yang sesuai dengan minatmu</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 card-deep-sea p-4 rounded-full">
+        <input type="text" id="searchInput" placeholder="Search events..." class="w-full p-3 rounded-full bg-[#f26419] text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
+        <button id='searchBtn'>
+        {% icon 'search' color='white' %}
+        </button>
+        <!-- Filter Button (Open Option) -->
+        <button id='filterBtn'>
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
+        </svg>
+        </button>
+    </div>
+
+    <!-- Filter Option -->
+    <div class="mb-8 card-deep-sea rounded-lg hidden" id="filterOptions">
+        <h1 class='text-white font-medium'>Filter Menu</h1>
+        <!-- Filters Dropdown -->
+        <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <!-- By Sport Type -->
+            <div class ='justify-center items-center'>
+            <label for="sportTypeFilt" class="text-white font-medium">Sport Type:</label><br>
+                <select id="sportTypeFilt" class="p-2 rounded-lg bg-[#f26419] text-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
+                    <option value="all">All Sports</option>
+                    {% for sport, label in sportChoices %}
+                    <option value='{{sport}}'>{{label}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- By Date -->
+            <div class ='justify-center items-center'>
+            <label for="eventDateFilt" class="text-white font-medium">Event Date:</label><br>
+                <input type="date" id="eventDateFilt" class="p-2 rounded-lg bg-[#f26419] text-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
+            </div>
+            <!-- By City -->
+            <div class='justify-center items-center'>
+                <label for="cityFilt" class="text-white font-medium">City:</label><br>
+                <select id='cityFilt' class="p-2 rounded-lg bg-[#f26419] text-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
+                    <option value="all">All City</option>
+                    {% for city, label in cityChoices %}
+                    <option value='{{city}}'>{{label}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Apply Button -->
+            <div class='justify-center items-center'>
+                <br>
+                <button id='applyFilter' class='btn'>Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="bg-[#00063D] rounded-lg border border-gray-800 p-12 text-center hidden">
+      <svg class="animate-spin h-8 w-8 text-[#F26419] inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-white mt-3">Loading Events...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden"></div>
+
+    <!-- Events Grid -->
+    <div id='grid' class="hidden"></div>
+    
+    <!-- Empty State -->
+    <div id="empty" class="card-deep-sea text-center text-white">
+        <h3 class="text-lg font-medium font-bold mb-2">Tidak ada event yang berlangsung</h3>
+        <p>Cek kembali untuk menemukan event seru lainnya!</p>     
+    </div>
+    
+</div>
+
+<script>
+    const Event_API_URL = "{% url 'event_discovery:show_json' %}";
+    const CURRENT_USER_ID = "{{ user.id|default_if_none:"" }}";
+
+    // DOM Elements
+    const gridContainer = document.getElementById('grid');
+    const loadingIndicator = document.getElementById('loading');
+    const errorContainer = document.getElementById('error');
+    const emptyState = document.getElementById('empty');
+    const filterMenu = document.getElementById('filterOptions');
+    const showFilterBtn = document.getElementById('filterBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const applyBtn = document.getElementById('applyFilter')
+  
+    let allEvents = []; // To store all fetched events
+    
+    // Filter
+    let sportFilter = 'all';
+    let dateFilter = 'all';
+    let cityFilter = 'all';
+    let showFilter = false;
+    let searchTerm = ''
+
+    // Function to display different sections
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+        loadingIndicator.classList.toggle('hidden', !showLoading); 
+        errorContainer.classList.toggle('hidden', !showError);
+        emptyState.classList.toggle('hidden', !showEmpty);
+        gridContainer.classList.toggle('hidden', !showGrid);
+
+        // Add Grid Class when showing grid
+        if (showGrid) {
+            gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-8');
+        }
+    }
+
+    // Map Sport Type to Icon
+    function getSportIcon(sportType) {
+        const sportIcons = {
+            'basketball': '🏀',
+            'football': '⚽',
+            'tennis': '🎾',
+            'running': '🏃‍♂️',
+            'cycling': '🚴‍♀️',
+            'swimming': '🏊‍♂️',
+            'volleyball': '🏐',
+            'badminton': '🏸',
+        };
+        return sportIcons[sportType.toLowerCase()] || '🏅';
+    }
+
+
+    // Build Event Card
+    function buildEventCard(event) {
+        const article = document.createElement('article');
+        article.className = "card-deep-sea overflow-hidden w-[360px] h-[480px]";
+        const detailURL = `{% url 'event_discovery:event_detail' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', event.id);
+        const title = DOMPurify.sanitize(event.title);
+        const location = DOMPurify.sanitize(event.location_name);
+        const sportType = DOMPurify.sanitize(event.sport_type);
+        const thumbnailHTML = DOMPurify.sanitize(event.thumbnail ? `<img src="${event.thumbnail}" class='w-full h-full object-cover hover:scale-105 transition-transform duration-300 rounded-xl'>` : `<div class='w-full h-full bg-gray-600 flex items-center justify-center text-white rounded-xl'>No Image</div>`);
+        const detailButton = `<a href='${detailURL}' class='chip-primary font-bold w-full h-full flex items-center justify-center mx-2 rounded-3xl'> Detail </a>`;
+        const sportIcon = getSportIcon(sportType);
+
+        article.innerHTML = `
+          <!-- Thumbnail  -->
+          <div class='flex items-center justify-center mt-2'>
+            <div class='h-[200px] w-[348px] rounded-lg overflow-hidden'>
+              ${thumbnailHTML}
+            </div>
+          </div>
+        
+          <!-- Content -->
+          <div class='flex items-center justify-center'>
+            <div class='mt-2 inline-flex flex-col items-center text-center'>
+              <span class='text-[#F26419] font-bold text-3xl truncate w-[260px]  my-4'>${title}</span>
+              <span class='text-[#F26419] truncate w-[260px]'>📍${location}</span>
+              <span class='text-[#F26419] my-4'>${sportIcon} ${sportType}</span>
+            </div>
+            </div>
+        
+            <!--Button-->
+              <div class='inline-flex flex-row items-center w-full justify-center'>
+                ${detailButton}
+              </div>
+        `;
+    return article;
+    }
+
+    // Render Events to Grid
+    function renderEvents(events) {
+        gridContainer.innerHTML = ''; // Clear existing content
+        events.forEach(event => {
+            const eventCard = buildEventCard(event);
+            gridContainer.appendChild(eventCard);
+        });
+    }
+
+    // Filtered Events
+    function filteredEvents(searchTerm=''){
+        let filteredEvents = allEvents;
+        // Add Filter Logic TODO
+        // Search Filter
+        if (searchTerm) {
+            filteredEvents = allEvents.filter(event => event.title.toLowerCase().includes(searchTerm));
+        }
+
+        if (sportFilter == 'all') {
+            filteredEvents = filteredEvents;
+        } else{
+            filteredEvents = filteredEvents.filter(event => event.sport_type == sportFilter.toLowerCase());
+        }
+
+        if (dateFilter == 'all'){
+            filteredEvents = filteredEvents;
+        } else{
+            filteredEvents = filteredEvents.filter(event => event.event_date == dateFilter);
+        }
+
+        if (cityFilter == 'all'){
+            filteredEvents = filteredEvents;
+        }else{
+            filteredEvents = filteredEvents.filter(event => event.city.toLowerCase() == cityFilter.toLowerCase().replace("_", " "));
+        }
+
+        if (filteredEvents.length === 0) {
+            displayPageSection({ showEmpty: true });
+        } else {
+            renderEvents(filteredEvents);
+            displayPageSection({ showGrid: true });
+        }
+    }
+
+
+    // Fetch Events from API
+    async function fetchEvents() {
+        try{
+            displayPageSection({ showLoading: true });
+
+            const response = await fetch(Event_API_URL, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }); 
+            if (!response.ok) {
+                throw new Error('Failed to fetch events');
+            }
+            const events = await response.json();
+            const today = new Date().toISOString().split('T')[0];
+            allEvents = events || []; // Store fetched events
+            allEvents = allEvents.filter(event => event.event_date >= today); // Remove old Event
+
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate loading delay
+            // Call Filter and Render after fetching
+            filteredEvents();
+
+        }
+        catch (error) {
+            // Show Error Message
+            // To be Changed
+            errorContainer.innerHTML = `<div class="card-deep-sea p-4 text-red-500">Error loading events. Please try again later.</div>`; // TODO
+            console.error('Error fetching events:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+    
+    // Show Filter Menu
+    showFilterBtn.addEventListener('click', function(){
+        showFilter = !showFilter
+        filterMenu.classList.toggle('hidden', !showFilter); 
+    });
+
+    // Search Event
+    searchBtn.addEventListener('click', function(){
+        searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+        filteredEvents(searchTerm);
+    });
+
+    applyBtn.addEventListener('click', function(){
+        console.log(document.getElementById('eventDateFilt').value)
+        sportFilter = document.getElementById('sportTypeFilt').value;
+        dateFilter = document.getElementById('eventDateFilt').value || 'all';
+        cityFilter = document.getElementById('cityFilt').value;
+    
+        filteredEvents(searchTerm);
+    })
+
+    function InitializeEventPage() {
+        
+        // Fetch Events on Page Load
+        fetchEvents();
+    }
+
+    InitializeEventPage();
+</script>
+
+{% endblock content %}

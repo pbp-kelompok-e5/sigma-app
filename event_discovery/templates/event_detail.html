@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% load icon_tags %}
+{% block title %}{{event.title}}{% endblock %}
+
+{% block extra_css %}
+<style>
+.container{
+    display: grid;
+    grid-template-areas:
+    'thumbanail info'
+    'detail detail';
+    grid-template-columns: 1.5fr 3fr;
+    gap: 12px;
+    padding: 5px;
+}
+
+.container div {
+  padding: 10px;
+}
+.container div.detail {
+  grid-area: detail;
+  text-align: left;
+}
+.container div.thumbnail {
+  grid-area: thumbanail;
+}
+.container div.info {
+  grid-area: info;
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-2">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">Event Detail</h1>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+     <div id="loading" class="bg-[#00063D] rounded-lg border border-gray-800 p-12 text-center hidden">
+      <svg class="animate-spin h-8 w-8 text-[#F26419] inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-white mt-3">Loading Event...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error" class="hidden">
+        <p class="text-red-500">An error occurred while loading the event details. Please try again later.</p>
+    </div>
+
+    <!-- Event Detail Container -->
+    <article id='event-detail' class="hidden">
+
+    </article>
+
+
+<script>
+// Configuration
+const EVENT_ID = "{{ event.id }}";
+const EVENT_DETAIL_ENDPOINT = `{% url 'event_discovery:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', EVENT_ID);
+const EVENT_PARTICIPANT_STATUS_ENDPOINT = `{% url 'event_discovery:event_participant_status' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', EVENT_ID);
+
+// DOM Elements
+const eventDetailContainer = document.getElementById('event-detail');
+const loadingIndicator = document.getElementById('loading');
+const errorContainer = document.getElementById('error');
+
+// Load State
+function showState(state) {
+    loadingIndicator.classList.toggle('hidden', state !== 'loading');
+    errorContainer.classList.toggle('hidden', state !== 'error');
+    eventDetailContainer.classList.toggle('hidden', state !== 'loaded');
+}
+
+// Render Event Detail
+function renderEventDetail(event) {
+    const joined = event.joined;
+    const thumbnailHTML = DOMPurify.sanitize(event.thumbnail ? `<img src="${event.thumbnail}" class='p-2 w-full h-[320px] object-fill hover:scale-105 transition-transform duration-300 rounded-xl'>` : `<div class='p-2 w-full h-[320px] bg-gray-600 flex items-center justify-center text-white rounded-xl'>No Image</div>`);
+    eventDetailContainer.innerHTML = `
+    <div class='container'>
+        <div class='thumbanail'>
+            <div class='card-deep-sea'>
+                ${thumbnailHTML}
+            </div>
+        </div>
+        <div class='info'>
+            <div class='card-deep-sea'>
+                <h1 class='p-2 mb-2 text-white text-3xl font-bold border-b border-white/20'>${event.title}</h1>
+                <p class='text-white/80 p-2 mb-2'>
+                    <span><strong>Jadwal : </strong>${event.event_date}</span>
+                    <span><strong> - Kota : </strong>${event.city}</span>
+                </p>
+
+                <p class='text-white/80 p-2 mb-2'>
+                    <span><strong>Lokasi : </strong>${event.location_name}</span>
+                </p>
+
+                <p class='text-white/80 p-2 mb-2'>
+                    <span><strong>Jumlah Partisipan : </strong>${event.current_participants}</span>
+                    <span> / ${event.max_participants}</span>
+                    <span><strong> - Status : </strong>${event.status.toUpperCase()}</span>
+                </p>
+
+                <p class='text-white/80 p-2 mb-2'>
+                    <span><strong>Waktu Event : </strong>${event.start_time}</span>
+                    <span><strong> - </strong>${event.end_time}</span>
+                </p>
+
+
+                <form method="${joined ? "DELETE ": "POST"}" action="${joined ? `/events/${EVENT_ID}/leave` : `/events/${EVENT_ID}/join`}">
+                    {% csrf_token %}
+                    <button type="submit" class="p-2 ml-2 mb-2 rounded-lg ${joined ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold">
+                        ${joined ? 'Leave Event' : 'Join Event'}
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class='detail'>
+            <div class='card-deep-sea'>
+                <h1 class='p-2 mb-2 text-white text-3xl font-bold border-b border-white/20'>Description</h1>
+
+                <p class='text-white/80 p-2 mb-2 border-b border-white/20'>
+                    ${event.description}
+                </p>
+
+                <p class='text-white/80 p-2 mb-2'>
+                    <span><strong>Organizer : </strong>${event.organizer}</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+// Asynchtronous Join/Leave Event Handlers
+addEventListener('submit', async function(event) {
+    if (event.target.matches('form')) {
+        event.preventDefault(); 
+        const form = event.target;
+        const actionUrl = form.action;
+        const method = form.method.toUpperCase();
+
+        showState('loading');
+        // Delay 0.25 second
+        await new Promise(resolve => setTimeout(resolve, 250));
+
+        try {
+            const response = await fetch(actionUrl, {
+                method: method,
+                headers: {
+                    'X-CSRFToken': form.querySelector('input[name="csrfmiddlewaretoken"]').value,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            // Refresh Event Detail after Join/Leave
+            await fetchEventDetail();
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            showState('error');
+        }
+    }
+});
+
+// Fetch Event Detail
+async function fetchEventDetail() {
+    showState('loading');
+    // Delay 0.25 second
+    await new Promise(resolve => setTimeout(resolve, 250));
+    try {
+        const response = await fetch(EVENT_DETAIL_ENDPOINT);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const eventData = await response.json();
+        const status = await fetch(EVENT_PARTICIPANT_STATUS_ENDPOINT);
+        const statusData = await status.json();
+        eventData.joined = statusData.status == 'joined';
+        
+        renderEventDetail(eventData);
+        showState('loaded');
+    } catch (error) {
+        console.error('Error fetching event detail:', error);
+        showState('error');
+    }
+}
+
+fetchEventDetail();
+
+</script>
+{% endblock content %}
