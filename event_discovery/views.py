@@ -1,12 +1,17 @@
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Event, EventParticipant
+from sigma_app.constants import SPORT_CHOICES, CITY_CHOICES
 
 # Create your views here.
 
 # Show All Event
 def show_event(request):
-    return render(request, 'event_page.html')
+    context={
+        'cityChoices' : CITY_CHOICES,
+        'sportChoices' : SPORT_CHOICES
+    }
+    return render(request, 'event_page.html', context)
 
 # Show Event in JSON
 def show_json(request):
@@ -67,8 +72,9 @@ def show_my_event(request):
 # JSON For Participant
 def show_json_my_event(request):
     user = request.user
-    event_participant = EventParticipant.objects.filter(user=user, status='joined')
-    event_participant += EventParticipant.objects.filter(user=user, status='attended')
+    # Filter EventParticipant by user
+    event_participant = EventParticipant.objects.filter(user=user)
+    
     event_list = [participant.event for participant in event_participant]
     data=[
         {
@@ -97,9 +103,6 @@ def show_json_my_event(request):
 def join_event(request, id):
     event = get_object_or_404(Event, pk=id)
 
-    # Cek User Sudah Join atau Belum
-    if EventParticipant.objects.filter(user=request.user, event=event).exists():
-        return JsonResponse({'message': 'Already joined'}, status=200)
 
     # Cek Kapasitas Sudah Penuh
     if event.is_full():
@@ -135,9 +138,18 @@ def leave_event(request, id):
 # Event Detail
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
-    
+
     context = {
-        'event' : event
+        'event' : event,
     }
     
     return render(request, 'event_detail.html', context)
+
+# Event Participant Status
+def event_participant_status(request, id):
+    event = get_object_or_404(Event, pk=id)
+    try:
+        participant = EventParticipant.objects.get(user=request.user, event=event)
+        return JsonResponse({'status': participant.status}, status=200)
+    except EventParticipant.DoesNotExist:
+        return JsonResponse({'status': 'not_participating'}, status=200)

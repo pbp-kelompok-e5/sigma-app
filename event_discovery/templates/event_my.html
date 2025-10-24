@@ -16,14 +16,14 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div class="flex space-x-3 mb-4 sm:mb-0">
             <button>
-                <a id='futureEvents' class="chip-primary rounded-xl">
+            <a id='futureEvents' class="chip-primary rounded-xl">
                     Upcoming Events
-                </a>
+            </a>
             </button>
             <button>
-                <a id='pastEvents' class="chip-primary rounded-xl">
+            <a id='pastEvents' class="chip-primary rounded-xl">
                     Past Events
-                </a>
+            </a>
             </button>
         </div>
     </div>
@@ -45,21 +45,24 @@
     
     <!-- Empty State -->
     <div id="empty" class="card-deep-sea text-center text-white">
-        <h3 class="text-lg font-medium font-bold mb-2">Tidak ada event yang berlangsung</h3>
-        <p>Cek kembali untuk menemukan event seru lainnya!</p>     
+        <h3 class="text-lg font-medium font-bold mb-2">Tidak ada event ditemukan</h3>
+        <p>Cari event yang sesuai dengan dirimu!</p>     
     </div>
     
 </div>
 
 <script>
-    const Event_API_URL = "{% url 'event_discovery:show_json' %}";
+    const Event_API_URL = "{% url 'event_discovery:show_json_my_event' %}";
     const CURRENT_USER_ID = "{{ user.id|default_if_none:"" }}";
+    const EVENT_PARTICIPANT_STATUS_ENDPOINT = `{% url 'event_discovery:event_participant_status' '00000000-0000-0000-0000-000000000000' %}`;
 
     // DOM Elements
     const gridContainer = document.getElementById('grid');
     const loadingIndicator = document.getElementById('loading');
     const errorContainer = document.getElementById('error');
     const emptyState = document.getElementById('empty');
+    const futureEventsBtn = document.getElementById('futureEvents');
+    const pastEventsBtn = document.getElementById('pastEvents');
   
     let allEvents = []; // To store all fetched events
     let activeFilter = 'future'
@@ -77,20 +80,112 @@
         }
     }
 
-    // Filtered Events
-    function filteredEvents(){
-        let filteredEvents;
-        // Add Filter Logic TODO
-        if (activeFilter == 'future') {
-            filteredEvents = allEvents
-        }
-
-        if (filteredEvents.length === 0) {
-            displayPageSection({ showEmpty: true });
+    // Update Button UI
+    function updateFilterButtons() {
+        if (activeFilter === 'future') {
+            futureEventsBtn.classList.add('bg-[#F26419]', 'text-[#00063D]');
+            pastEventsBtn.classList.remove('bg-[#F26419]', 'text-[#00063D]');
         } else {
-            displayPageSection({ showGrid: true });
+            pastEventsBtn.classList.add('bg-[#F26419]', 'text-[#00063D]');
+            futureEventsBtn.classList.remove('bg-[#F26419]', 'text-[#00063D]');
         }
     }
+
+    // Map Sport Type to Icon
+    function getSportIcon(sportType) {
+        const sportIcons = {
+            'basketball': '🏀',
+            'football': '⚽',
+            'tennis': '🎾',
+            'running': '🏃‍♂️',
+            'cycling': '🚴‍♀️',
+            'swimming': '🏊‍♂️',
+            'volleyball': '🏐',
+            'badminton': '🏸',
+        };
+        return sportIcons[sportType.toLowerCase()] || '🏅';
+    }
+
+
+    // Build Event Card
+    function buildEventCard(event) {
+        const article = document.createElement('article');
+        article.className = "card-deep-sea overflow-hidden w-[360px] h-[480px]";
+        const detailURL = `{% url 'event_discovery:event_detail' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', event.id);
+        const title = DOMPurify.sanitize(event.title);
+        const location = DOMPurify.sanitize(event.location_name);
+        const sportType = DOMPurify.sanitize(event.sport_type);
+        const thumbnailHTML = DOMPurify.sanitize(event.thumbnail ? `<img src="${event.thumbnail}" class='w-full h-full object-cover hover:scale-105 transition-transform duration-300 rounded-xl'>` : `<div class='w-full h-full bg-gray-600 flex items-center justify-center text-white rounded-xl'>No Image</div>`);
+        const detailButton = `<a href='${detailURL}' class='chip-primary font-bold w-full h-full flex items-center justify-center mx-2 rounded-3xl'> Detail </a>`;
+        const sportIcon = getSportIcon(sportType);
+
+        article.innerHTML = `
+          <!-- Thumbnail  -->
+          <div class='flex items-center justify-center mt-2'>
+            <div class='h-[200px] w-[348px] rounded-lg overflow-hidde'>
+              ${thumbnailHTML}
+            </div>
+          </div>
+        
+          <!-- Content -->
+          <div class='flex items-center justify-center'>
+            <div class='mt-2 inline-flex flex-col items-center text-center'>
+              <span class='text-[#F26419] font-bold text-3xl truncate w-[260px]  my-4'>${title}</span>
+              <span class='text-[#F26419] truncate w-[260px]'>📍${location}</span>
+              <span class='text-[#F26419] my-4'>${sportIcon} ${sportType}</span>
+            </div>
+            </div>
+        
+            <!--Button-->
+              <div class='inline-flex flex-row items-center w-full justify-center'>
+                ${detailButton}
+              </div>
+        `;
+    return article;
+    }
+
+    // Render Events to Grid
+    function renderEvents(events) {
+        gridContainer.innerHTML = ''; // Clear existing content
+        events.forEach(event => {
+            const eventCard = buildEventCard(event);
+            gridContainer.appendChild(eventCard);
+        });
+    }
+
+    // Filtered Events
+    async function filteredEvents() {
+    updateFilterButtons();
+
+    const statusToMatch = activeFilter === 'future' ? 'joined' : 'attended';
+
+    // Fetch participant status for all events
+    const statusChecks = await Promise.all(
+        allEvents.map(async event => {
+            try {
+                const response = await fetch(EVENT_PARTICIPANT_STATUS_ENDPOINT.replace('00000000-0000-0000-0000-000000000000', event.id));
+                const data = await response.json();
+                return { event, status: data.status };
+            } catch (error) {
+                console.error(`Error checking status for event ${event.id}:`, error);
+                return { event, status: null };
+            }
+        })
+    );
+
+    // Filter based on status
+    const filtered = statusChecks
+        .filter(item => item.status === statusToMatch)
+        .map(item => item.event);
+
+    if (filtered.length === 0) {
+        displayPageSection({ showEmpty: true });
+    } else {
+        renderEvents(filtered);
+        displayPageSection({ showGrid: true });
+    }
+}
+
 
 
     // Fetch Events from API
@@ -109,6 +204,9 @@
             const events = await response.json();
             allEvents = events || []; // Store fetched events
 
+            // Simulate loading delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
             // Call Filter and Render after fetching
             filteredEvents();
 
@@ -122,7 +220,20 @@
         }
     }
 
+    // Handle Filter Button Clicks
+    function handleFutureEventsClick() {
+        activeFilter = 'future';
+        filteredEvents();
+    }
+    function handlePastEventsClick() {
+        activeFilter = 'past';
+        filteredEvents();
+    }
+
+    // Initialize Event Page
     function InitializeEventPage() {
+        futureEventsBtn.addEventListener('click', handleFutureEventsClick);
+        pastEventsBtn.addEventListener('click', handlePastEventsClick);
 
         // Fetch Events on Page Load
         fetchEvents();

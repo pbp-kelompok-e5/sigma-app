@@ -13,4 +13,5 @@ urlpatterns = [
     path('events/<uuid:id>/join', views.join_event, name='join_event'),
     path('events/<uuid:id>/leave', views.leave_event, name='leave_event'),
     path('events/<uuid:id>/json/', views.show_json_by_id, name='show_json_by_id'),
+    path('events/<uuid:id>/participant-status/', views.event_participant_status, name='event_participant_status'),
 ]
