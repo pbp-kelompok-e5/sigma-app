@@ -45,19 +45,18 @@ def leaderboard_page(request):
             else:
                 points = profile.total_points
 
-        # Only include users with points > 0
-        if points > 0:
-            ranked_users.append({
-                'user_id': profile.user.id,
-                'full_name': profile.full_name,
-                'username': profile.user.username,
-                'total_points': points,
-                'total_events': profile.total_events,
-                'city': profile.get_city_display() if profile.city else 'Unknown',
-                'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
-                'tier': get_tier(points),
-                'badge': get_badge(points),
-            })
+        # Include all users, even with 0 points
+        ranked_users.append({
+            'user_id': profile.user.id,
+            'full_name': profile.full_name,
+            'username': profile.user.username,
+            'total_points': points,
+            'total_events': profile.total_events,
+            'city': profile.get_city_display() if profile.city else 'Unknown',
+            'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
+            'tier': get_tier(points),
+            'badge': get_badge(points),
+        })
 
     # Sort by points and assign ranks
     ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
@@ -122,19 +121,18 @@ def leaderboard_api(request):
             else:
                 points = profile.total_points
 
-        # Only include users with points > 0
-        if points > 0:
-            ranked_users.append({
-                'user_id': profile.user.id,
-                'full_name': profile.full_name,
-                'username': profile.user.username,
-                'total_points': points,
-                'total_events': profile.total_events,
-                'city': profile.get_city_display() if profile.city else 'Unknown',
-                'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
-                'tier': get_tier(points),
-                'badge': get_badge(points),
-            })
+        # Include all users, even with 0 points
+        ranked_users.append({
+            'user_id': profile.user.id,
+            'full_name': profile.full_name,
+            'username': profile.user.username,
+            'total_points': points,
+            'total_events': profile.total_events,
+            'city': profile.get_city_display() if profile.city else 'Unknown',
+            'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
+            'tier': get_tier(points),
+            'badge': get_badge(points),
+        })
 
     # Sort by points and assign ranks
     ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
