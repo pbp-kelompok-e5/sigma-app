@@ -1,77 +1,156 @@
 {% extends "base.html" %}
+{% load icon_tags %}
 {% block title %}Manage Participants{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto mt-8">
-    <h1 class="text-2xl font-semibold text-white mb-6">Manage Participants - {{ event.name }}</h1>
+<div class="max-w-6xl mx-auto mt-8 px-4">
 
-    <table class="min-w-full bg-gray-900 rounded-lg overflow-hidden text-white">
-        <thead class="bg-gray-800">
-            <tr>
-                <th class="py-2 px-4 text-left">Name</th>
-                <th class="py-2 px-4 text-left">Status</th>
-                <th class="py-2 px-4 text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in participants %}
-            <tr class="border-b border-gray-700" id="participant-{{ p.user.id }}">
-                <td class="py-2 px-4">{{ p.user.username }}</td>
-                <td class="py-2 px-4">{{ p.status }}</td>
-                <td class="py-2 px-4 text-right space-x-2">
-                    <button data-user-id="{{ p.user.id }}" 
-                            data-action="mark_attended" 
-                            class="mark-btn bg-green-600 hover:bg-green-700 px-3 py-1 rounded">Mark Attended</button>
-                    <button data-user-id="{{ p.user.id }}" 
-                            data-action="remove" 
-                            class="remove-btn bg-red-600 hover:bg-red-700 px-3 py-1 rounded">Remove</button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="py-4 text-center text-gray-400">No participants.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-semibold text-white mb-2">Manage Participants</h1>
+            <p class="text-gray-400">{{ event.title }}</p>
+        </div>
+        <a href="{% url 'event_management:my_events' %}" class="btn btn-secondary btn-sm flex items-center gap-2">
+            {% icon 'arrow-right' size='sm' color='white' %}
+            <span>Back to Events</span>
+        </a>
+    </div>
+
+    <!-- Event Info Card -->
+    <div class="card-deep-sea mb-6">
+        <div class="flex flex-wrap gap-4 text-sm">
+            <div class="flex items-center gap-2 text-gray-300">
+                {% icon 'calendar' size='sm' color='#F26419' %}
+                <span>{{ event.event_date }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-gray-300">
+                {% icon 'clock' size='sm' color='#F26419' %}
+                <span>{{ event.start_time }} - {{ event.end_time }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-gray-300">
+                {% icon 'map-pin' size='sm' color='#F26419' %}
+                <span>{{ event.city }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-gray-300">
+                {% icon 'users' size='sm' color='#F26419' %}
+                <span id="participant-count">{{ event.current_participants }} / {{ event.max_participants }} participants</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Participants Table -->
+    <div class="card-deep-sea overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-white">
+                <thead class="bg-gray-800/50 border-b border-gray-700">
+                    <tr>
+                        <th class="py-3 px-4 text-left font-semibold">Participant</th>
+                        <th class="py-3 px-4 text-left font-semibold">Status</th>
+                        <th class="py-3 px-4 text-left font-semibold">Joined At</th>
+                        <th class="py-3 px-4 text-right font-semibold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in participants %}
+                    <tr class="border-b border-gray-700/50 hover:bg-gray-800/30 transition" id="participant-{{ p.user.id }}">
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2">
+                                {% icon 'user' size='sm' color='#F26419' %}
+                                <span class="font-medium">{{ p.user.username }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="chip-secondary chip-sm status-chip {% if p.status == 'attended' %}bg-green-600{% else %}bg-blue-600{% endif %}">
+                                {{ p.status|title }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-gray-400">
+                            {{ p.joined_at|date:"M d, Y H:i" }}
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <div class="flex justify-end gap-2">
+                                <button data-user-id="{{ p.user.id }}"
+                                        data-action="mark_attended"
+                                        class="mark-btn btn btn-sm bg-green-600 hover:bg-green-700 text-white flex items-center gap-1">
+                                    {% icon 'check' size='sm' color='white' %}
+                                    <span>Mark Attended</span>
+                                </button>
+                                <button data-user-id="{{ p.user.id }}"
+                                        data-action="remove"
+                                        class="remove-btn btn btn-sm btn-danger flex items-center gap-1">
+                                    {% icon 'trash' size='sm' color='white' %}
+                                    <span>Remove</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-gray-400">
+                            <div class="flex flex-col items-center gap-2">
+                                {% icon 'users' size='lg' color='#6B7280' %}
+                                <p>No participants yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
-{% include "components/modal.html" %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function handleParticipantAction(button) {
-    const userId = button.dataset.userId;
-    const action = button.dataset.action;
-    const eventId = "{{ event.id }}";
+let currentParticipantCount = {{ event.current_participants }};
+const maxParticipants = {{ event.max_participants }};
+const eventId = "{{ event.id }}";
 
-    const message = action === "remove"
-        ? "Are you sure you want to remove this participant?"
-        : "Mark this participant as attended?";
-
-    openModal("Confirm Action", message, async () => {
-        try {
-            const res = await ajaxPost(`/event_management/${eventId}/participants/`, {
-                action: action,
-                user_id: userId
-            });
-            if (res.success) {
-                showSuccessToast(res.message);
-                if (action === "remove") {
-                    document.getElementById(`participant-${userId}`).remove();
-                } else if (action === "mark_attended") {
-                    document.querySelector(`#participant-${userId} td:nth-child(2)`).innerText = "attended";
-                }
-            } else {
-                showErrorToast(res.message || "Failed to perform action.");
-            }
-        } catch (err) {
-            handleAjaxError(err);
-        }
-    });
+function updateParticipantCount() {
+    const el = document.getElementById('participant-count');
+    el.textContent = `${currentParticipantCount} / ${maxParticipants} participants`;
 }
 
-document.querySelectorAll(".mark-btn, .remove-btn").forEach(btn => {
-    btn.addEventListener("click", () => handleParticipantAction(btn));
+async function handleParticipantAction(button) {
+    const userId = button.dataset.userId;
+    const action = button.dataset.action;
+
+    if (!confirm(action === "remove"
+        ? "Are you sure you want to remove this participant?"
+        : "Mark this participant as attended?")) return;
+
+    try {
+        const res = await ajaxPost(`/event-management/${eventId}/participants/`, {
+            action: action,
+            user_id: userId
+        });
+
+        if (res.success) {
+            if (action === "remove") {
+                document.getElementById(`participant-${userId}`)?.remove();
+                currentParticipantCount = Math.max(0, currentParticipantCount - 1);
+                updateParticipantCount();
+            } else if (action === "mark_attended") {
+                const chip = document.querySelector(`#participant-${userId} .status-chip`);
+                chip.textContent = "Attended";
+                chip.classList.remove("bg-blue-600");
+                chip.classList.add("bg-green-600");
+            }
+            showSuccessToast(res.message);
+        } else {
+            showErrorToast(res.message || "Failed to perform action.");
+        }
+    } catch (err) {
+        showErrorToast("Request failed.");
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll(".mark-btn, .remove-btn").forEach(btn =>
+        btn.addEventListener("click", () => handleParticipantAction(btn))
+    );
 });
 </script>
 {% endblock %}

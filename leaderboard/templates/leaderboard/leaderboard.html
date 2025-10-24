@@ -26,17 +26,6 @@
                     <option value="weekly" {% if current_filter == 'weekly' %}selected{% endif %}>This Week</option>
                 </select>
             </div>
-            <div class="flex-1">
-                <label class="block text-sm font-medium text-white/80 mb-2">Sport</label>
-                <select name="sport" class="w-full px-4 py-2 bg-white/10 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#F26419] focus:border-transparent">
-                    <option value="">All Sports</option>
-                    {% for sport_value, sport_label in sport_choices %}
-                        <option value="{{ sport_value }}" {% if sport_filter == sport_value %}selected{% endif %}>
-                            {{ sport_label }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
             <div class="flex items-end">
                 <button type="submit" class="btn btn-primary w-full sm:w-auto">
                     {% icon 'filter' size='sm' color='white' %}
@@ -55,7 +44,6 @@
                         <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Rank</th>
                         <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">User</th>
                         <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80 hidden sm:table-cell">City</th>
-                        <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80 hidden md:table-cell">Events</th>
                         <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Points</th>
                         <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Tier</th>
                         <th class="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-white/80">Action</th>
@@ -95,12 +83,7 @@
                         <td class="px-4 sm:px-6 py-4 hidden sm:table-cell">
                             <span class="text-white/80">{{ user.city }}</span>
                         </td>
-                        
-                        <!-- Total Events -->
-                        <td class="px-4 sm:px-6 py-4 hidden md:table-cell">
-                            <span class="text-white/80 font-medium">{{ user.total_events }}</span>
-                        </td>
-                        
+
                         <!-- Points -->
                         <td class="px-4 sm:px-6 py-4">
                             <span class="text-[#F26419] font-bold text-lg">{{ user.total_points }}</span>
@@ -140,7 +123,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="6" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-4">
                                 {% icon 'trophy' size='xl' color='white' %}
                                 <p class="text-white/60">No users found in leaderboard yet.</p>

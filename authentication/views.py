@@ -9,28 +9,18 @@ from django.core.exceptions import ValidationError
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, SportPreferenceForm
 from .models import UserProfile, SportPreference
 
-def home_view(request):
-    """Home page view"""
+def home_redirect_view(request):
+    """Home page redirect - redirects to profile if authenticated, landing page if not"""
     if request.user.is_authenticated:
-        # Show profile (TODO: Change when events module is ready) for authenticated users
-        try:
-            profile = request.user.profile
-        except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(
-                user=request.user,
-                full_name=request.user.get_full_name() or request.user.username
-            )
-
-        sport_preferences = request.user.sport_preferences.all()
-
-        context = {
-            'profile': profile,
-            'sport_preferences': sport_preferences,
-        }
-        return render(request, 'authentication/profile.html', context)
+        return redirect('authentication:profile')
     else:
         # Show landing page for anonymous users
         return render(request, 'authentication/home.html')
+
+
+def home_view(request):
+    """Home page view - kept for backward compatibility"""
+    return home_redirect_view(request)
 
 
 def register_view(request):

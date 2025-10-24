@@ -2,27 +2,131 @@
 {% block title %}Update Event{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto bg-gray-900 p-6 rounded-xl shadow-md mt-8">
-    <h1 class="text-2xl font-semibold text-white mb-4">Update Event</h1>
-    <form id="update-event-form" method="POST" class="space-y-4">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg">
-            Update Event
-        </button>
-    </form>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="card-deep-sea">
+        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-8">Update Event</h1>
+        <form id="update-event-form" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="input-group">
+                <!-- Title (Full Width) -->
+                <div class="form-field-full">
+                    {{ form.title.label_tag }}
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <span class="error-message">{{ form.title.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Description (Full Width) -->
+                <div class="form-field-full">
+                    {{ form.description.label_tag }}
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <span class="error-message">{{ form.description.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Sport Type & Thumbnail URL (2 columns) -->
+                <div class="form-row form-row-2">
+                    <div>
+                        {{ form.sport_type.label_tag }}
+                        {{ form.sport_type }}
+                        {% if form.sport_type.errors %}
+                            <span class="error-message">{{ form.sport_type.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ form.thumbnail.label_tag }}
+                        {{ form.thumbnail }}
+                        {% if form.thumbnail.errors %}
+                            <span class="error-message">{{ form.thumbnail.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Event Date, Start Time & End Time (3 columns) -->
+                <div class="form-row form-row-3">
+                    <div>
+                        {{ form.event_date.label_tag }}
+                        {{ form.event_date }}
+                        {% if form.event_date.errors %}
+                            <span class="error-message">{{ form.event_date.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ form.start_time.label_tag }}
+                        {{ form.start_time }}
+                        {% if form.start_time.errors %}
+                            <span class="error-message">{{ form.start_time.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ form.end_time.label_tag }}
+                        {{ form.end_time }}
+                        {% if form.end_time.errors %}
+                            <span class="error-message">{{ form.end_time.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- City & Location Name (2 columns) -->
+                <div class="form-row form-row-2">
+                    <div>
+                        {{ form.city.label_tag }}
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <span class="error-message">{{ form.city.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ form.location_name.label_tag }}
+                        {{ form.location_name }}
+                        {% if form.location_name.errors %}
+                            <span class="error-message">{{ form.location_name.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Max Participants (Full Width) -->
+                <div class="form-field-full">
+                    {{ form.max_participants.label_tag }}
+                    {{ form.max_participants }}
+                    {% if form.max_participants.errors %}
+                        <span class="error-message">{{ form.max_participants.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-full mt-8">
+                Update Event
+            </button>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Choices.js on the city select field
+    const citySelect = document.getElementById('{{ form.city.id_for_label }}');
+    if (citySelect) {
+        new Choices(citySelect, {
+            searchEnabled: true,
+            itemSelectText: '',
+            searchPlaceholderValue: 'Search for a city...',
+            noResultsText: 'No cities found',
+            shouldSort: false
+        });
+    }
+});
 document.getElementById("update-event-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
 
     try {
-        const res = await ajaxPost(form.action || window.location.pathname, formData);
+        const res = await ajaxPostFormData(form.action || window.location.pathname, formData);
         if (res.success) {
             showSuccessToast(res.message);
             setTimeout(() => window.location.href = res.redirect_url, 1000);
@@ -30,7 +134,7 @@ document.getElementById("update-event-form").addEventListener("submit", async (e
             showErrorToast("Failed to update event.");
         }
     } catch (err) {
-        handleAjaxError(err);
+        handleAjaxError(err, "Failed to update event. Please try again.");
     }
 });
 </script>

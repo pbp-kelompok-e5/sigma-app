@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load icon_tags %}
 
-{% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - Sigma App{% endblock %}
+{% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - BondUp{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -166,7 +166,7 @@
                     </div>
                     <h2 class="text-xl sm:text-2xl font-bold text-white">Connections</h2>
                 </div>
-                <a href="{% url 'partner_matching:my_connections' %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
+                <a href="{% url 'partner_matching:connections' %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
                     {% icon 'arrow-right' size='sm' color='white' %}
                     View
                 </a>
@@ -177,7 +177,7 @@
                     {% icon 'users' size='lg' color='#60A5FA' %}
                 </div>
                 <p class="text-white/60 mb-3 text-sm">Connect with sports enthusiasts</p>
-                <a href="{% url 'partner_matching:my_connections' %}" class="btn btn-primary btn-sm bg-blue-500 hover:bg-blue-600 hover:scale-105 transition-all">
+                <a href="{% url 'partner_matching:connections' %}" class="btn btn-primary btn-sm bg-blue-500 hover:bg-blue-600 hover:scale-105 transition-all">
                     {% icon 'arrow-right' size='sm' color='white' %}
                     Explore
                 </a>
@@ -197,7 +197,7 @@
                     <h2 class="text-xl sm:text-2xl font-bold text-white">My Reviews</h2>
                 </div>
                 {% if reviews_written %}
-                <a href="{% url 'reviews:written' profile_user.id %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
+                    <a href="{% url 'reviews:user-written-reviews' profile_user.id %}" class="chip chip-secondary chip-sm bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all">
                     {% icon 'arrow-right' size='sm' color='white' %}
                     All
                 </a>

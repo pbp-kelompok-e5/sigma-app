@@ -145,7 +145,7 @@
     function buildEventCard(event) {
         const article = document.createElement('article');
         article.className = "card-deep-sea overflow-hidden w-[360px] h-[480px]";
-        const detailURL = `{% url 'event_discovery:event_detail' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', event.id);
+        const detailURL = `{% url 'event_discovery:event_detail' '0' %}`.replace('0', event.id);
         const title = DOMPurify.sanitize(event.title);
         const location = DOMPurify.sanitize(event.location_name);
         const sportType = DOMPurify.sanitize(event.sport_type);

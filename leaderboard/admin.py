@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PointTransaction, Leaderboard, Achievement
+from .models import PointTransaction, Achievement
 
 
 @admin.register(PointTransaction)
@@ -8,14 +8,6 @@ class PointTransactionAdmin(admin.ModelAdmin):
     list_filter = ('activity_type', 'created_at')
     search_fields = ('user__username', 'description')
     readonly_fields = ('created_at',)
-
-
-@admin.register(Leaderboard)
-class LeaderboardAdmin(admin.ModelAdmin):
-    list_display = ('rank', 'user', 'total_points', 'period', 'sport_type')
-    list_filter = ('period', 'sport_type')
-    search_fields = ('user__username',)
-    readonly_fields = ('last_updated',)
 
 
 @admin.register(Achievement)
