@@ -27,8 +27,63 @@ function ajaxPost(url, data = {}, options = {}) {
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
         },
         body: JSON.stringify(data),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (showToast && data.success) {
+            showSuccessToast(data.message || successMessage);
+        }
+        if (onSuccess) {
+            onSuccess(data);
+        }
+        return data;
+    })
+    .catch(error => {
+        console.error('AJAX Error:', error);
+        if (showToast) {
+            showErrorToast(errorMessage);
+        }
+        if (onError) {
+            onError(error);
+        }
+        throw error;
+    });
+}
+
+/**
+ * Make a POST request with FormData (for file uploads)
+ * @param {string} url - The endpoint URL
+ * @param {FormData} formData - FormData object to send
+ * @param {object} options - Additional options (onSuccess, onError, showToast)
+ * @returns {Promise}
+ */
+function ajaxPostFormData(url, formData, options = {}) {
+    const {
+        onSuccess = null,
+        onError = null,
+        showToast = true,
+        successMessage = 'Operation successful',
+        errorMessage = 'An error occurred',
+    } = options;
+
+    // Get CSRF token from cookie
+    const csrfToken = getCookie('csrftoken');
+
+    return fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData,
     })
     .then(response => {
         if (!response.ok) {
@@ -79,7 +134,62 @@ function ajaxDelete(url, options = {}) {
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
         },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (showToast && data.success) {
+            showSuccessToast(data.message || successMessage);
+        }
+        if (onSuccess) {
+            onSuccess(data);
+        }
+        return data;
+    })
+    .catch(error => {
+        console.error('AJAX Error:', error);
+        if (showToast) {
+            showErrorToast(errorMessage);
+        }
+        if (onError) {
+            onError(error);
+        }
+        throw error;
+    });
+}
+
+/**
+ * Make a PATCH request with CSRF token
+ * @param {string} url - The endpoint URL
+ * @param {object} data - Data to send (will be JSON stringified)
+ * @param {object} options - Additional options
+ * @returns {Promise}
+ */
+function ajaxPatch(url, data = {}, options = {}) {
+    const {
+        onSuccess = null,
+        onError = null,
+        showToast = true,
+        successMessage = 'Updated successfully',
+        errorMessage = 'Failed to update',
+    } = options;
+
+    const csrfToken = getCookie('csrftoken');
+
+    return fetch(url, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(data),
     })
     .then(response => {
         if (!response.ok) {
@@ -126,6 +236,7 @@ function ajaxGet(url, options = {}) {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
         },
     })
     .then(response => {
@@ -227,5 +338,16 @@ function throttle(func, limit) {
             setTimeout(() => inThrottle = false, limit);
         }
     };
+}
+
+/**
+ * Handle AJAX errors with user-friendly messages
+ * @param {Error} error - The error object
+ * @param {string} customMessage - Optional custom error message
+ */
+function handleAjaxError(error, customMessage = null) {
+    console.error('AJAX Error:', error);
+    const message = customMessage || 'An error occurred. Please try again.';
+    showErrorToast(message);
 }
 

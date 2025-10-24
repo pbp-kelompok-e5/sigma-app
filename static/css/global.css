@@ -329,16 +329,70 @@
     gap: 12px;
 }
 
+/* ===== EVENT MANAGEMENT STYLES ===== */
+
+/* Event card enhancements */
+.event-item {
+    border-left: 4px solid var(--orange-sport);
+}
+
+.event-item:hover {
+    border-left-color: var(--orange-sport-hover);
+}
+
+/* Status badge styles */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.status-active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+}
+
+.status-badge.status-cancelled {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.status-badge.status-completed {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+}
+
+/* Event info icons */
+.event-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+}
+
+.event-info-item svg {
+    flex-shrink: 0;
+}
+
 /* ===== INPUT DESIGN SYSTEM ===== */
 
 /* Input group container */
 .input-group {
     display: flex;
     width: 100%;
-    max-width: 652px;
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 24px;
 }
 
 /* Input label */
@@ -350,19 +404,64 @@
     line-height: normal;
 }
 
+/* Form field wrapper */
+.input-group > div:not(.form-row) {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Form row layout for multiple fields */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    width: 100%;
+}
+
+/* Two column layout on medium screens and up */
+@media (min-width: 768px) {
+    .form-row.form-row-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Three column layout on large screens */
+@media (min-width: 1024px) {
+    .form-row.form-row-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+/* Full width field */
+.form-field-full {
+    grid-column: 1 / -1;
+}
+
+/* Form labels styling */
+.input-group label {
+    color: var(--orange-sport);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    display: block;
+    margin-bottom: 4px;
+}
+
 /* Base input styles */
 .input-group input,
 .input-group textarea,
-.input-group select {
+.input-group select,
+.form-input {
     display: flex;
-    padding: 16px 8px;
+    padding: 12px 16px;
     align-items: center;
     gap: 10px;
     align-self: stretch;
     width: 100%;
-    border: none;
-    border-bottom: 2px solid var(--orange-sport);
-    border-radius: 0;
+    border: 2px solid var(--orange-sport);
+    border-radius: 8px;
     background: transparent;
     color: var(--orange-sport);
     font-size: 16px;
@@ -370,46 +469,55 @@
     font-weight: 400;
     line-height: normal;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 /* Focus state */
 .input-group input:focus,
 .input-group textarea:focus,
-.input-group select:focus {
-    border-bottom: 2px solid var(--orange-sport-hover);
+.input-group select:focus,
+.form-input:focus {
+    border-color: var(--orange-sport-hover);
+    box-shadow: 0 0 0 4px rgba(242, 100, 25, 0.1);
 }
 
 /* Placeholder styling */
 .input-group input::placeholder,
-.input-group textarea::placeholder {
+.input-group textarea::placeholder,
+.form-input::placeholder {
     color: rgba(242, 100, 25, 0.5);
 }
 
 /* Disabled state */
 .input-group input:disabled,
 .input-group textarea:disabled,
-.input-group select:disabled {
+.input-group select:disabled,
+.form-input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 /* Textarea specific */
-.input-group textarea {
+.input-group textarea,
+.form-input[type="textarea"] {
     min-height: 120px;
     resize: vertical;
+    font-family: inherit;
 }
 
 /* Error state */
-.input-group .input-error {
-    border-bottom-color: #dc2626;
+.input-group .input-error,
+.form-input.input-error {
+    border-color: #dc2626;
     color: #dc2626;
 }
 
-.input-group .error-message {
+.input-group .error-message,
+.form-input ~ .error-message {
     color: #dc2626;
     font-size: 14px;
-    margin-top: -8px;
+    margin-top: -4px;
 }
 
 /* ===== CUSTOM STYLES FOR SEARCHABLE SELECT (Choices.js) ===== */
