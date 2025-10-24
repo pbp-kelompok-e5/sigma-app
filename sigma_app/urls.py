@@ -21,8 +21,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('authentication.urls')),
     path('leaderboard/', include('leaderboard.urls')),
-    # path('partner-matching/', include('partner_matching.urls')),
-    # path('event-discovery/', include('event_discovery.urls')),
+    path('partner-matching/', include('partner_matching.urls')),
+    path('event-discovery/', include('event_discovery.urls')),
     path('event-management/', include('event_management.urls')),
-    # path('reviews/', include('reviews.urls')),
+    path('reviews/', include('reviews.urls')),
 ]
