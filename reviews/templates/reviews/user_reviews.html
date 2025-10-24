@@ -14,12 +14,12 @@
     <div class="card-body">
 
       {% if reviews %}
-      <!-- ✅ GRID 3 COLOMNS -->
+      <!-- ✅ GRID 3 COLUMNS -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {% for review in reviews %}
         <div style="background: var(--deep-sea-light); border-radius: 12px; padding: 16px;">
-          <!-- Pemberi Review -->
+          <!-- Reviewer -->
           <p><strong>{{ review.from_user.username }}</strong></p>
 
           <!-- Rating -->
@@ -27,15 +27,15 @@
             {{ review.rating }} ⭐
           </p>
 
-          <!-- Nama Event -->
+          <!-- Event -->
           <p style="font-size: .9rem; opacity: .9;">
             Event: <span style="font-weight: 600;">{{ review.event.title }}</span>
           </p>
 
-          <!-- Komentar -->
+          <!-- Comment -->
           <p><em>{{ review.comment }}</em></p>
 
-          <!-- Tanggal -->
+          <!-- Date -->
           <p style="font-size: 0.75rem; opacity: 0.7; margin-top: 6px;">
             {{ review.created_at }}
           </p>
