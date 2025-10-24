@@ -27,7 +27,61 @@
 <body class="bg-gray-800 min-h-screen">
     {% block content %}{% endblock %}
 
+    <!-- Modal and Toast Utilities -->
+    <script src="{% static 'js/modal-toast.js' %}"></script>
+
+    <!-- AJAX Utilities -->
+    <script src="{% static 'js/ajax-utils.js' %}"></script>
+
     {% block extra_js %}{% endblock %}
+    <!-- Toast container (Tailwind) -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<script>
+/* CSRF helper (works in modern browsers) */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const c = cookies[i].trim();
+            if (c.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/* Simple toast utility using Tailwind classes
+   type can be 'success' | 'error' | 'info' */
+function showToast(message, type='info', duration=3500) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const color = (type === 'success') ? 'bg-green-600' : (type === 'error') ? 'bg-red-600' : 'bg-slate-700';
+    const toast = document.createElement('div');
+    toast.className = `${color} text-white p-3 rounded shadow-md max-w-sm`;
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 150ms ease-in-out, transform 150ms ease-in-out';
+    toast.innerText = message;
+
+    container.appendChild(toast);
+    // animate in
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    setTimeout(() => {
+        // fade out
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 200);
+    }, duration);
+}
+</script>
+
 </body>
 
 </html>

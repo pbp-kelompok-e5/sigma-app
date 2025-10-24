@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Create Event{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto bg-gray-900 p-6 rounded-xl shadow-md mt-8">
+    <h1 class="text-2xl font-semibold text-white mb-4">Create Event</h1>
+    <form id="create-event-form" method="POST" class="space-y-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg">
+            Create Event
+        </button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById("create-event-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    try {
+        const res = await ajaxPost(form.action || window.location.pathname, formData);
+        if (res.success) {
+            showSuccessToast(res.message);
+            setTimeout(() => window.location.href = res.redirect_url, 1000);
+        } else {
+            showErrorToast("Failed to create event.");
+        }
+    } catch (err) {
+        handleAjaxError(err);
+    }
+});
+</script>
+{% endblock %}
