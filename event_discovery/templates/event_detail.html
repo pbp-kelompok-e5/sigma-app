@@ -64,9 +64,10 @@
 <script>
 // Configuration
 const EVENT_ID = "{{ event.id }}";
-const EVENT_DETAIL_ENDPOINT = `{% url 'event_discovery:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', EVENT_ID);
-const EVENT_PARTICIPANT_STATUS_ENDPOINT = `{% url 'event_discovery:event_participant_status' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', EVENT_ID);
-
+const EVENT_DETAIL_ENDPOINT = `{% url 'event_discovery:show_json_by_id' 0 %}`.replace('0', EVENT_ID);
+const EVENT_PARTICIPANT_STATUS_ENDPOINT = `{% url 'event_discovery:event_participant_status' 0 %}`.replace('0', EVENT_ID);
+const EVENT_HAS_ATTENDED_ENDPOINT = `{% url 'event_discovery:event_has_attended_participants' 0 %}`.replace('0', EVENT_ID);
+const EVENT_USER_HAS_REVIEWED_ENDPOINT = `{% url 'event_discovery:event_user_has_reviewed' 0 %}`.replace('0', EVENT_ID);
 // DOM Elements
 const eventDetailContainer = document.getElementById('event-detail');
 const loadingIndicator = document.getElementById('loading');
@@ -82,6 +83,9 @@ function showState(state) {
 // Render Event Detail
 function renderEventDetail(event) {
     const joined = event.joined;
+    const attended = event.attended;
+    const hasAttendedParticipants = event.hasAttendedParticipants;
+    const hasReviewed = event.hasReviewed;
     const thumbnailHTML = DOMPurify.sanitize(event.thumbnail ? `<img src="${event.thumbnail}" class='p-2 w-full h-[320px] object-fill hover:scale-105 transition-transform duration-300 rounded-xl'>` : `<div class='p-2 w-full h-[320px] bg-gray-600 flex items-center justify-center text-white rounded-xl'>No Image</div>`);
     eventDetailContainer.innerHTML = `
     <div class='container'>
@@ -113,13 +117,29 @@ function renderEventDetail(event) {
                     <span><strong> - </strong>${event.end_time}</span>
                 </p>
 
+                ${!attended ? `
+                    ${!joined ? `
+                    <form method="POST" action="/event-discovery/events/${EVENT_ID}/join">
+                        {% csrf_token %}
+                        <button type="submit" class="p-2 ml-2 mb-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold">
+                            Join Event
+                        </button>
+                    </form>
+                    ` : `
+                    <form method="POST" action="/event-discovery/events/${EVENT_ID}/leave">
+                        {% csrf_token %}
+                        <button type="submit" class="p-2 ml-2 mb-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold">
+                            Leave Event
+                        </button>
+                    </form>
+                    `}
+                ` : ''}
 
-                <form method="${joined ? "DELETE ": "POST"}" action="${joined ? `/events/${EVENT_ID}/leave` : `/events/${EVENT_ID}/join`}">
-                    {% csrf_token %}
-                    <button type="submit" class="p-2 ml-2 mb-2 rounded-lg ${joined ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold">
-                        ${joined ? 'Leave Event' : 'Join Event'}
-                    </button>
-                </form>
+                ${hasAttendedParticipants && !hasReviewed ? `
+                <a href="/reviews/${EVENT_ID}/" class="inline-block p-2 ml-2 mb-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                    Review Participants
+                </a>
+                ` : ''}
             </div>
         </div>
         <div class='detail'>
@@ -186,7 +206,18 @@ async function fetchEventDetail() {
         const status = await fetch(EVENT_PARTICIPANT_STATUS_ENDPOINT);
         const statusData = await status.json();
         eventData.joined = statusData.status == 'joined';
-        
+        eventData.attended = statusData.status == 'attended';
+
+        // Check if event has attended participants
+        const attendedResponse = await fetch(EVENT_HAS_ATTENDED_ENDPOINT);
+        const attendedData = await attendedResponse.json();
+        eventData.hasAttendedParticipants = attendedData.has_attended_participants;
+
+        // Check if user has already reviewed
+        const reviewedResponse = await fetch(EVENT_USER_HAS_REVIEWED_ENDPOINT);
+        const reviewedData = await reviewedResponse.json();
+        eventData.hasReviewed = reviewedData.has_reviewed;
+
         renderEventDetail(eventData);
         showState('loaded');
     } catch (error) {

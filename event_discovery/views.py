@@ -2,6 +2,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Event, EventParticipant
 from sigma_app.constants import SPORT_CHOICES, CITY_CHOICES
+from reviews.models import Review
 
 # Create your views here.
 
@@ -153,3 +154,25 @@ def event_participant_status(request, id):
         return JsonResponse({'status': participant.status}, status=200)
     except EventParticipant.DoesNotExist:
         return JsonResponse({'status': 'not_participating'}, status=200)
+
+# Check if event has attended participants (excluding current user)
+def event_has_attended_participants(request, id):
+    event = get_object_or_404(Event, pk=id)
+    # Check if there are any attended participants excluding the current user
+    has_attended = EventParticipant.objects.filter(
+        event=event,
+        status='attended'
+    ).exclude(user=request.user).exists()
+
+    return JsonResponse({'has_attended_participants': has_attended}, status=200)
+
+# Check if user has already reviewed participants for this event
+def event_user_has_reviewed(request, id):
+    event = get_object_or_404(Event, pk=id)
+    # Check if the user has submitted any reviews for this event
+    has_reviewed = Review.objects.filter(
+        event=event,
+        from_user=request.user
+    ).exists()
+
+    return JsonResponse({'has_reviewed': has_reviewed}, status=200)

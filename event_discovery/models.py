@@ -11,10 +11,7 @@ class Event(models.Model):
         ('full', 'Full'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
-    ]
-    # Event ID
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
+    ]    
     # User yang membuat atau menyelenggarakan event
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     
