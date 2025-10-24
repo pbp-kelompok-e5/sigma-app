@@ -3,46 +3,66 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.http import JsonResponse
 from authentication.models import UserProfile
-from leaderboard.models import PointTransaction, Achievement, Leaderboard
-from sigma_app.constants import SPORT_CHOICES
+from leaderboard.models import PointTransaction, Achievement
 
 
 def leaderboard_page(request):
     """
     Leaderboard Page - menampilkan ranking user berdasarkan total points
-    dengan filter periode dan olahraga
+    dengan filter periode
     """
+    from django.utils import timezone
+    from datetime import timedelta
 
     # Get filter dari query params
     period_filter = request.GET.get('period', 'all_time')
-    sport_filter = request.GET.get('sport', '')
 
-    # Query leaderboard dengan filter period dan sport
-    leaderboard_query = Leaderboard.objects.select_related('user').filter(period=period_filter)
+    # Query all user profiles
+    profiles_query = UserProfile.objects.select_related('user').all()
 
-    # Apply sport filter if provided
-    if sport_filter:
-        leaderboard_query = leaderboard_query.filter(sport_type=sport_filter)
-
-    # Order by rank
-    leaderboard_query = leaderboard_query.order_by('rank')
-
-    # Build ranked users list
+    # Build ranked users list with period filtering
     ranked_users = []
-    for entry in leaderboard_query:
-        profile = entry.user.userprofile
-        ranked_users.append({
-            'rank': entry.rank,
-            'user_id': entry.user.id,
-            'full_name': profile.full_name,
-            'username': entry.user.username,
-            'total_points': entry.total_points,
-            'total_events': profile.total_events,
-            'city': profile.get_city_display() if profile.city else 'Unknown',
-            'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
-            'tier': get_tier(entry.total_points),
-            'badge': get_badge(entry.total_points),
-        })
+    for profile in profiles_query:
+        # Calculate points based on period
+        if period_filter == 'all_time':
+            points = profile.total_points
+        else:
+            # Filter point transactions by period
+            now = timezone.now()
+            if period_filter == 'weekly':
+                start_date = now - timedelta(days=7)
+            elif period_filter == 'monthly':
+                start_date = now - timedelta(days=30)
+            else:
+                start_date = None
+
+            if start_date:
+                period_points = PointTransaction.objects.filter(
+                    user=profile.user,
+                    created_at__gte=start_date
+                ).aggregate(Sum('points'))['points__sum'] or 0
+                points = period_points
+            else:
+                points = profile.total_points
+
+        # Only include users with points > 0
+        if points > 0:
+            ranked_users.append({
+                'user_id': profile.user.id,
+                'full_name': profile.full_name,
+                'username': profile.user.username,
+                'total_points': points,
+                'total_events': profile.total_events,
+                'city': profile.get_city_display() if profile.city else 'Unknown',
+                'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
+                'tier': get_tier(points),
+                'badge': get_badge(points),
+            })
+
+    # Sort by points and assign ranks
+    ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
+    for rank, user_data in enumerate(ranked_users, start=1):
+        user_data['rank'] = rank
 
     # Get current user's rank if logged in
     current_user_rank = None
@@ -55,8 +75,6 @@ def leaderboard_page(request):
     context = {
         'users': ranked_users,
         'current_filter': period_filter,
-        'sport_filter': sport_filter,
-        'sport_choices': SPORT_CHOICES,
         'current_user_rank': current_user_rank,
     }
 
@@ -66,40 +84,62 @@ def leaderboard_page(request):
 def leaderboard_api(request):
     """
     AJAX API endpoint for leaderboard data
-    Supports filtering by period and sport
+    Supports filtering by period
     """
-    # Get filter dari query params
+    from django.utils import timezone
+    from datetime import timedelta
+
+    # Get filter and pagination params
     period_filter = request.GET.get('period', 'all_time')
-    sport_filter = request.GET.get('sport', '')
     page = int(request.GET.get('page', 1))
     per_page = int(request.GET.get('per_page', 20))
 
-    # Query leaderboard dengan filter period dan sport
-    leaderboard_query = Leaderboard.objects.select_related('user').filter(period=period_filter)
+    # Query all user profiles
+    profiles_query = UserProfile.objects.select_related('user').all()
 
-    # Apply sport filter if provided
-    if sport_filter:
-        leaderboard_query = leaderboard_query.filter(sport_type=sport_filter)
-
-    # Order by rank
-    leaderboard_query = leaderboard_query.order_by('rank')
-
-    # Build ranked users list
+    # Build ranked users list with period filtering
     ranked_users = []
-    for entry in leaderboard_query:
-        profile = entry.user.userprofile
-        ranked_users.append({
-            'rank': entry.rank,
-            'user_id': entry.user.id,
-            'full_name': profile.full_name,
-            'username': entry.user.username,
-            'total_points': entry.total_points,
-            'total_events': profile.total_events,
-            'city': profile.get_city_display() if profile.city else 'Unknown',
-            'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
-            'tier': get_tier(entry.total_points),
-            'badge': get_badge(entry.total_points),
-        })
+    for profile in profiles_query:
+        # Calculate points based on period
+        if period_filter == 'all_time':
+            points = profile.total_points
+        else:
+            # Filter point transactions by period
+            now = timezone.now()
+            if period_filter == 'weekly':
+                start_date = now - timedelta(days=7)
+            elif period_filter == 'monthly':
+                start_date = now - timedelta(days=30)
+            else:
+                start_date = None
+
+            if start_date:
+                period_points = PointTransaction.objects.filter(
+                    user=profile.user,
+                    created_at__gte=start_date
+                ).aggregate(Sum('points'))['points__sum'] or 0
+                points = period_points
+            else:
+                points = profile.total_points
+
+        # Only include users with points > 0
+        if points > 0:
+            ranked_users.append({
+                'user_id': profile.user.id,
+                'full_name': profile.full_name,
+                'username': profile.user.username,
+                'total_points': points,
+                'total_events': profile.total_events,
+                'city': profile.get_city_display() if profile.city else 'Unknown',
+                'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
+                'tier': get_tier(points),
+                'badge': get_badge(points),
+            })
+
+    # Sort by points and assign ranks
+    ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
+    for rank, user_data in enumerate(ranked_users, start=1):
+        user_data['rank'] = rank
 
     # Pagination
     start = (page - 1) * per_page
