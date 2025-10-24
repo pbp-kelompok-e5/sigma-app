@@ -15,7 +15,6 @@ import json
 
 from django.template.loader import render_to_string
 
-# Create your views here.
 def browse_user_ajax(request):
 
     users_query = User.objects.exclude(pk=request.user.pk).select_related('profile').prefetch_related('sport_preferences')
@@ -42,6 +41,9 @@ def browse_user_ajax(request):
     users_query = users_query.distinct()
 
     users_list = []
+
+    DEFAULT_AVATAR = 'https://ui-avatars.com/api/?background=F26419&color=fff&size=96&name='
+
     for user in users_query:
         profile = getattr(user, 'profile', None)
         if not profile:
@@ -50,22 +52,22 @@ def browse_user_ajax(request):
         sport_preferences = user.sport_preferences.all()
         sport_display = ", ".join([sp.sport_type for sp in sport_preferences]) if sport_preferences else "No Sports"
         
-        # FIX: Handle profile picture based on actual model fields
         profile_picture_url = ''
         
-        # Cek field yang ada di UserProfile model Anda
+        # cek field yang ada di UserProfile 
         if hasattr(profile, 'profile_image_url') and profile.profile_image_url:
-            # Jika menggunakan URL field
+            # jika menggunakan URL field
             profile_picture_url = profile.profile_image_url
         elif hasattr(profile, 'photo') and profile.photo:
-            # Jika menggunakan ImageField
+            # jika menggunakan ImageField
             try:
                 profile_picture_url = profile.photo.url
             except:
                 profile_picture_url = ''
         else:
-            # Fallback ke default avatar
-            profile_picture_url = '/static/images/default-avatar.png'
+            # fallback ke default avatar
+            user_name = profile.full_name or user.username
+            profile_picture_url = f"{DEFAULT_AVATAR}{user_name.replace(' ', '+')}"
         
         users_list.append({
             'id': user.id,
@@ -86,8 +88,6 @@ def browse_user(request):
         'skills': SKILL_CHOICES,
     }
 
-    # print("SPORT_CHOICES:", SPORT_CHOICES)
-
     return render(request, 'partner_matching/browse.html', context)
     
 @login_required
@@ -98,73 +98,46 @@ def user_profile_detail(request, user_id):
 
     sport_preferences = SportPreference.objects.filter(user=target_user)
 
-    # cek koneksi antara user saat ini dan target_user
     connection_status = None
 
-    connection = Connection.objects.filter(
-        from_user=request.user, to_user=target_user
-    ).first()
+    is_friends = Connection.objects.filter(
+        Q(from_user=request.user, to_user=target_user, status='accepted') |
+        Q(from_user=target_user, to_user=request.user, status='accepted')
+    ).exists()
 
-    if connection:
-        connection_status = connection.status  # 'pending' or 'accepted' or 'rejected'
+    if is_friends:
+        connection_status = 'accepted'
     else:
-        incoming_connection = Connection.objects.filter(
-            from_user=target_user, to_user=request.user
+        # apakah ada request yang dikirim dari user ke target
+        sent_request = Connection.objects.filter(
+            from_user=request.user,
+            to_user=target_user
         ).first()
-        if incoming_connection:
-            connection_status = 'incoming'
+
+        # apakah ada request yang diterima dari target ke user
+        received_request = Connection.objects.filter(
+            from_user=target_user,
+            to_user=request.user
+        ).first()
+
+        if sent_request:
+            # kalau ada request yang dikirim, status bisa pending/reject
+            connection_status = 'pending'
+        elif received_request:
+            # kalau ada request yang diterima, status bisa pending/rejected
+            connection_status = 'pending'
+        else:
+            # tidak ada koneksi sama sekali
+            connection_status = None
     
     context = {
         'profile_user': target_user,
         'profile': target_profile,
         'sport_preferences': sport_preferences,
         'connection_status': connection_status,
-        'connection': connection,
-        'connection_status': connection_status,
     }
 
     return render(request, 'partner_matching/user_profile_detail.html', context)
-
-# @login_required
-# def user_profile_detail(request, user_id):
-#     target_user = get_object_or_404(User, id=user_id)
-#     target_profile = get_object_or_404(UserProfile, user=target_user)
-    
-#     is_own_profile = (request.user == target_user)
-#     sport_preferences = SportPreference.objects.filter(user=target_user)
-    
-#     # connection logic
-#     connection_status = None
-    
-#     if not is_own_profile:
-#         # check if current user sent a request to target user
-#         sent_request = Connection.objects.filter(
-#             from_user=request.user,
-#             to_user=target_user
-#         ).first()
-        
-#         if sent_request:
-#             connection_status = sent_request.status  # 'pending' or 'accepted'
-#         else:
-#             # Check if target user sent a request to current user  
-#             received_request = Connection.objects.filter(
-#                 from_user=target_user,
-#                 to_user=request.user,
-#                 status='pending'
-#             ).first()
-            
-#             if received_request:
-#                 connection_status = 'incoming'
-    
-#     context = {
-#         'profile_user': target_user,
-#         'profile': target_profile,
-#         'sport_preferences': sport_preferences,
-#         'is_own_profile': is_own_profile,
-#         'connection_status': connection_status,
-#     }
-    
-#     return render(request, 'partner_matching/user_profile_detail.html', context)
 
 @login_required
 @require_http_methods(["POST"])
@@ -176,7 +149,7 @@ def connection_request(request, action, user_id):
     
     try:
         if action == 'connect':
-            # Create connection request
+            # create connection request
             connection, created = Connection.objects.get_or_create(
                 from_user=request.user,
                 to_user=target_user,
@@ -187,7 +160,7 @@ def connection_request(request, action, user_id):
                 return JsonResponse({'success': False, 'error': 'Connection request already exists'})
                 
         elif action == 'accept':
-            # Accept incoming connection request
+            # accept incoming connection request
             connection = get_object_or_404(
                 Connection, 
                 from_user=target_user, 
@@ -198,7 +171,7 @@ def connection_request(request, action, user_id):
             connection.save()
             
         elif action == 'reject':
-            # Reject incoming connection request
+            # reject incoming connection request
             connection = get_object_or_404(
                 Connection, 
                 from_user=target_user, 
@@ -215,98 +188,18 @@ def connection_request(request, action, user_id):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
-
-def icon_preview(request):
-    from sigma_app.templatetags.icon_tags import get_available_icons, get_size_presets, get_color_presets
-    
-    context = {
-        'available_icons': get_available_icons(),
-        'size_presets': get_size_presets(),
-        'color_presets': get_color_presets(),
-    }
-    return render(request, 'partner_matching/icons_preview.html', context)
-
-@login_required
-def connection(request):
-    my_friends = User.objects.filter(
-        Q(connections_sent__to_user=request.user, connections_sent__status='accepted') |
-        Q(connections_received__from_user=request.user, connections_received__status='accepted')
-    ).distinct()
-
-    received_requests = Connection.objects.filter(
-        connections_sent__to_user=request.user, connections_sent__status='pending'
-    ).distinct()
-
-    sent_requests = Connection.objects.filter(
-        connections_received__from_user=request.user, connections_received__status='pending'
-    ).distinct()
-
-    context = {
-        'my_friends': my_friends,
-        'received_requests': received_requests,
-        'sent_requests': sent_requests,
-        'is_own_connections': True,
-    }
-
-    return render(request, 'partner_matching/connections.html', context)
-
-def public_connection(request, user_id):
-    target_user = get_object_or_404(User, id=user_id)
-
-    friends = User.objects.filter(
-        Q(connections_sent__to_user=target_user, connections_sent__status='accepted') |
-        Q(connections_received__from_user=target_user, connections_received__status='accepted')
-    ).distinct()
-
-    context = {
-        'target_user': target_user,
-        'friends': friends,
-        'is_own_connections': False,
-    }
-
-    return render(request, 'partner_matching/connections.html', context)
-
-@login_required
-def connection_action(request, action, connection_id):
-    connection = get_object_or_404(Connection, id=connection_id)
-
-    if connection.from_user != request.user and connection.to_user != request.user:
-        return JsonResponse({'success': False, 'error': 'Not authorized'})
-    
-    try:
-        if action == 'accept':
-            if connection.to_user == request.user and connection.status == 'pending':
-                connection.status = 'accepted'
-                connection.save()
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid action'})
-        
-        elif action == 'reject':
-            if connection.to_user == request.user and connection.status == 'pending':
-                connection.status = 'rejected'
-                connection.save()
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid action'})
-            
-        elif action == 'remove':
-            if (connection.from_user == request.user or connection.to_user == request.user) and connection.status == 'accepted':
-                connection.delete()
-            else:
-                return JsonResponse({'success': False, 'error': 'Invalid action'})
-
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
     
 @login_required
 def connections(request):
-    """Own profile connections view with tabs - CORRECTED"""
+    # own profile connections view with tabs 
     try:
-        # Friends: Users who have accepted connections with current user
+        # Friends: current user accepting requests from other users
         friends_who_sent_to_me = User.objects.filter(
             connections_sent__to_user=request.user,
             connections_sent__status='accepted'
         )
         
+        # Friends: another user accepted current user request and the status is accepted
         friends_who_received_from_me = User.objects.filter(
             connections_received__from_user=request.user,
             connections_received__status='accepted'
@@ -326,18 +219,41 @@ def connections(request):
             connections_received__status='pending'
         )
 
-        # excluded
+        # excluded 
         excluded_users = User.objects.filter(
             Q(connections_sent__to_user=request.user) |
             Q(connections_received__from_user=request.user) |
             Q(id=request.user.id)
         ).distinct()
+
+        user_sports = SportPreference.objects.filter(user=request.user).values_list('sport_type', flat=True)
+
+        user_city = request.user.profile.city if hasattr(request.user, 'profile') else None
         
+        recommendations = User.objects.exclude(
+            id__in=excluded_users.values_list('id', flat=True)
+        ).filter(sport_preferences__sport_type__in=user_sports).distinct()
+
+        # add match score to each user
+        recommendations_with_score = []
+        for user in recommendations:
+            score = calculate_match_score(request.user, user)
+            if score > 0:  # only include users with some match
+                recommendations_with_score.append({
+                    'user': user,
+                    'score': score,
+                    'common_sports': get_common_sports(request.user, user),
+                    'same_city': user_city and hasattr(user, 'profile') and user.profile.city == user_city
+                })
+
+            recommendations_with_score.sort(key=lambda x: x['score'], reverse=True)
+
         context = {
             'my_friends': my_friends,
             'received_requests': received_requests,
             'sent_requests': sent_requests,
             'is_own_connections': True,
+            'recommendations': recommendations_with_score,
         }
         return render(request, 'partner_matching/connections.html', context)
         
@@ -351,6 +267,60 @@ def connections(request):
         }
         return render(request, 'partner_matching/connections.html', context)
     
+def calculate_match_score(user1, user2):
+    score = 0
+
+    common_sports = get_common_sports(user1, user2)
+    score += min(len(common_sports) * 10, 40) # max point 40
+
+    if (hasattr(user1, 'profile') and hasattr(user2, 'profile') and user1.profile.city == user2.profile.city):
+        score += 30 # same city 30
+
+    skill_score = calculate_skill_compatibility(user1, user2, common_sports)
+    score += skill_score
+
+    return score
+
+def get_common_sports(user1, user2):
+    user1_sports = set(SportPreference.objects.filter(user=user1).values_list('sport_type', flat=True))
+    user2_sports = set(SportPreference.objects.filter(user=user2).values_list('sport_type', flat=True))
+    return list(user1_sports.intersection(user2_sports))
+
+def calculate_skill_compatibility(user1, user2, common_sport):
+    if not common_sport:
+        return 0
+    
+    skill_levels = {
+        'beginner': 1,
+        'intermediate': 2,
+        'advanced': 3,
+        'pro': 4
+    }
+
+    total_compatibility = 0
+
+    for sport in common_sport:
+        try:
+            user1_pref = SportPreference.objects.get(user=user1, sport_type=sport)
+            user2_pref = SportPreference.objects.get(user=user2, sport_type=sport)
+
+            level_user1 = skill_levels.get(user1_pref.skill_level, 0)
+            level_user2 = skill_levels.get(user2_pref.skill_level, 0)
+
+            level_diff = abs(level_user1 - level_user2)
+            if level_diff == 0:  
+                total_compatibility += 10
+            elif level_diff == 1: 
+                total_compatibility += 7
+            elif level_diff == 2:  
+                total_compatibility += 3
+            else:
+                total_compatibility += 0
+        except SportPreference.DoesNotExist:
+            continue
+
+        return min(total_compatibility, 30)
+
 def public_connections(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
 
@@ -391,7 +361,7 @@ def connection_action_by_user(request, action, user_id):
     
     try:
         if action == 'accept':
-            # User menerima request dari target_user
+            # user menerima request dari target_user
             connection = Connection.objects.filter(
                 from_user=target_user, 
                 to_user=request.user,
@@ -403,7 +373,7 @@ def connection_action_by_user(request, action, user_id):
             connection.save()
                 
         elif action == 'reject':
-            # User menolak request dari target_user
+            # user menolak request dari target_user
             connection = Connection.objects.filter(
                 from_user=target_user, 
                 to_user=request.user,
@@ -415,7 +385,7 @@ def connection_action_by_user(request, action, user_id):
             connection.save()
                 
         elif action == 'remove':
-            # User remove friend (accepted connection)
+            # user remove friend (accepted connection)
             connection = Connection.objects.filter(
                 Q(from_user=request.user, to_user=target_user, status='accepted') |
                 Q(from_user=target_user, to_user=request.user, status='accepted')
@@ -425,7 +395,7 @@ def connection_action_by_user(request, action, user_id):
             connection.delete()
                 
         elif action == 'cancel':
-            # User cancel sent request
+            # user cancel sent request
             connection = Connection.objects.filter(
                 from_user=request.user, 
                 to_user=target_user,

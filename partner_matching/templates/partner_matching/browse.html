@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <style>
-    
     .browse-page {
         min-height: 100vh;
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -334,7 +333,7 @@
             </p>
         </div>
 
-        <!-- Search and Filter Section - Using card-deep-sea from global.css -->
+        <!-- Search and Filter Section -->
         <div class="card-deep-sea filter-card">
             <!-- Search Input -->
             <div class="search-group">
@@ -490,11 +489,11 @@ function loadUsers() {
                 return;
             }
 
-            // Render users - Using card-deep-sea and chip-filled from global.css
+            // render users 
             container.innerHTML = '';
             data.users.forEach(user => {
                 const userCard = `
-                    <div class="user-card card-deep-sea" onclick="window.location.href='/matching/profile/${user.id}/'">
+                    <div class="user-card card-deep-sea" onclick="window.location.href='/partner-matching/profile/${user.id}/?from=browse'">
                         <div class="user-card-content">
                             <img 
                                 src="${user.profile_picture_url || '/static/images/default-avatar.png'}" 
@@ -529,13 +528,13 @@ function loadUsers() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // Live search with debounce
+    // live search with debounce
     document.getElementById('search-input').addEventListener('input', function() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(loadUsers, 500);
     });
 
-    // Search button click
+    // search button click
     document.getElementById('search-btn').addEventListener('click', loadUsers);
 
     // Enter key on search input

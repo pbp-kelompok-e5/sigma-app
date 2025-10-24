@@ -5,6 +5,496 @@
     {% if is_own_connections %}My Connections{% else %}{{ target_user.username }}'s Friends{% endif %} - Sigma App
 {% endblock %}
 
+{% block extra_css %}
+<style>
+.back-buttons-container {
+    margin-bottom: 20px;
+}
+
+.connections-section {
+    background-color: var(--deep-sea);
+    color: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 6, 61, 0.4);
+}
+
+/* Utility classes */
+.hidden {
+    display: none !important;
+}
+
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.bg-white {
+    background-color: white;
+}
+
+.bg-purple-50 {
+    background-color: #faf5ff;
+}
+
+.bg-blue-100 {
+    background-color: #dbeafe;
+}
+
+.bg-green-100 {
+    background-color: #dcfce7;
+}
+
+.bg-gray-100 {
+    background-color: #f3f4f6;
+}
+
+.bg-purple-100 {
+    background-color: #e9d5ff;
+}
+
+.text-blue-600 {
+    color: #2563eb;
+}
+
+.text-green-700 {
+    color: #15803d;
+}
+
+.text-purple-600 {
+    color: #9333ea;
+}
+
+.text-gray-600 {
+    color: #4b5563;
+}
+
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.text-gray-900 {
+    color: #111827;
+}
+
+.text-white {
+    color: white;
+}
+
+.text-white-70 {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.text-white-60 {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.border-gray-200 {
+    border-color: #e5e7eb;
+}
+
+.border-gray-300 {
+    border-color: #d1d5db;
+}
+
+.border-b {
+    border-bottom-width: 1px;
+}
+
+.border-t {
+    border-top-width: 1px;
+}
+
+.rounded-xl {
+    border-radius: 12px;
+}
+
+.rounded-lg {
+    border-radius: 8px;
+}
+
+.rounded-full {
+    border-radius: 9999px;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+.space-x-2 > * + * {
+    margin-left: 0.5rem;
+}
+
+.space-x-3 > * + * {
+    margin-left: 0.75rem;
+}
+
+.space-x-4 > * + * {
+    margin-left: 1rem;
+}
+
+.p-4 {
+    padding: 1rem;
+}
+
+.p-6 {
+    padding: 1.5rem;
+}
+
+.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.py-12 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.pl-10 {
+    padding-left: 2.5rem;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.mb-8 {
+    margin-bottom: 2rem;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+.mr-2 {
+    margin-right: 0.5rem;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+.flex-1 {
+    flex: 1 1 0%;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.items-start {
+    align-items: flex-start;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.text-lg {
+    font-size: 1.125rem;
+}
+
+.text-3xl {
+    font-size: 1.875rem;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.leading-relaxed {
+    line-height: 1.625;
+}
+
+.w-10 {
+    width: 2.5rem;
+}
+
+.h-10 {
+    height: 2.5rem;
+}
+
+.w-12 {
+    width: 3rem;
+}
+
+.h-12 {
+    height: 3rem;
+}
+
+.w-16 {
+    width: 4rem;
+}
+
+.h-16 {
+    height: 4rem;
+}
+
+.w-5 {
+    width: 1.25rem;
+}
+
+.h-5 {
+    height: 1.25rem;
+}
+
+.w-4 {
+    width: 1rem;
+}
+
+.h-4 {
+    height: 1rem;
+}
+
+.object-cover {
+    object-fit: cover;
+}
+
+.border-2 {
+    border-width: 2px;
+}
+
+.border-b-2 {
+    border-bottom-width: 2px;
+}
+
+.relative {
+    position: relative;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.left-3 {
+    left: 0.75rem;
+}
+
+.top-2\.5 {
+    top: 0.625rem;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}
+
+.opacity-50 {
+    opacity: 0.5;
+}
+
+.transform {
+    transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.transition-colors {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.duration-200 {
+    transition-duration: 200ms;
+}
+
+.duration-300 {
+    transition-duration: 300ms;
+}
+
+.hover\:bg-gray-50:hover {
+    background-color: #f9fafb;
+}
+
+.hover\:bg-red-50:hover {
+    background-color: #fef2f2;
+}
+
+.hover\:bg-green-600:hover {
+    background-color: #16a34a;
+}
+
+.hover\:border-gray-400:hover {
+    border-color: #9ca3af;
+}
+
+.focus\:ring-2:focus {
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.focus\:ring-blue-500:focus {
+    --tw-ring-opacity: 1;
+    --tw-ring-color: rgb(59 130 246 / var(--tw-ring-opacity));
+}
+
+.focus\:border-blue-500:focus {
+    border-color: #3b82f6;
+}
+
+/* Tab styles */
+.tab-button {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-bottom-width: 2px;
+    transition: all 0.2s ease;
+}
+
+.tab-button.active {
+    border-color: var(--orange-sport);
+    color: var(--orange-sport);
+}
+
+.tab-button:not(.active) {
+    border-color: transparent;
+    color: #6b7280;
+}
+
+.tab-button:not(.active):hover {
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+/* Gradient background */
+.bg-gradient-to-r {
+    background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+.from-purple-50 {
+    --tw-gradient-from: #faf5ff;
+    --tw-gradient-to: rgb(250 245 255 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+.to-white {
+    --tw-gradient-to: #fff;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .md\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .back-buttons-container {
+        flex-direction: column;
+    }
+}
+
+/* Fixed notification */
+.fixed {
+    position: fixed;
+}
+
+.top-4 {
+    top: 1rem;
+}
+
+.right-4 {
+    right: 1rem;
+}
+
+.z-50 {
+    z-index: 50;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,31 +519,50 @@
 
         <!-- Own Profile View with Tabs -->
         {% if is_own_connections %}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="card-deep-sea">
+            
+            <!-- Back to Own Profile-->
+            <div class="p-6 border-b border-white-60">
+                <div class="max-w-4xl mx-auto">
+                    <a href="{% url 'authentication:profile' %}" 
+                    class="btn btn-outline btn-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to My Profile
+                    </a>
+                </div>
+            </div>
+
             <!-- Tabs Navigation -->
-            <div class="border-b border-gray-200">
+            <div class="border-b border-white-60">
                 <nav class="flex -mb-px">
-                    <button id="friends-tab" class="tab-button active py-4 px-6 text-sm font-medium border-b-2 border-blue-500 text-blue-600">
+                    <button id="friends-tab" class="tab-button active">
                         Friends
                         <span class="ml-2 bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">{{ my_friends|length }}</span>
                     </button>
-                    <button id="received-tab" class="tab-button py-4 px-6 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <button id="received-tab" class="tab-button">
                         Received
                         <span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{{ received_requests|length }}</span>
                     </button>
-                    <button id="sent-tab" class="tab-button py-4 px-6 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <button id="sent-tab" class="tab-button">
                         Sent
                         <span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">{{ sent_requests|length }}</span>
+                    </button>
+
+                    <button id="recommendations-tab" class="tab-button">
+                        Recommendations
+                        <span class="ml-2 bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full">{{ recommendations|length }}</span>
                     </button>
                 </nav>
             </div>
 
             <!-- Search Bar -->
-            <div class="p-4 border-b border-gray-200">
+            <div class="p-4 border-b border-white-60">
                 <div class="relative">
                     <input type="text" id="search-input" placeholder="Search by name or username..." 
-                           class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="w-full px-4 py-2 pl-10 border border-white-60 rounded-lg bg-transparent text-white focus:ring-2 focus:ring-orange-sport focus:border-orange-sport">
+                    <svg class="w-5 h-5 absolute left-3 top-2.5 text-white-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
@@ -66,25 +575,29 @@
                     {% if my_friends %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="friends-list">
                             {% for user in my_friends %}
-                            <div class="user-card flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                                 <div class="flex items-center space-x-3">
-                                    <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
-                                        alt="{{ user.profile.full_name }}" 
-                                        class="w-10 h-10 rounded-full object-cover">
-                                    <div>
-                                        <h3 class="font-semibold text-gray-900">{{ user.profile.full_name }}</h3>
-                                        <p class="text-sm text-gray-500">@{{ user.username }}</p>
-                                    </div>
+                                    <a href="{% url 'partner_matching:user_profile' user.id %}?from=connections" class="flex items-center space-x-3">
+                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
+                                            alt="{{ user.profile.full_name }}" 
+                                            class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
+                                        <div>
+                                            <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
+                                            <p class="text-sm text-white-70">@{{ user.username }}</p>
+                                        </div>
+                                    </a>
                                 </div>
-                                <button class="remove-btn px-3 py-1 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
+
+                                <button class="btn btn-danger btn-sm remove-btn"
                                         data-user-id="{{ user.id }}">
                                     Remove
                                 </button>
+
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-8 text-gray-500">
+                        <div class="text-center py-8 text-white-70">
                             <p>No friends yet. Start connecting with other users!</p>
                         </div>
                     {% endif %}
@@ -95,22 +608,26 @@
                     {% if received_requests %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="received-list">
                             {% for user in received_requests %}
-                            <div class="user-card flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                                 <div class="flex items-center space-x-3">
-                                    <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
-                                        alt="{{ user.profile.full_name }}" 
-                                        class="w-10 h-10 rounded-full object-cover">
-                                    <div>
-                                        <h3 class="font-semibold text-gray-900">{{ user.profile.full_name }}</h3>
-                                        <p class="text-sm text-gray-500">@{{ user.username }}</p>
-                                    </div>
+
+                                    <a href="{% url 'partner_matching:user_profile' user.id %}?from=connections" class="flex items-center space-x-3">
+                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
+                                            alt="{{ user.profile.full_name }}" 
+                                            class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
+                                        <div>
+                                            <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
+                                            <p class="text-sm text-white-70">@{{ user.username }}</p>
+                                        </div>
+                                    </a>
+
                                 </div>
                                 <div class="flex space-x-2">
-                                    <button class="accept-btn px-3 py-1 text-sm text-white bg-green-500 rounded hover:bg-green-600 transition-colors"
+                                    <button class="btn btn-success btn-sm accept-btn"
                                             data-user-id="{{ user.id }}">
                                         Accept
                                     </button>
-                                    <button class="reject-btn px-3 py-1 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
+                                    <button class="btn btn-danger btn-sm reject-btn"
                                             data-user-id="{{ user.id }}">
                                         Decline
                                     </button>
@@ -119,7 +636,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-8 text-gray-500">
+                        <div class="text-center py-8 text-white-70">
                             <p>No pending received requests.</p>
                         </div>
                     {% endif %}
@@ -130,17 +647,21 @@
                     {% if sent_requests %}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="sent-list">
                             {% for user in sent_requests %}
-                            <div class="user-card flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                            <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                                 <div class="flex items-center space-x-3">
-                                    <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
-                                        alt="{{ user.profile.full_name }}" 
-                                        class="w-10 h-10 rounded-full object-cover">
-                                    <div>
-                                        <h3 class="font-semibold text-gray-900">{{ user.profile.full_name }}</h3>
-                                        <p class="text-sm text-gray-500">@{{ user.username }}</p>
-                                    </div>
+
+                                    <a href="{% url 'partner_matching:user_profile' user.id %}?from=connections" class="flex items-center space-x-3">
+                                        <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
+                                            alt="{{ user.profile.full_name }}" 
+                                            class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
+                                        <div>
+                                            <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
+                                            <p class="text-sm text-white-70">@{{ user.username }}</p>
+                                        </div>
+                                    </a>
+
                                 </div>
-                                <button class="cancel-btn px-3 py-1 text-sm text-gray-600 border border-gray-600 rounded hover:bg-gray-50 transition-colors"
+                                <button class="btn btn-outline btn-sm cancel-btn"
                                         data-user-id="{{ user.id }}">
                                     Cancel
                                 </button>
@@ -148,8 +669,76 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-8 text-gray-500">
+                        <div class="text-center py-8 text-white-70">
                             <p>No pending sent requests.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="recommendations-content" class="tab-content hidden">
+                    {% if recommendations %}
+                        <div class="space-y-4" id="recommendations-list">
+                            {% for recommendation in recommendations %}
+                            <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg bg-gradient-to-r from-purple-50 to-white">
+                                <div class="flex items-center space-x-4 flex-1">
+                                    <!-- User Avatar -->
+                                    <div class="flex-shrink-0">
+                                        <img src="{{ recommendation.user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
+                                            alt="{{ recommendation.user.profile.full_name }}" 
+                                            class="w-12 h-12 rounded-full object-cover border-2 border-orange-sport">
+                                    </div>
+                                    
+                                    <!-- User Info -->
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <h3 class="font-semibold text-gray-900 text-lg">
+                                                {{ recommendation.user.profile.full_name|default:recommendation.user.username }}
+                                            </h3>
+                                            <span class="bg-purple-100 text-purple-600 text-xs px-2 py-1 rounded-full font-medium">
+                                                {{ recommendation.score }}% Match
+                                            </span>
+                                        </div>
+                                        
+                                        <p class="text-sm text-gray-500 mb-2">@{{ recommendation.user.username }}</p>
+                                        
+                                        <!-- Match Details -->
+                                        <div class="flex flex-wrap gap-2 text-xs">
+                                            {% if recommendation.common_sports %}
+                                            <span class="chip chip-filled chip-sm">
+                                                🏆 {{ recommendation.common_sports|join:", " }}
+                                            </span>
+                                            {% endif %}
+                                            
+                                            {% if recommendation.same_city %}
+                                            <span class="chip chip-filled chip-sm">
+                                                📍 Same City
+                                            </span>
+                                            {% endif %}
+                                            
+                                            {% if recommendation.user.profile.city %}
+                                            <span class="chip chip-filled chip-sm">
+                                                🏠 {{ recommendation.user.profile.city }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="flex space-x-2">
+                                    <button class="btn btn-outline btn-sm"
+                                            onclick="window.location.href='{% url 'partner_matching:user_profile' recommendation.user.id %}?from=connections'">
+                                        View Profile
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="max-w-md mx-auto">
+                                <h3 class="text-lg font-semibold text-white mb-2">No Recommendations Yet</h3>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
@@ -160,13 +749,23 @@
 
         <!-- Public View (Other User's Friends) -->
         {% else %}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div class="card-deep-sea">
+            <div class="p-6 border-b border-white-60">
+                <a href="{% url 'partner_matching:user_profile' target_user.id %}{% if request.GET.from %}?from={{ request.GET.from }}{% endif %}" 
+                    class="btn btn-outline btn-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to {{ target_user.username }}'s Profile
+                </a>
+            </div>
+
             <!-- Search Bar -->
-            <div class="p-4 border-b border-gray-200">
+            <div class="p-4 border-b border-white-60">
                 <div class="relative">
                     <input type="text" id="search-input" placeholder="Search friends..." 
-                           class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <svg class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="w-full px-4 py-2 pl-10 border border-white-60 rounded-lg bg-transparent text-white focus:ring-2 focus:ring-orange-sport focus:border-orange-sport">
+                    <svg class="w-5 h-5 absolute left-3 top-2.5 text-white-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
@@ -177,21 +776,21 @@
                 {% if friends %}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="friends-list">
                         {% for user in friends %}
-                        <div class="user-card flex items-center p-4 border border-gray-200 rounded-lg">
+                        <div class="user-card flex items-center p-4 border border-white-60 rounded-lg">
                             <div class="flex items-center space-x-3">
-                                <img src="{{ user.to_user.profile_image_url|default:'/static/images/default-avatar.png' }}" 
+                                <img src="{{ user.profile.profile_image_url|default:'/static/images/default-avatar.png' }}" 
                                      alt="{{ user.profile.full_name }}" 
-                                     class="w-10 h-10 rounded-full object-cover">
+                                     class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
                                 <div>
-                                    <h3 class="font-semibold text-gray-900">{{ user.profile.full_name }}</h3>
-                                    <p class="text-sm text-gray-500">@{{ user.username }}</p>
+                                    <h3 class="font-semibold text-white">{{ user.profile.full_name }}</h3>
+                                    <p class="text-sm text-white-70">@{{ user.username }}</p>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-8 text-gray-500">
+                    <div class="text-center py-8 text-white-70">
                         <p>{{ target_user.username }} doesn't have any friends yet.</p>
                     </div>
                 {% endif %}
@@ -252,10 +851,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const isOwnConnections = "{{ is_own_connections }}" === "True";
 
     if (isOwnConnections) {
-        const contentContainer = document.querySelector('.bg-white.rounded-xl .p-6');
+        const contentContainer = document.querySelector('.card-deep-sea .p-6');
 
         if (contentContainer) {
-            contentContainer.addEventListener('click', function(event) {
+            document.addEventListener('click', function(event) {
                 const target = event.target.closest('button'); // button yang diklik
 
                 if (!target) return;
@@ -280,41 +879,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-        // initializeConnectionActions();
     }
 });
-
-// harusnya udah gak perlu ini karena pake event delegation di atas
-// pisahin function connection actions
-function initializeConnectionActions() {
-    // Accept request
-    document.querySelectorAll('.accept-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            handleConnectionAction('accept', this.dataset.userId, this);
-        });
-    });
-
-    // Reject request
-    document.querySelectorAll('.reject-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            handleConnectionAction('reject', this.dataset.userId, this);
-        });
-    });
-
-    // Remove friend
-    document.querySelectorAll('.remove-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            handleConnectionAction('remove', this.dataset.userId, this);
-        });
-    });
-
-    // Cancel sent request
-    document.querySelectorAll('.cancel-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            handleConnectionAction('cancel', this.dataset.userId, this);
-        });
-    });
-}
 
 function handleConnectionAction(action, userId, button) {
     console.log(`Action: ${action}, User ID: ${userId}`);
@@ -327,7 +893,7 @@ function handleConnectionAction(action, userId, button) {
     button.textContent = 'Processing...';
 
     // Debug URL
-    const url = `/matching/connection/${action}/user/${userId}/`;
+    const url = `/partner-matching/connection/${action}/user/${userId}/`;
     console.log('Fetching URL:', url);
 
     fetch(url, {
@@ -353,17 +919,17 @@ function handleConnectionAction(action, userId, button) {
                 const username = cardRemove.querySelector('p').textContent;
 
                 const friendCard = `
-                <div class="user-card flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div class="user-card flex items-center justify-between p-4 border border-white-60 rounded-lg">
                     <div class="flex items-center space-x-3">
                         <img src="${photo}" 
                             alt="${fullName}" 
-                            class="w-10 h-10 rounded-full object-cover">
+                            class="w-10 h-10 rounded-full object-cover border-2 border-orange-sport">
                         <div>
-                            <h3 class="font-semibold text-gray-900">${fullName}</h3>
-                            <p class="text-sm text-gray-500">${username}</p>
+                            <h3 class="font-semibold text-white">${fullName}</h3>
+                            <p class="text-sm text-white-70">${username}</p>
                         </div>
                     </div>
-                    <button class="remove-btn px-3 py-1 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
+                    <button class="btn btn-danger btn-sm remove-btn"
                             data-user-id="${userId}">
                         Remove
                     </button>
@@ -383,9 +949,6 @@ function handleConnectionAction(action, userId, button) {
                 }
 
                 friendsListContainer.insertAdjacentHTML('beforeend', friendCard);
-
-                // add card to friends list in the friends tab in position before the "no friends" message if it exists
-                // document.getElementById('friends-list').insertAdjacentHTML('beforeend', friendCard);
             }
             cardRemove.remove();
             showNotification('Action successful!', 'success');
@@ -457,7 +1020,7 @@ function showNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Auto remove after 3 seconds
+    // auto remove after 3 seconds
     setTimeout(() => {
         notification.remove();
     }, 3000);
