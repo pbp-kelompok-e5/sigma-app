@@ -1,0 +1,563 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse Users - Sigma App{% endblock %}
+
+{% block extra_css %}
+<style>
+    
+    .browse-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 48px 0;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 48px;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--deep-sea);
+        margin-bottom: 16px;
+        letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: #64748b;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .filter-card {
+        margin-bottom: 48px;
+    }
+
+    .search-group {
+        margin-bottom: 24px;
+    }
+
+    .search-label {
+        color: var(--orange-sport);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .search-input-wrapper {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(242, 100, 25, 0.3);
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--orange-sport);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-clear {
+        display: inline-flex;
+        padding: 16px 24px;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-weight: 500;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-clear:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .filter-label {
+        color: var(--orange-sport);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .filter-select {
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(242, 100, 25, 0.3);
+        border-radius: 12px;
+        color: white;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='white'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 40px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--orange-sport);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-select option {
+        background: var(--deep-sea);
+        color: white;
+        padding: 12px;
+    }
+
+    .result-count {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .user-card {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .user-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .user-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .user-card-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .user-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--orange-sport);
+        margin-bottom: 16px;
+        transition: transform 0.3s ease;
+    }
+
+    .user-full-name {
+        color: var(--orange-sport);
+        font-size: 1.375rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        line-height: 1.2;
+    }
+
+    .user-username {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    .user-location {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .loading-container {
+        text-align: center;
+        padding: 64px 0;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(242, 100, 25, 0.2);
+        border-top-color: var(--orange-sport);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        margin-top: 16px;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 64px 32px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .no-results-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 24px;
+        opacity: 0.3;
+    }
+
+    .no-results-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--deep-sea);
+        margin-bottom: 8px;
+    }
+
+    .no-results-text {
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .placeholder-card {
+        background: var(--deep-sea);
+        border-radius: 16px;
+        padding: 24px;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .placeholder-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 0 auto 16px;
+    }
+
+    .placeholder-line {
+        height: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        margin-bottom: 12px;
+    }
+
+    .placeholder-line.short {
+        width: 60%;
+        margin: 0 auto 12px;
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .search-input-wrapper {
+            flex-direction: column;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .users-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="browse-page">
+    <div class="container mx-auto px-4 max-w-7xl">
+        <!-- Header -->
+        <div class="page-header">
+            <h1 class="page-title">Find Sports Partners</h1>
+            <p class="page-subtitle">
+                Connect with other sports enthusiasts based on your preferences and location
+            </p>
+        </div>
+
+        <!-- Search and Filter Section - Using card-deep-sea from global.css -->
+        <div class="card-deep-sea filter-card">
+            <!-- Search Input -->
+            <div class="search-group">
+                <label for="search-input" class="search-label">
+                    Search by Username or Name
+                </label>
+                <div class="search-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Enter username or full name..."
+                        class="search-input"
+                    >
+                    <!-- Using btn from global.css -->
+                    <button id="search-btn" class="btn btn-md">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <span>Search</span>
+                    </button>
+                    <button id="clear-search" class="btn-clear">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Dropdowns -->
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="sport-filter" class="filter-label">Sport</label>
+                    <select id="sport-filter" class="filter-select">
+                        <option value="">All Sports</option>
+                        {% for sport in sports %}
+                        <option value="{{ sport.0 }}">{{ sport.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="skill-filter" class="filter-label">Skill Level</label>
+                    <select id="skill-filter" class="filter-select">
+                        <option value="">All Skills</option>
+                        {% for skill in skills %}
+                        <option value="{{ skill.0 }}">{{ skill.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="city-filter" class="filter-label">City</label>
+                    <select id="city-filter" class="filter-select">
+                        <option value="">All Cities</option>
+                        {% for city in cities %}
+                        <option value="{{ city.0 }}">{{ city.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Result Count -->
+            <div id="result-count" class="result-count">
+                Start searching to find users
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="users-container" data-api-url="{% url 'partner_matching:browse_user_api' %}" class="users-grid">
+            <!-- Placeholder cards -->
+            <div class="placeholder-card">
+                <div class="placeholder-avatar"></div>
+                <div class="placeholder-line short"></div>
+                <div class="placeholder-line short"></div>
+                <div class="placeholder-line short"></div>
+            </div>
+            <div class="placeholder-card">
+                <div class="placeholder-avatar"></div>
+                <div class="placeholder-line short"></div>
+                <div class="placeholder-line short"></div>
+                <div class="placeholder-line short"></div>
+            </div>
+            <div class="placeholder-card">
+                <div class="placeholder-avatar"></div>
+                <div class="placeholder-line short"></div>
+                <div class="placeholder-line short"></div>
+                <div class="placeholder-line short"></div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading-container hidden">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Searching for users...</div>
+        </div>
+
+        <!-- No Results Message -->
+        <div id="no-results" class="no-results hidden">
+            <svg class="no-results-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="no-results-title">No users found</h3>
+            <p class="no-results-text">Try adjusting your search criteria or filters</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let searchTimeout;
+
+function loadUsers() {
+    const loading = document.getElementById('loading');
+    const container = document.getElementById('users-container');
+    const noResults = document.getElementById('no-results');
+    const resultCount = document.getElementById('result-count');
+
+    // show loading, hide previous results
+    loading.classList.remove('hidden');
+    container.classList.add('hidden');
+    noResults.classList.add('hidden');
+
+    // get filter values
+    const searchQuery = document.getElementById('search-input').value;
+    const sportFilter = document.getElementById('sport-filter').value;
+    const skillFilter = document.getElementById('skill-filter').value;
+    const cityFilter = document.getElementById('city-filter').value;
+
+    // build query params
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('search', searchQuery);
+    if (sportFilter) params.append('sport', sportFilter);
+    if (skillFilter) params.append('skill', skillFilter);
+    if (cityFilter) params.append('city', cityFilter);
+
+    const apiUrl = container.dataset.apiUrl;
+
+    fetch(`${apiUrl}?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            // update result count
+            const userCount = data.users.length;
+            resultCount.textContent = `${userCount} user${userCount !== 1 ? 's' : ''} found`;
+
+            if (userCount === 0) {
+                noResults.classList.remove('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            // Render users - Using card-deep-sea and chip-filled from global.css
+            container.innerHTML = '';
+            data.users.forEach(user => {
+                const userCard = `
+                    <div class="user-card card-deep-sea" onclick="window.location.href='/matching/profile/${user.id}/'">
+                        <div class="user-card-content">
+                            <img 
+                                src="${user.profile_picture_url || '/static/images/default-avatar.png'}" 
+                                alt="${user.full_name}" 
+                                class="user-avatar"
+                                onerror="this.src='/static/images/default-avatar.png'"
+                            >
+                            <h3 class="user-full-name">${DOMPurify.sanitize(user.full_name)}</h3>
+                            <p class="user-username">@${DOMPurify.sanitize(user.username)}</p>
+                            <span class="chip chip-filled chip-md">
+                                ${DOMPurify.sanitize(user.sports)}
+                            </span>
+                            <div class="user-location">
+                                <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                ${DOMPurify.sanitize(user.city)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += userCard;
+            });
+        })
+        .catch(error => {
+            loading.classList.add('hidden');
+            console.error('Error loading users:', error);
+            resultCount.textContent = 'Error loading users';
+        });
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Live search with debounce
+    document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(loadUsers, 500);
+    });
+
+    // Search button click
+    document.getElementById('search-btn').addEventListener('click', loadUsers);
+
+    // Enter key on search input
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loadUsers();
+        }
+    });
+
+    // Clear search button
+    document.getElementById('clear-search').addEventListener('click', function() {
+        document.getElementById('search-input').value = '';
+        loadUsers();
+    });
+
+    // Filter change events
+    document.getElementById('sport-filter').addEventListener('change', loadUsers);
+    document.getElementById('skill-filter').addEventListener('change', loadUsers);
+    document.getElementById('city-filter').addEventListener('change', loadUsers);
+
+    // Load initial users
+    loadUsers();
+});
+</script>
+{% endblock %}
