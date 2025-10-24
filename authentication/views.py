@@ -148,6 +148,39 @@ def profile_view(request, user_id=None):
     # Calculate average rating
     average_rating = reviews_received.aggregate(Avg('rating'))['rating__avg'] or 0
 
+    # Get connection status if viewing another user's profile
+    connection_status = None
+    if not is_own_profile:
+        from partner_matching.models import Connection
+        from django.db.models import Q
+
+        is_friends = Connection.objects.filter(
+            Q(from_user=request.user, to_user=profile_user, status='accepted') |
+            Q(from_user=profile_user, to_user=request.user, status='accepted')
+        ).exists()
+
+        if is_friends:
+            connection_status = 'accepted'
+        else:
+            # Check if there's a pending request sent by current user
+            sent_request = Connection.objects.filter(
+                from_user=request.user,
+                to_user=profile_user
+            ).first()
+
+            # Check if there's a pending request received from the profile user
+            received_request = Connection.objects.filter(
+                from_user=profile_user,
+                to_user=request.user
+            ).first()
+
+            if sent_request:
+                connection_status = 'pending'
+            elif received_request:
+                connection_status = 'pending'
+            else:
+                connection_status = None
+
     context = {
         'profile_user': profile_user,
         'profile': profile,
@@ -156,6 +189,7 @@ def profile_view(request, user_id=None):
         'reviews_written': reviews_written,
         'reviews_received': reviews_received,
         'average_rating': average_rating,
+        'connection_status': connection_status,
     }
 
     return render(request, 'authentication/profile.html', context)

@@ -3,6 +3,23 @@
 
 {% block title %}{% if is_own_profile %}My Profile{% else %}{{ profile.full_name }}'s Profile{% endif %} - BondUp{% endblock %}
 
+{% block extra_css %}
+<style>
+.connection-btn {
+    transition: all 0.3s ease;
+}
+.button-text, .button-loading {
+    transition: opacity 0.3s ease;
+}
+.min-w-140 {
+    min-width: 140px;
+}
+.min-h-42 {
+    min-height: 42px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     <!-- Profile Header -->
@@ -53,6 +70,32 @@
                         Logout
                     </button>
                 </form>
+                {% else %}
+                <!-- Connection Button for other users -->
+                <div class="w-full sm:w-auto" id="connection-section">
+                    {% if connection_status == 'pending' %}
+                        <button class="btn btn-secondary w-full sm:w-auto min-w-140 min-h-42" disabled>
+                            {% icon 'clock' size='sm' color='white' %}
+                            Request Sent
+                        </button>
+                    {% elif connection_status == 'accepted' %}
+                        <button class="btn btn-success w-full sm:w-auto min-w-140 min-h-42" disabled>
+                            {% icon 'check' size='sm' color='white' %}
+                            Connected
+                        </button>
+                    {% else %}
+                        <button class="btn btn-primary w-full sm:w-auto flex items-center justify-center min-w-140 min-h-42 connection-btn"
+                            data-action="connect" data-user-id="{{ profile_user.id }}">
+                            <span class="button-text">
+                                {% icon 'user-plus' size='sm' color='white' %}
+                                Add Friend
+                            </span>
+                            <div class="button-loading hidden">
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white border-t-transparent"></div>
+                            </div>
+                        </button>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
 
@@ -324,6 +367,71 @@
             const messageText = '{{ message|escapejs }}';
             showToast(messageText, messageType, 4000);
         {% endfor %}
+    });
+</script>
+{% endif %}
+
+<!-- Connection Button Handler -->
+{% if not is_own_profile %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const connectionBtn = document.querySelector('.connection-btn');
+
+        if (connectionBtn) {
+            connectionBtn.addEventListener('click', async function() {
+                const action = this.dataset.action;
+                const userId = this.dataset.userId;
+                const buttonText = this.querySelector('.button-text');
+                const buttonLoading = this.querySelector('.button-loading');
+
+                // Show loading state
+                buttonText.classList.add('hidden');
+                buttonLoading.classList.remove('hidden');
+                this.disabled = true;
+
+                try {
+                    const response = await fetch(`/partner-matching/connection/${action}/${userId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update button to show request sent
+                        const connectionSection = document.getElementById('connection-section');
+                        connectionSection.innerHTML = `
+                            <button class="btn btn-secondary w-full sm:w-auto min-w-140 min-h-42" disabled>
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Request Sent
+                            </button>
+                        `;
+
+                        if (typeof showToast === 'function') {
+                            showToast('Connection request sent successfully!', 'success', 3000);
+                        }
+                    } else {
+                        throw new Error(data.error || 'Failed to send connection request');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    buttonText.classList.remove('hidden');
+                    buttonLoading.classList.add('hidden');
+                    this.disabled = false;
+
+                    if (typeof showToast === 'function') {
+                        showToast(error.message || 'Failed to send connection request', 'error', 3000);
+                    } else {
+                        alert(error.message || 'Failed to send connection request');
+                    }
+                }
+            });
+        }
     });
 </script>
 {% endif %}
