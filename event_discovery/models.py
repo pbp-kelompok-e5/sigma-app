@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from sigma_app.constants import SPORT_CHOICES
@@ -11,6 +12,8 @@ class Event(models.Model):
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
+    # Event ID
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
     # User yang membuat atau menyelenggarakan event
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
