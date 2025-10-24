@@ -19,14 +19,26 @@
                     <a href="{% url 'partner_matching:browse_user' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
                         Find Partners
                     </a>
-                    <a href="{% url 'event_discovery:show_event' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
-                        Discover Events
-                    </a>
-                    <a href="{% url 'event_discovery:show_my_event' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
-                        My Events
-                    </a>
-                    <a href="{% url 'event_management:create_event' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
-                        Create Event
+                    <!-- Discover Event Dropdown -->
+                    <div class="relative group">
+                        <button class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200 flex items-center space-x-1">
+                            <span>Discover Event</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div class="absolute left-0 mt-0 w-48 bg-gray-800 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 z-50">
+                            <a href="{% url 'event_discovery:show_event' %}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-t-md">
+                                Find Event
+                            </a>
+                            <a href="{% url 'event_discovery:show_my_event' %}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-b-md">
+                                Joined Event
+                            </a>
+                        </div>
+                    </div>
+                    <a href="{% url 'event_management:my_events' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
+                        Manage Event
                     </a>
                     <a href="{% url 'leaderboard:leaderboard' %}" class="px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
                         Leaderboard
@@ -93,14 +105,18 @@
                 <a href="{% url 'partner_matching:browse_user' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
                     Find Partners
                 </a>
-                <a href="{% url 'event_discovery:show_event' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
-                    Discover Events
-                </a>
-                <a href="{% url 'event_discovery:show_my_event' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
-                    My Events
-                </a>
-                <a href="{% url 'event_management:create_event' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
-                    Create Event
+                <!-- Discover Event Section -->
+                <div class="pl-3">
+                    <p class="px-3 py-2 text-sm font-semibold text-gray-400">Discover Event</p>
+                    <a href="{% url 'event_discovery:show_event' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
+                        Find Event
+                    </a>
+                    <a href="{% url 'event_discovery:show_my_event' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
+                        Joined Event
+                    </a>
+                </div>
+                <a href="{% url 'event_management:my_events' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
+                    Manage Event
                 </a>
                 <a href="{% url 'leaderboard:leaderboard' %}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition duration-200">
                     Leaderboard
