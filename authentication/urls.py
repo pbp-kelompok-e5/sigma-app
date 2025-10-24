@@ -4,8 +4,8 @@ from . import views
 app_name = 'authentication'
 
 urlpatterns = [
-    # Home page
-    path('', views.home_view, name='home'),
+    # Home page - redirect to profile
+    path('', views.home_redirect_view, name='home'),
 
     # Authentication endpoints
     path('auth/register/', views.register_view, name='register'),
