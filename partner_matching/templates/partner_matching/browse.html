@@ -7,7 +7,6 @@
 <style>
     .browse-page {
         min-height: 100vh;
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         padding: 48px 0;
     }
 
@@ -19,7 +18,7 @@
     .page-title {
         font-size: 3rem;
         font-weight: 700;
-        color: var(--deep-sea);
+        color: white;
         margin-bottom: 16px;
         letter-spacing: -0.02em;
     }
@@ -489,15 +488,15 @@ function loadUsers() {
                 return;
             }
 
-            // render users 
+            // render users
             container.innerHTML = '';
             data.users.forEach(user => {
                 const userCard = `
-                    <div class="user-card card-deep-sea" onclick="window.location.href='/partner-matching/profile/${user.id}/?from=browse'">
+                    <div class="user-card card-deep-sea" onclick="window.location.href='/profile/${user.id}/?from=browse'">
                         <div class="user-card-content">
-                            <img 
-                                src="${user.profile_picture_url || '/static/images/default-avatar.png'}" 
-                                alt="${user.full_name}" 
+                            <img
+                                src="${user.profile_picture_url || '/static/images/default-avatar.png'}"
+                                alt="${user.full_name}"
                                 class="user-avatar"
                                 onerror="this.src='/static/images/default-avatar.png'"
                             >

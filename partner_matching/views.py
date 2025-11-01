@@ -94,7 +94,17 @@ def browse_user(request):
 def user_profile_detail(request, user_id):
     # mendapatkan user berdasarkan user_id
     target_user = get_object_or_404(User, pk=user_id)
-    target_profile = get_object_or_404(UserProfile, user=target_user)
+
+    # Get or create UserProfile if it doesn't exist
+    try:
+        target_profile = target_user.profile
+    except UserProfile.DoesNotExist:
+        # Create profile if it doesn't exist
+        target_profile = UserProfile.objects.create(
+            user=target_user,
+            full_name=target_user.get_full_name() or target_user.username,
+            city='jakarta'  # default city
+        )
 
     sport_preferences = SportPreference.objects.filter(user=target_user)
 
@@ -129,7 +139,7 @@ def user_profile_detail(request, user_id):
         else:
             # tidak ada koneksi sama sekali
             connection_status = None
-    
+
     context = {
         'profile_user': target_user,
         'profile': target_profile,

@@ -19,14 +19,12 @@ def _is_ajax(request):
 
 def _get_request_data(request):
     """
-    Handle both form-encoded and JSON AJAX submissions.
-    Returns a dictionary suitable for passing to Django forms.
+    Helper untuk GET data JSON jika endpoint-nya memang JSON-based.
+    (Tidak dipakai untuk manage_participants karena dia pakai FormData)
     """
-    # For normal POST forms
     if request.method == "POST" and request.POST:
         return request.POST
 
-    # For JSON AJAX submissions
     try:
         if request.body:
             body_data = json.loads(request.body.decode("utf-8"))
@@ -113,29 +111,37 @@ def update_event(request, event_id):
 def delete_event(request, event_id):
     event = get_object_or_404(Event, id=event_id, organizer=request.user)
 
-    if request.method == 'POST' or request.method == 'DELETE':
+    if request.method in ["POST", "DELETE"]:
         event.delete()
         if _is_ajax(request):
-            return JsonResponse({'success': True, 'event_id': event_id, 'message': 'Event deleted successfully!'})
-        messages.success(request, 'Event deleted successfully!')
-        return redirect('event_management:my_events')
+            return JsonResponse({
+                "success": True,
+                "event_id": event_id,
+                "message": "Event deleted successfully."
+            })
+        messages.success(request, "Event deleted successfully.")
+        return redirect("event_management:my_events")
 
-    return redirect('event_management:my_events')
+    return redirect("event_management:my_events")
 
 
 @login_required
 def cancel_event(request, event_id):
     event = get_object_or_404(Event, id=event_id, organizer=request.user)
 
-    if request.method == 'POST' or request.method == 'PATCH':
-        event.status = 'cancelled'
+    if request.method in ["POST", "PATCH"]:
+        event.status = "cancelled"
         event.save()
         if _is_ajax(request):
-            return JsonResponse({'success': True, 'event_id': event_id, 'message': 'Event cancelled successfully!'})
-        messages.info(request, 'Event has been cancelled.')
-        return redirect('event_management:my_events')
+            return JsonResponse({
+                "success": True,
+                "event_id": event_id,
+                "message": "Event has been cancelled."
+            })
+        messages.info(request, "Event has been cancelled.")
+        return redirect("event_management:my_events")
 
-    return redirect('event_management:my_events')
+    return redirect("event_management:my_events")
 
 
 @login_required
@@ -143,6 +149,7 @@ def manage_participants(request, event_id):
     event = get_object_or_404(Event, id=event_id, organizer=request.user)
     participants = EventParticipant.objects.filter(event=event)
 
+    # ✅ FIX: pakai _get_request_data untuk handle JSON dari AJAX
     if request.method == 'POST':
         data = _get_request_data(request)
         action = data.get('action')
@@ -156,14 +163,18 @@ def manage_participants(request, event_id):
 
         if action == 'remove':
             deleted, _ = EventParticipant.objects.filter(event=event, user_id=user_id).delete()
+            if deleted:
+                event.current_participants = max(0, event.current_participants - 1)
+                event.save()
+
             if _is_ajax(request):
                 return JsonResponse({
                     'success': True if deleted else False,
                     'action': 'remove',
                     'user_id': int(user_id),
-                    'message': 'Participant removed.' if deleted else 'Participant not found.'
+                    'message': 'Participant removed successfully.' if deleted else 'Participant not found.'
                 }, status=200 if deleted else 404)
-            messages.warning(request, 'Participant removed.' if deleted else 'Participant not found.')
+
             return redirect('event_management:manage_participants', event_id=event.id)
 
         elif action == 'mark_attended':
@@ -171,6 +182,7 @@ def manage_participants(request, event_id):
             if participant:
                 participant.status = 'attended'
                 participant.save()
+
                 if _is_ajax(request):
                     return JsonResponse({
                         'success': True,
@@ -178,11 +190,9 @@ def manage_participants(request, event_id):
                         'user_id': int(user_id),
                         'message': 'Attendance marked.'
                     })
-                messages.success(request, 'Attendance marked.')
-            else:
-                if _is_ajax(request):
-                    return JsonResponse({'success': False, 'message': 'Participant not found.'}, status=404)
-                messages.error(request, 'Participant not found.')
+
+            if _is_ajax(request):
+                return JsonResponse({'success': False, 'message': 'Participant not found.'}, status=404)
 
             return redirect('event_management:manage_participants', event_id=event.id)
 

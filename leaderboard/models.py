@@ -41,45 +41,6 @@ class PointTransaction(models.Model):
         return f"{self.user.username} - {self.activity_type} (+{self.points})"
 
 
-# Model untuk menyimpan peringkat leaderboard user
-class Leaderboard(models.Model):
-    # Periode leaderboard
-    PERIOD_CHOICES = [
-        ('weekly', 'Weekly'),
-        ('monthly', 'Monthly'),
-        ('all_time', 'All Time'),
-    ]
-
-    # User yang masuk leaderboard
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leaderboard_entries')
-
-    # Peringkat user dalam periode dan sport tertentu
-    rank = models.IntegerField()
-
-    # Total poin user dalam periode tersebut
-    total_points = models.IntegerField(default=0)
-
-    # Periode leaderboard
-    period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
-
-    # Bisa ditentukan untuk olahraga tertentu, atau kosong jika umum
-    sport_type = models.CharField(max_length=20, blank=True, null=True)
-
-    # Waktu update terakhir secara otomatis
-    last_updated = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        # Kombinasi user, periode, dan sport_type harus unik
-        unique_together = ['user', 'period', 'sport_type']
-
-        # Default pengurutan berdasarkan peringkat
-        ordering = ['rank']
-
-    def __str__(self):
-        # Representasi string menampilkan peringkat, username, dan total poin
-        return f"#{self.rank} - {self.user.username} ({self.total_points} pts)"
-
-
 # Model untuk menyimpan prestasi atau achievement user
 class Achievement(models.Model):
     # Kode prestasi yang bisa dicapai user

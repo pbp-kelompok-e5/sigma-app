@@ -9,28 +9,18 @@ from django.core.exceptions import ValidationError
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileForm, SportPreferenceForm
 from .models import UserProfile, SportPreference
 
-def home_view(request):
-    """Home page view"""
+def home_redirect_view(request):
+    """Home page redirect - redirects to profile if authenticated, landing page if not"""
     if request.user.is_authenticated:
-        # Show profile (TODO: Change when events module is ready) for authenticated users
-        try:
-            profile = request.user.profile
-        except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(
-                user=request.user,
-                full_name=request.user.get_full_name() or request.user.username
-            )
-
-        sport_preferences = request.user.sport_preferences.all()
-
-        context = {
-            'profile': profile,
-            'sport_preferences': sport_preferences,
-        }
-        return render(request, 'authentication/profile.html', context)
+        return redirect('authentication:profile')
     else:
         # Show landing page for anonymous users
         return render(request, 'authentication/home.html')
+
+
+def home_view(request):
+    """Home page view - kept for backward compatibility"""
+    return home_redirect_view(request)
 
 
 def register_view(request):
@@ -158,6 +148,39 @@ def profile_view(request, user_id=None):
     # Calculate average rating
     average_rating = reviews_received.aggregate(Avg('rating'))['rating__avg'] or 0
 
+    # Get connection status if viewing another user's profile
+    connection_status = None
+    if not is_own_profile:
+        from partner_matching.models import Connection
+        from django.db.models import Q
+
+        is_friends = Connection.objects.filter(
+            Q(from_user=request.user, to_user=profile_user, status='accepted') |
+            Q(from_user=profile_user, to_user=request.user, status='accepted')
+        ).exists()
+
+        if is_friends:
+            connection_status = 'accepted'
+        else:
+            # Check if there's a pending request sent by current user
+            sent_request = Connection.objects.filter(
+                from_user=request.user,
+                to_user=profile_user
+            ).first()
+
+            # Check if there's a pending request received from the profile user
+            received_request = Connection.objects.filter(
+                from_user=profile_user,
+                to_user=request.user
+            ).first()
+
+            if sent_request:
+                connection_status = 'pending'
+            elif received_request:
+                connection_status = 'pending'
+            else:
+                connection_status = None
+
     context = {
         'profile_user': profile_user,
         'profile': profile,
@@ -166,6 +189,7 @@ def profile_view(request, user_id=None):
         'reviews_written': reviews_written,
         'reviews_received': reviews_received,
         'average_rating': average_rating,
+        'connection_status': connection_status,
     }
 
     return render(request, 'authentication/profile.html', context)

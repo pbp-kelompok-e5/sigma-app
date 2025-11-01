@@ -1,101 +1,158 @@
 {% extends "base.html" %}
+{% load icon_tags %}
 {% block title %}My Events{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto mt-8">
-    <h1 class="text-2xl font-semibold text-white mb-6">My Events</h1>
+<div class="max-w-4xl mx-auto mt-8 px-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold text-white">Manage Events</h1>
+        <a href="{% url 'event_management:create_event' %}" class="btn btn-primary btn-sm flex items-center gap-2">
+            {% icon 'plus' size='sm' color='white' %}
+            <span>Create Event</span>
+        </a>
+    </div>
 
-    <!-- Upcoming Events -->
-    <h2 class="text-xl text-gray-200 mb-3">Upcoming Events</h2>
+    <!-- ✅ UPCOMING EVENTS -->
+    <h2 class="text-xl text-gray-200 mb-4">Upcoming Events</h2>
     {% for event in upcoming_events %}
-    <div class="bg-gray-900 p-4 mb-4 rounded-lg shadow-md flex justify-between items-center event-item" data-event-id="{{ event.id }}">
-        <div>
-            <h2 class="text-lg font-bold text-white">{{ event.name }}</h2>
-            <p class="text-gray-400">{{ event.event_date }}</p>
-            <p class="text-gray-400">Status: {{ event.status }}</p>
-        </div>
-        <div class="flex gap-2">
-            <a href="{% url 'event_management:update_event' event.id %}"
-               class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">Edit</a>
-            <button data-event-id="{{ event.id }}"
-                    class="cancel-btn bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded">
-                Cancel
-            </button>
-            <button data-event-id="{{ event.id }}"
-                    class="delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
-                Delete
-            </button>
+    <div class="card-deep-sea mb-4 event-item"
+     data-event-id="{{ event.id }}"
+     data-participants-url="{% url 'event_management:manage_participants' event.id %}">
+
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div class="flex-1">
+                <h2 class="text-xl font-bold text-white mb-2">{{ event.title }}</h2>
+                <div class="flex flex-wrap gap-3 text-sm">
+                    <div class="flex items-center gap-2 text-gray-300">
+                        {% icon 'calendar' size='sm' color='#F26419' %}
+                        <span>{{ event.event_date }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-300">
+                        {% icon 'clock' size='sm' color='#F26419' %}
+                        <span>{{ event.start_time }} - {{ event.end_time }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-300">
+                        {% icon 'map-pin' size='sm' color='#F26419' %}
+                        <span>{{ event.city }}</span>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="chip-secondary chip-sm bg-blue-600">{{ event.status|title }}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="{% url 'event_management:manage_participants' event.id %}" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1">
+                    {% icon 'users' size='sm' color='white' %}
+                    <span>Participants</span>
+                </a>
+
+                <a href="{% url 'event_management:update_event' event.id %}" class="btn btn-sm btn-secondary flex items-center gap-1">
+                    {% icon 'edit' size='sm' color='white' %}
+                    <span>Edit</span>
+                </a>
+
+                <button class="cancel-btn btn btn-sm bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-1"
+                        data-url="{% url 'event_management:cancel_event' event.id %}">
+                    {% icon 'x' size='sm' color='white' %}
+                    <span>Cancel</span>
+                </button>
+
+                <button class="delete-btn btn btn-sm btn-danger flex items-center gap-1"
+                        data-url="{% url 'event_management:delete_event' event.id %}">
+                    {% icon 'trash' size='sm' color='white' %}
+                    <span>Delete</span>
+                </button>
+            </div>
         </div>
     </div>
     {% empty %}
-    <p class="text-gray-400 mb-6">You have no upcoming events.</p>
+    <div class="card-deep-sea text-center py-8">
+        <p class="text-gray-400">You have no upcoming events.</p>
+    </div>
     {% endfor %}
 
-    <!-- Past Events -->
-    <h2 class="text-xl text-gray-200 mt-8 mb-3">Past Events</h2>
+    <!-- ✅ PAST EVENTS (DITAMBAHKAN) -->
+    <h2 class="text-xl text-gray-200 mt-8 mb-4">Past Events</h2>
     {% for event in past_events %}
-    <div class="bg-gray-900 p-4 mb-4 rounded-lg shadow-md flex justify-between items-center">
-        <div>
-            <h2 class="text-lg font-bold text-white">{{ event.name }}</h2>
-            <p class="text-gray-400">{{ event.event_date }}</p>
-            <p class="text-gray-400">Status: {{ event.status }}</p>
+    <div class="card-deep-sea mb-4 opacity-75">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div class="flex-1">
+                <h2 class="text-xl font-bold text-white mb-2">{{ event.title }}</h2>
+                <div class="flex flex-wrap gap-3 text-sm">
+                    <div class="flex items-center gap-2 text-gray-300">
+                        {% icon 'calendar' size='sm' color='#F26419' %}
+                        <span>{{ event.event_date }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-300">
+                        {% icon 'clock' size='sm' color='#F26419' %}
+                        <span>{{ event.start_time }} - {{ event.end_time }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-300">
+                        {% icon 'map-pin' size='sm' color='#F26419' %}
+                        <span>{{ event.city }}</span>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="chip-secondary chip-sm bg-gray-600">{{ event.status|title }}</span>
+                </div>
+            </div>
+
+            <div>
+                <a href="{% url 'event_management:update_event' event.id %}"
+                   class="btn btn-sm btn-secondary flex items-center gap-1">
+                    {% icon 'eye' size='sm' color='white' %}
+                    <span>View</span>
+                </a>
+            </div>
         </div>
-        <a href="{% url 'event_management:update_event' event.id %}"
-           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">View</a>
     </div>
     {% empty %}
-    <p class="text-gray-400">You have no past events.</p>
+    <div class="card-deep-sea text-center py-8 opacity-75">
+        <p class="text-gray-400">You have no past events.</p>
+    </div>
     {% endfor %}
 </div>
-
-{% include "components/modal.html" %}
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// === DELETE EVENT ===
 document.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const eventId = btn.dataset.eventId;
-        openModal("Delete Event", "Are you sure you want to permanently delete this event?", async () => {
-            try {
-                const res = await ajaxDelete(`/event_management/${eventId}/delete/`);
-                if (res.success) {
-                    showSuccessToast(res.message);
-                    document.querySelector(`.event-item[data-event-id="${eventId}"]`).remove();
-                } else {
-                    showErrorToast(res.message || "Failed to delete event.");
-                }
-            } catch (err) {
-                handleAjaxError(err);
-            }
-        });
+    btn.addEventListener("click", async () => {
+        const url = btn.dataset.url;
+        const card = btn.closest(".event-item");
+
+        if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) return;
+
+        const res = await ajaxDelete(url);
+        if (res.success) {
+            card.remove();
+            showSuccessToast(res.message);
+        } else {
+            showErrorToast(res.message);
+        }
     });
 });
 
-// === CANCEL EVENT ===
 document.querySelectorAll(".cancel-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-        const eventId = btn.dataset.eventId;
-        openModal("Cancel Event", "Are you sure you want to cancel this event? It will no longer be open for participants.", async () => {
-            try {
-                const res = await ajaxPatch(`/event_management/${eventId}/cancel/`);
-                if (res.success) {
-                    showInfoToast(res.message);
-                    // Update the event card’s status text dynamically
-                    const card = document.querySelector(`.event-item[data-event-id="${eventId}"]`);
-                    if (card) {
-                        const statusEl = card.querySelector("p.text-gray-400:nth-child(3)");
-                        if (statusEl) statusEl.textContent = "Status: cancelled";
-                    }
-                } else {
-                    showErrorToast(res.message || "Failed to cancel event.");
-                }
-            } catch (err) {
-                handleAjaxError(err);
-            }
-        });
+    btn.addEventListener("click", async () => {
+        const url = btn.dataset.url;
+        const card = btn.closest(".event-item");
+
+        if (!confirm("Are you sure you want to cancel this event? Participants will no longer be able to attend.")) return;
+
+        const res = await ajaxPatch(url);
+        if (res.success) {
+            // ✅ Update teks status tanpa ubah warna
+            card.querySelector(".chip-secondary").innerText = "Cancelled";
+
+            // ✅ Toast
+            showSuccessToast(res.message);
+        } else {
+            showErrorToast(res.message);
+        }
     });
 });
 </script>
 {% endblock %}
+

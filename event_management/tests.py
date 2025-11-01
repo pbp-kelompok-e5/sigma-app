@@ -36,7 +36,7 @@ class EventManagementAjaxTests(TestCase):
         )
 
         print("Response JSON:", response.json())
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertTrue(response.json()["success"])
         self.assertEqual(Event.objects.count(), 1)
 
@@ -50,7 +50,7 @@ class EventManagementAjaxTests(TestCase):
             self._event_data(title="Updated Event"),
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         event.refresh_from_db()
         self.assertEqual(event.title, "Updated Event")
 

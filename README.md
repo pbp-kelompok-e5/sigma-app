@@ -35,6 +35,8 @@ Setiap interaksi, pertandingan, dan event di BondUp bukan hanya tentang bermain 
 
 ## 📦 Pembagian Modul (6 Modul dengan Relasi)
 
+**Note:** Konstanta seperti `SPORT_CHOICES`, `SKILL_CHOICES`, dan `CITY_CHOICES` didefinisikan di `sigma_app/constants.py` untuk konsistensi di seluruh aplikasi.
+
 ---
 
 ### Modul 1: Authentication & User Profile
@@ -68,13 +70,14 @@ from django.contrib.auth.models import User
 ```python
 from django.db import models
 from django.contrib.auth.models import User
+from sigma_app.constants import CITY_CHOICES
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=100)
     bio = models.TextField(blank=True, null=True)
-    city = models.CharField(max_length=50)
-    profile_image_url = models.URLField(blank=True, null=True) 
+    city = models.CharField(max_length=50, choices=CITY_CHOICES)
+    profile_image_url = models.URLField(blank=True, null=True)
     total_points = models.IntegerField(default=0)
     total_events = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -85,45 +88,30 @@ class UserProfile(models.Model):
 
 **SportPreference**
 ```python
-SPORT_CHOICES = [
-    ('football', 'Football'),
-    ('basketball', 'Basketball'),
-    ('badminton', 'Badminton'),
-    ('tennis', 'Tennis'),
-    ('running', 'Running'),
-    ('cycling', 'Cycling'),
-    ('swimming', 'Swimming'),
-    ('volleyball', 'Volleyball'),
-]
-
-SKILL_CHOICES = [
-    ('beginner', 'Beginner'),
-    ('intermediate', 'Intermediate'),
-    ('advanced', 'Advanced'),
-]
+from sigma_app.constants import SPORT_CHOICES, SKILL_CHOICES
 
 class SportPreference(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sport_preferences')
     sport_type = models.CharField(max_length=20, choices=SPORT_CHOICES)
     skill_level = models.CharField(max_length=20, choices=SKILL_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         unique_together = ['user', 'sport_type']
-    
+
     def __str__(self):
         return f"{self.user.username} - {self.sport_type}"
 ```
 
 **API Endpoints:**
+- `GET /` (redirects to profile)
 - `POST /auth/register/`
 - `POST /auth/login/`
 - `POST /auth/logout/`
+- `GET /profile/`
 - `GET /profile/<int:user_id>/`
-- `PUT /profile/update/`
-- `DELETE /profile/delete/`
+- `POST /profile/update/`
 - `GET /profile/sports/`
-- `POST /profile/sports/add/`
 - `DELETE /profile/sports/<int:sport_id>/`
 
 ---
@@ -180,15 +168,13 @@ class Connection(models.Model):
 ```
 
 **API Endpoints:**
-- `GET /users/browse/`
-- `GET /users/search/?q=<query>`
-- `GET /users/filter/?sport=<>&city=<>&skill=<>`
-- `POST /connections/send/<int:user_id>/`
-- `GET /connections/my-connections/`
-- `DELETE /connections/<int:connection_id>/`
-- `GET /connections/requests/`
-- `PUT /connections/<int:connection_id>/accept/`
-- `PUT /connections/<int:connection_id>/reject/`
+- `GET /partner-matching/browse/`
+- `GET /partner-matching/browse-users-api/`
+- `GET /partner-matching/profile/<int:user_id>/`
+- `POST /partner-matching/connection/<str:action>/<int:user_id>/`
+- `GET /partner-matching/connections/`
+- `GET /partner-matching/profile/<int:user_id>/connections/`
+- `POST /partner-matching/connection/<str:action>/user/<int:user_id>/`
 
 ---
 
@@ -224,6 +210,7 @@ class Connection(models.Model):
 ```python
 from django.db import models
 from django.contrib.auth.models import User
+from sigma_app.constants import SPORT_CHOICES
 
 class Event(models.Model):
     STATUS_CHOICES = [
@@ -232,21 +219,11 @@ class Event(models.Model):
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
-    
-    SPORT_CHOICES = [
-        ('football', 'Football'),
-        ('basketball', 'Basketball'),
-        ('badminton', 'Badminton'),
-        ('tennis', 'Tennis'),
-        ('running', 'Running'),
-        ('cycling', 'Cycling'),
-        ('swimming', 'Swimming'),
-        ('volleyball', 'Volleyball'),
-    ]
-    
+
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
     title = models.CharField(max_length=200)
     description = models.TextField()
+    thumbnail = models.URLField(blank=True, null=True)
     sport_type = models.CharField(max_length=20, choices=SPORT_CHOICES)
     event_date = models.DateField()
     start_time = models.TimeField()
@@ -258,10 +235,10 @@ class Event(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='open')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return self.title
-    
+
     def is_full(self):
         return self.current_participants >= self.max_participants
 ```
@@ -274,27 +251,31 @@ class EventParticipant(models.Model):
         ('attended', 'Attended'),
         ('cancelled', 'Cancelled'),
     ]
-    
-    event = models.ForeignKey(event_discovery.Event, on_delete=models.CASCADE, related_name='participants')
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='participants')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='joined_events')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='joined')
     joined_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         unique_together = ['event', 'user']
-    
+
     def __str__(self):
         return f"{self.user.username} - {self.event.title}"
 ```
 
 **API Endpoints:**
 - `GET /events/`
-- `GET /events/<int:event_id>/`
-- `GET /events/filter/?sport=<>&date=<>&city=<>`
-- `GET /events/search/?q=<query>`
-- `POST /events/<int:event_id>/join/`
+- `GET /events/json/`
+- `GET /events/<int:id>/`
+- `GET /events/<int:id>/json/`
+- `POST /events/<int:id>/join/`
+- `DELETE /events/<int:id>/leave/`
 - `GET /events/my-joined/`
-- `DELETE /events/<int:event_id>/leave/`
+- `GET /events/my-joined/json/`
+- `GET /events/<int:id>/participant-status/`
+- `GET /events/<int:id>/has-attended-participants/`
+- `GET /events/<int:id>/user-has-reviewed/`
 
 ---
 
@@ -329,14 +310,12 @@ class EventParticipant(models.Model):
 Menggunakan model **Event** dan **EventParticipant** dari Modul 3.
 
 **API Endpoints:**
-- `POST /events/create/`
-- `PUT /events/<int:event_id>/update/`
-- `DELETE /events/<int:event_id>/`
-- `POST /events/<int:event_id>/cancel/`
-- `GET /events/my-organized/`
-- `GET /events/<int:event_id>/participants/`
-- `DELETE /events/<int:event_id>/participants/<int:user_id>/`
-- `POST /events/<int:event_id>/mark-attendance/`
+- `POST /event-management/create/`
+- `GET /event-management/my-events/`
+- `PUT /event-management/<int:event_id>/edit/`
+- `DELETE /event-management/<int:event_id>/delete/`
+- `POST /event-management/<int:event_id>/cancel/`
+- `GET /event-management/<int:event_id>/participants/`
 
 ---
 
@@ -402,13 +381,13 @@ class UserRating(models.Model):
 ```
 
 **API Endpoints:**
-- `POST /reviews/create/`
-- `GET /reviews/event/<int:event_id>/`
-- `GET /reviews/user/<int:user_id>/received/`
-- `GET /reviews/my-reviews/`
-- `PUT /reviews/<int:review_id>/update/`
-- `DELETE /reviews/<int:review_id>/`
-- `GET /reviews/user/<int:user_id>/summary/`
+- `GET /reviews/<int:event_id>/`
+- `GET /reviews/user/<int:user_id>/`
+- `GET /reviews/written/<int:user_id>/`
+- `GET /reviews/edit/<int:review_id>/`
+- `POST /reviews/ajax/event/<int:event_id>/create/`
+- `PUT /reviews/ajax/review/<int:review_id>/update/`
+- `DELETE /reviews/ajax/review/<int:review_id>/delete/`
 
 ---
 
@@ -461,28 +440,12 @@ class PointTransaction(models.Model):
         return f"{self.user.username} - {self.activity_type} (+{self.points})"
 ```
 
-**Leaderboard**
-```python
-class Leaderboard(models.Model):
-    PERIOD_CHOICES = [
-        ('weekly', 'Weekly'),
-        ('monthly', 'Monthly'),
-        ('all_time', 'All Time'),
-    ]
-    
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leaderboard_entries')
-    rank = models.IntegerField()
-    period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
-    sport_type = models.CharField(max_length=20, blank=True, null=True)
-    last_updated = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        unique_together = ['user', 'period', 'sport_type']
-        ordering = ['rank']
-    
-    def __str__(self):
-        return f"#{self.rank} - {self.user.username} ({self.total_points} pts)"
-```
+**Leaderboard (Calculated Dynamically)**
+
+The leaderboard is calculated dynamically from UserProfile's `total_points` field and PointTransaction records. There is no separate Leaderboard model. Rankings are computed on-the-fly based on:
+- **All-time**: Total points from UserProfile
+- **Weekly**: Sum of PointTransaction points from last 7 days
+- **Monthly**: Sum of PointTransaction points from last 30 days
 
 **Achievement**
 ```python
@@ -511,14 +474,11 @@ class Achievement(models.Model):
 ```
 
 **API Endpoints:**
-- `GET /points/dashboard/`
-- `GET /points/history/`
-- `POST /points/add/` # Internal use (called by other modules via signals)
 - `GET /leaderboard/`
-- `GET /leaderboard/filter/?period=<>&sport=<>`
-- `GET /leaderboard/my-rank/`
-- `GET /achievements/`
-- `GET /achievements/<int:user_id>/`
+- `GET /leaderboard/api/leaderboard/`
+- `GET /leaderboard/points/dashboard/`
+- `GET /leaderboard/points/history/`
+- `GET /leaderboard/achievements/`
 
 ---
 
