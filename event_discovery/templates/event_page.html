@@ -1,70 +1,395 @@
 {% extends "base.html" %}
 {% load icon_tags %}
 {% block title %}Events Discovery{% endblock %}
+{% block extra_css %}
+<style>
+.browse-page {
+        min-height: 100vh;
+        padding: 48px 0;
+    }
 
+    .page-header {
+        text-align: center;
+        margin-bottom: 48px;
+    }
 
+    .page-title {
+        font-size: 3rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 16px;
+        letter-spacing: -0.02em;
+    }
 
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: #64748b;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .filter-card {
+        margin-bottom: 48px;
+    }
+
+    .search-group {
+        margin-bottom: 24px;
+    }
+
+    .search-label {
+        color: var(--orange-sport);
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .search-input-wrapper {
+        display: flex;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(242, 100, 25, 0.3);
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--orange-sport);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-clear {
+        display: inline-flex;
+        padding: 16px 24px;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-weight: 500;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-clear:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .filter-label {
+        color: var(--orange-sport);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .filter-select {
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(242, 100, 25, 0.3);
+        border-radius: 12px;
+        color: white;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='white'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 40px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--orange-sport);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-select option {
+        background: var(--deep-sea);
+        color: white;
+        padding: 12px;
+    }
+
+    .result-count {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .user-card {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .user-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .user-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .user-card-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .user-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--orange-sport);
+        margin-bottom: 16px;
+        transition: transform 0.3s ease;
+    }
+
+    .user-full-name {
+        color: var(--orange-sport);
+        font-size: 1.375rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        line-height: 1.2;
+    }
+
+    .user-username {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    .user-location {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .loading-container {
+        text-align: center;
+        padding: 64px 0;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(242, 100, 25, 0.2);
+        border-top-color: var(--orange-sport);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        margin-top: 16px;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 64px 32px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .no-results-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 24px;
+        opacity: 0.3;
+    }
+
+    .no-results-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--deep-sea);
+        margin-bottom: 8px;
+    }
+
+    .no-results-text {
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .placeholder-card {
+        background: var(--deep-sea);
+        border-radius: 16px;
+        padding: 24px;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .placeholder-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 0 auto 16px;
+    }
+
+    .placeholder-line {
+        height: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        margin-bottom: 12px;
+    }
+
+    .placeholder-line.short {
+        width: 60%;
+        margin: 0 auto 12px;
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .search-input-wrapper {
+            flex-direction: column;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .users-grid {
+            grid-template-columns: 1fr;
+        }
+</style>
+
+{% endblock %}
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-3xl sm:text-4xl font-bold text-white">Event Discovery</h1>
+    <div class="page-header">
+            <h1 class="page-title">Find Sport Event</h1>
+            <p class="page-subtitle">
+                Connect with other sports enthusiasts with joining an Event
+            </p>
         </div>
-        <p class="text-white/80 text-base sm:text-lg">Temukan event yang sesuai dengan minatmu</p>
-    </div>
 
-    <!-- Search Bar -->
-    <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 card-deep-sea p-4 rounded-full">
-        <input type="text" id="searchInput" placeholder="Search events..." class="w-full p-3 rounded-full bg-[#f26419] text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
-        <button id='searchBtn'>
-        {% icon 'search' color='white' %}
-        </button>
-        <!-- Filter Button (Open Option) -->
-        <button id='filterBtn'>
-        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"></path>
-        </svg>
-        </button>
-    </div>
+    <!-- Search and Filter Section -->
+        <div class="card-deep-sea filter-card">
+            <!-- Search Input -->
+            <div class="search-group">
+                <label for="search-input" class="search-label">
+                    Search by Username or Name
+                </label>
+                <div class="search-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Enter username or full name..."
+                        class="search-input"
+                    >
+                    <!-- Using btn from global.css -->
+                    <button id="search-btn" class="btn btn-md">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <span>Search</span>
+                    </button>
+                    <button id="clear-search" class="btn-clear">
+                        <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
 
-    <!-- Filter Option -->
-    <div class="mb-8 card-deep-sea rounded-lg hidden" id="filterOptions">
-        <h1 class='text-white font-medium'>Filter Menu</h1>
-        <!-- Filters Dropdown -->
-        <div class="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <!-- By Sport Type -->
-            <div class ='justify-center items-center'>
-            <label for="sportTypeFilt" class="text-white font-medium">Sport Type:</label><br>
-                <select id="sportTypeFilt" class="p-2 rounded-lg bg-[#f26419] text-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
-                    <option value="all">All Sports</option>
-                    {% for sport, label in sportChoices %}
-                    <option value='{{sport}}'>{{label}}</option>
-                    {% endfor %}
-                </select>
+            <!-- Filter Dropdowns -->
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="sportTypeFilt" class="filter-label">Sport</label>
+                    <select id="sportTypeFilt" class="filter-select">
+                        <option value="">All Sports</option>
+                        {% for sport in sports %}
+                        <option value="{{ sport.0 }}">{{ sport.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="skill-filter" class="filter-label">Skill Level</label>
+                    <select id="skill-filter" class="filter-select">
+                        <option value="">All Skills</option>
+                        {% for skill in skills %}
+                        <option value="{{ skill.0 }}">{{ skill.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="cityFilt" class="filter-label">City</label>
+                    <select id="cityFilt" class="filter-select">
+                        <option value="">All Cities</option>
+                        {% for city in cities %}
+                        <option value="{{ city.0 }}">{{ city.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <!-- By Date -->
-            <div class ='justify-center items-center'>
-            <label for="eventDateFilt" class="text-white font-medium">Event Date:</label><br>
-                <input type="date" id="eventDateFilt" class="p-2 rounded-lg bg-[#f26419] text-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
-            </div>
-            <!-- By City -->
-            <div class='justify-center items-center'>
-                <label for="cityFilt" class="text-white font-medium">City:</label><br>
-                <select id='cityFilt' class="p-2 rounded-lg bg-[#f26419] text-white focus:outline-none focus:ring-2 focus:ring-[#d94f0f]">
-                    <option value="all">All City</option>
-                    {% for city, label in cityChoices %}
-                    <option value='{{city}}'>{{label}}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <!-- Apply Button -->
-            <div class='justify-center items-center'>
-                <br>
-                <button id='applyFilter' class='btn'>Apply</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Loading State -->
     <div id="loading" class="bg-[#00063D] rounded-lg border border-gray-800 p-12 text-center hidden">
