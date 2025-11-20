@@ -138,7 +138,6 @@ async function handleParticipantAction(button) {
                 chip.classList.remove("bg-blue-600");
                 chip.classList.add("bg-green-600");
             }
-            showSuccessToast(res.message);
         } else {
             showErrorToast(res.message || "Failed to perform action.");
         }
