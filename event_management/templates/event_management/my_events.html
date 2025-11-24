@@ -127,7 +127,6 @@ document.querySelectorAll(".delete-btn").forEach(btn => {
         const res = await ajaxDelete(url);
         if (res.success) {
             card.remove();
-            showSuccessToast(res.message);
         } else {
             showErrorToast(res.message);
         }
@@ -145,9 +144,6 @@ document.querySelectorAll(".cancel-btn").forEach(btn => {
         if (res.success) {
             // ✅ Update teks status tanpa ubah warna
             card.querySelector(".chip-secondary").innerText = "Cancelled";
-
-            // ✅ Toast
-            showSuccessToast(res.message);
         } else {
             showErrorToast(res.message);
         }

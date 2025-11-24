@@ -128,7 +128,6 @@ document.getElementById("create-event-form").addEventListener("submit", async (e
     try {
         const res = await ajaxPostFormData(form.action || window.location.pathname, formData);
         if (res.success) {
-            showSuccessToast(res.message);
             setTimeout(() => window.location.href = res.redirect_url, 1000);
         } else {
             showErrorToast("Failed to create event.");
