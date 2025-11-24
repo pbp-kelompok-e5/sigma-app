@@ -237,9 +237,7 @@
                 throw new Error('Failed to fetch events');
             }
             const events = await response.json();
-            const today = new Date().toISOString().split('T')[0];
             allEvents = events || []; // Store fetched events
-            allEvents = allEvents.filter(event => event.event_date >= today); // Remove old Event
 
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate loading delay
             // Call Filter and Render after fetching
