@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import Event, EventParticipant
 from sigma_app.constants import SPORT_CHOICES, CITY_CHOICES
 from reviews.models import Review
+from django.utils import timezone
+
 
 # Create your views here.
 
@@ -16,7 +18,15 @@ def show_event(request):
 
 # Show Event in JSON
 def show_json(request):
+    now = timezone.localtime()
     event_list = Event.objects.all()
+    event_list = Event.objects.filter(
+        event_date__gt=now.date()
+    ) | Event.objects.filter(
+        event_date=now.date(),
+        start_time__gte=now.time()
+    )
+
     data=[
         {
             'id' : str(event.id),
@@ -124,8 +134,7 @@ def leave_event(request, id):
     try:
         event = get_object_or_404(Event, pk=id)
         # Cari Partisipan User
-        eventparticipant = get_object_or_404(EventParticipant, user=request.user, event=event)
-        
+        eventparticipant = get_object_or_404(EventParticipant, user=request.user, event=event) 
         # Hapus Partisipan
         eventparticipant.delete()
         # Kurangi Jumlah Partisipan di Event
