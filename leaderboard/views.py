@@ -1,105 +1,186 @@
+"""
+Views untuk Leaderboard Module
+Berisi view functions untuk leaderboard, points dashboard, points history, dan achievements
+"""
+
+# Import fungsi-fungsi Django untuk routing dan HTTP response
 from django.shortcuts import render, get_object_or_404
+# Import decorator untuk membatasi akses hanya untuk user yang sudah login
 from django.contrib.auth.decorators import login_required
+# Import fungsi agregasi untuk menghitung sum/total
 from django.db.models import Sum
+# Import JsonResponse untuk mengembalikan response dalam format JSON (untuk AJAX)
 from django.http import JsonResponse
+# Import model-model yang diperlukan
 from authentication.models import UserProfile
 from leaderboard.models import PointTransaction, Achievement
 
 
 def leaderboard_page(request):
     """
-    Leaderboard Page - menampilkan ranking user berdasarkan total points
-    dengan filter periode
+    Leaderboard Page - menampilkan ranking user berdasarkan total points.
+    Support filter periode: all_time, weekly, monthly.
+
+    Query Parameters:
+        period (str): Filter periode ('all_time', 'weekly', 'monthly')
+
+    Flow:
+    1. Ambil parameter filter periode dari query string
+    2. Query semua UserProfile
+    3. Untuk setiap user, hitung poin berdasarkan periode
+    4. Sort user berdasarkan poin (descending)
+    5. Assign ranking (1, 2, 3, ...)
+    6. Tentukan tier dan badge berdasarkan poin
+    7. Cari ranking user yang sedang login (jika ada)
+    8. Render template dengan data leaderboard
     """
+    # Import timezone dan timedelta untuk filter periode
     from django.utils import timezone
     from datetime import timedelta
 
-    # Get filter dari query params
+    # Ambil parameter filter periode dari query string
+    # Default: 'all_time' jika tidak ada parameter
     period_filter = request.GET.get('period', 'all_time')
 
-    # Query all user profiles
+    # Query semua user profiles dengan select_related untuk optimasi
+    # select_related('user'): Menghindari N+1 query problem
     profiles_query = UserProfile.objects.select_related('user').all()
 
-    # Build ranked users list with period filtering
+    # List untuk menyimpan data user yang sudah di-rank
     ranked_users = []
+
+    # Loop setiap profile untuk hitung poin dan build data
     for profile in profiles_query:
-        # Calculate points based on period
+        # Hitung poin berdasarkan periode filter
         if period_filter == 'all_time':
+            # All time: Gunakan total_points dari profile (sudah dihitung via signal)
             points = profile.total_points
         else:
-            # Filter point transactions by period
+            # Weekly atau Monthly: Hitung dari PointTransaction dalam periode tertentu
             now = timezone.now()
+
+            # Tentukan start_date berdasarkan filter
             if period_filter == 'weekly':
+                # 7 hari terakhir
                 start_date = now - timedelta(days=7)
             elif period_filter == 'monthly':
+                # 30 hari terakhir
                 start_date = now - timedelta(days=30)
             else:
+                # Filter tidak valid, gunakan all_time
                 start_date = None
 
             if start_date:
+                # Filter transaksi poin berdasarkan created_at >= start_date
+                # aggregate(Sum('points')): Menjumlahkan semua poin
+                # ['points__sum']: Ambil nilai sum dari dict hasil aggregate
+                # or 0: Jika None (belum ada transaksi), gunakan 0
                 period_points = PointTransaction.objects.filter(
                     user=profile.user,
                     created_at__gte=start_date
                 ).aggregate(Sum('points'))['points__sum'] or 0
                 points = period_points
             else:
+                # Fallback ke all_time
                 points = profile.total_points
 
-        # Include all users, even with 0 points
+        # Build dictionary data user untuk leaderboard
+        # Include semua user, bahkan yang poinnya 0
         ranked_users.append({
             'user_id': profile.user.id,
             'full_name': profile.full_name,
             'username': profile.user.username,
             'total_points': points,
             'total_events': profile.total_events,
+            # get_city_display(): Mendapatkan label dari choice field
             'city': profile.get_city_display() if profile.city else 'Unknown',
+            # Gunakan default avatar jika profile_image_url kosong
             'profile_image_url': profile.profile_image_url or '/static/img/default-avatar.png',
+            # Helper function untuk menentukan tier berdasarkan poin
             'tier': get_tier(points),
+            # Helper function untuk menentukan badge emoji berdasarkan poin
             'badge': get_badge(points),
         })
 
-    # Sort by points and assign ranks
+    # Sort user berdasarkan total_points (descending = tertinggi dulu)
+    # key=lambda x: x['total_points']: Sort berdasarkan field total_points
+    # reverse=True: Descending order
     ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
+
+    # Assign ranking ke setiap user
+    # enumerate(ranked_users, start=1): Loop dengan index mulai dari 1
     for rank, user_data in enumerate(ranked_users, start=1):
         user_data['rank'] = rank
 
-    # Get current user's rank if logged in
+    # Cari ranking user yang sedang login (untuk highlight di template)
     current_user_rank = None
     if request.user.is_authenticated:
+        # Loop semua user untuk cari yang ID-nya sama dengan current user
         for user_data in ranked_users:
             if user_data['user_id'] == request.user.id:
                 current_user_rank = user_data['rank']
                 break
 
+    # Siapkan context untuk template
     context = {
         'users': ranked_users,
         'current_filter': period_filter,
         'current_user_rank': current_user_rank,
     }
 
+    # Render template leaderboard dengan context
     return render(request, 'leaderboard/leaderboard.html', context)
 
 
 def leaderboard_api(request):
     """
-    AJAX API endpoint for leaderboard data
-    Supports filtering by period
+    AJAX API endpoint untuk leaderboard data.
+    Mengembalikan data leaderboard dalam format JSON.
+    Support filter periode dan pagination.
+
+    Query Parameters:
+        period (str): Filter periode ('all_time', 'weekly', 'monthly')
+        page (int): Nomor halaman untuk pagination (default: 1)
+        per_page (int): Jumlah user per halaman (default: 20)
+
+    Returns:
+        JsonResponse: {
+            'success': True,
+            'users': [...],  # List user dengan ranking
+            'total_count': int,  # Total jumlah user
+            'page': int,  # Halaman saat ini
+            'per_page': int,  # Jumlah user per halaman
+            'current_user_rank': int or None  # Ranking user yang login
+        }
+
+    Flow:
+    1. Ambil parameter filter dan pagination dari query string
+    2. Query semua UserProfile
+    3. Hitung poin setiap user berdasarkan periode
+    4. Sort dan assign ranking
+    5. Lakukan pagination (slice array)
+    6. Return JSON response
     """
+    # Import timezone dan timedelta untuk filter periode
     from django.utils import timezone
     from datetime import timedelta
 
-    # Get filter and pagination params
+    # Ambil parameter filter dan pagination dari query string
+    # int(): Convert string ke integer
     period_filter = request.GET.get('period', 'all_time')
     page = int(request.GET.get('page', 1))
     per_page = int(request.GET.get('per_page', 20))
 
-    # Query all user profiles
+    # Query semua user profiles dengan select_related untuk optimasi
     profiles_query = UserProfile.objects.select_related('user').all()
 
-    # Build ranked users list with period filtering
+    # List untuk menyimpan data user yang sudah di-rank
     ranked_users = []
+
+    # Loop setiap profile untuk hitung poin dan build data
     for profile in profiles_query:
-        # Calculate points based on period
+        # Hitung poin berdasarkan periode filter
+        # Logic sama dengan leaderboard_page view
         if period_filter == 'all_time':
             points = profile.total_points
         else:
@@ -121,7 +202,7 @@ def leaderboard_api(request):
             else:
                 points = profile.total_points
 
-        # Include all users, even with 0 points
+        # Build dictionary data user untuk leaderboard
         ranked_users.append({
             'user_id': profile.user.id,
             'full_name': profile.full_name,
@@ -134,17 +215,20 @@ def leaderboard_api(request):
             'badge': get_badge(points),
         })
 
-    # Sort by points and assign ranks
+    # Sort user berdasarkan total_points (descending)
     ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
+
+    # Assign ranking ke setiap user
     for rank, user_data in enumerate(ranked_users, start=1):
         user_data['rank'] = rank
 
-    # Pagination
+    # Pagination: Slice array berdasarkan page dan per_page
+    # Contoh: page=2, per_page=20 -> start=20, end=40
     start = (page - 1) * per_page
     end = start + per_page
     paginated_users = ranked_users[start:end]
 
-    # Get current user's rank if logged in
+    # Cari ranking user yang sedang login
     current_user_rank = None
     if request.user.is_authenticated:
         for user_data in ranked_users:
@@ -152,6 +236,7 @@ def leaderboard_api(request):
                 current_user_rank = user_data['rank']
                 break
 
+    # Return JSON response dengan data leaderboard
     return JsonResponse({
         'success': True,
         'users': paginated_users,
@@ -165,39 +250,75 @@ def leaderboard_api(request):
 @login_required(login_url='login')
 def points_dashboard(request):
     """
-    Points Dashboard - menampilkan total points dan breakdown aktivitas user
+    Points Dashboard - menampilkan total points dan breakdown aktivitas user.
+    Halaman ini menampilkan:
+    - Total poin user
+    - Breakdown poin per jenis aktivitas
+    - 10 transaksi poin terbaru
+    - Achievement yang sudah didapat
+    - Ranking user di leaderboard
+    - Tier dan badge user
+
+    Requires:
+        User harus login (login_required decorator)
+
+    Flow:
+    1. Ambil UserProfile user yang login
+    2. Query semua transaksi poin user
+    3. Hitung breakdown poin per activity_type
+    4. Ambil 10 transaksi terbaru
+    5. Ambil semua achievement user
+    6. Hitung ranking user di leaderboard
+    7. Render template dengan semua data
     """
+    # Ambil user yang sedang login
     user = request.user
+
+    # Ambil UserProfile user, raise 404 jika tidak ada
+    # get_object_or_404: Shortcut untuk get() yang raise Http404 jika tidak ditemukan
     profile = get_object_or_404(UserProfile, user=user)
 
-    # Get all point transactions
+    # Query semua transaksi poin user, diurutkan dari terbaru
+    # order_by('-created_at'): Descending order (terbaru dulu)
     transactions = PointTransaction.objects.filter(user=user).order_by('-created_at')
 
-    # Calculate breakdown by activity type
+    # Hitung breakdown poin per jenis aktivitas
+    # breakdown = {
+    #     'event_join': {'label': 'Event Join', 'total': 100, 'count': 10},
+    #     'event_complete': {'label': 'Event Complete', 'total': 300, 'count': 10},
+    #     ...
+    # }
     breakdown = {}
     for activity_type, label in PointTransaction.ACTIVITY_CHOICES:
+        # Hitung total poin untuk activity_type ini
         total = transactions.filter(activity_type=activity_type).aggregate(Sum('points'))['points__sum'] or 0
+        # Hitung jumlah transaksi untuk activity_type ini
         count = transactions.filter(activity_type=activity_type).count()
+        # Simpan ke dictionary breakdown
         breakdown[activity_type] = {
             'label': label,
             'total': total,
             'count': count,
         }
 
-    # Get recent transactions (last 10)
+    # Ambil 10 transaksi terbaru untuk ditampilkan di dashboard
+    # [:10]: Slice array, ambil 10 item pertama
     recent_transactions = transactions[:10]
 
-    # Get user's achievements
+    # Ambil semua achievement user, diurutkan dari terbaru
     achievements = Achievement.objects.filter(user=user).order_by('-earned_at')
 
-    # Get user's rank
+    # Hitung ranking user di leaderboard
+    # Query semua UserProfile, diurutkan berdasarkan total_points (descending)
     ranked_users = UserProfile.objects.order_by('-total_points')
     user_rank = None
+    # Loop untuk cari posisi user di ranking
     for idx, p in enumerate(ranked_users, start=1):
         if p.user.id == user.id:
             user_rank = idx
             break
 
+    # Siapkan context untuk template
     context = {
         'profile': profile,
         'total_points': profile.total_points,
@@ -206,78 +327,143 @@ def points_dashboard(request):
         'recent_transactions': recent_transactions,
         'achievements': achievements,
         'user_rank': user_rank,
+        # Helper function untuk menentukan tier berdasarkan poin
         'tier': get_tier(profile.total_points),
+        # Helper function untuk menentukan badge emoji berdasarkan poin
         'badge': get_badge(profile.total_points),
     }
 
+    # Render template points dashboard dengan context
     return render(request, 'leaderboard/points_dashboard.html', context)
 
 
 @login_required(login_url='login')
 def points_history(request):
     """
-    Points History - menampilkan semua transaksi poin user
+    Points History - menampilkan semua transaksi poin user.
+    Support filter berdasarkan jenis aktivitas.
+
+    Query Parameters:
+        activity (str): Filter berdasarkan activity_type (opsional)
+
+    Requires:
+        User harus login (login_required decorator)
+
+    Flow:
+    1. Query semua transaksi poin user
+    2. Jika ada parameter 'activity', filter berdasarkan activity_type
+    3. Render template dengan data transaksi
     """
+    # Ambil user yang sedang login
     user = request.user
 
-    # Get all transactions with pagination
+    # Query semua transaksi poin user, diurutkan dari terbaru
     transactions = PointTransaction.objects.filter(user=user).order_by('-created_at')
 
-    # Filter by activity type if provided
+    # Ambil parameter filter activity dari query string
     activity_filter = request.GET.get('activity', '')
+
+    # Jika ada filter activity, filter transaksi berdasarkan activity_type
     if activity_filter:
         transactions = transactions.filter(activity_type=activity_filter)
 
+    # Siapkan context untuk template
     context = {
         'transactions': transactions,
         'activity_filter': activity_filter,
+        # ACTIVITY_CHOICES untuk dropdown filter di template
         'activity_choices': PointTransaction.ACTIVITY_CHOICES,
     }
 
+    # Render template points history dengan context
     return render(request, 'leaderboard/points_history.html', context)
 
 
 @login_required(login_url='login')
 def achievements_page(request):
     """
-    Achievements Page - menampilkan achievements user
+    Achievements Page - menampilkan semua achievements (earned dan locked).
+    Menampilkan progress achievement user.
+
+    Requires:
+        User harus login (login_required decorator)
+
+    Flow:
+    1. Query achievement yang sudah didapat user
+    2. Build list semua achievement (earned + locked)
+    3. Hitung persentase achievement yang sudah didapat
+    4. Render template dengan data achievement
     """
+    # Ambil user yang sedang login
     user = request.user
 
-    # Get user's achievements
+    # Query achievement yang sudah didapat user, diurutkan dari terbaru
     earned_achievements = Achievement.objects.filter(user=user).order_by('-earned_at')
 
-    # Get all possible achievements
+    # Ambil semua kode achievement yang mungkin
+    # List comprehension: [code for code, _ in Achievement.ACHIEVEMENT_CODES]
+    # Contoh: ['first_event', 'ten_events', 'organizer', ...]
     all_achievement_codes = [code for code, _ in Achievement.ACHIEVEMENT_CODES]
+
+    # Ambil set kode achievement yang sudah didapat user
+    # values_list('achievement_code', flat=True): Return list kode saja
+    # set(): Convert list ke set untuk lookup yang lebih cepat
     earned_codes = set(earned_achievements.values_list('achievement_code', flat=True))
 
-    # Create list of all achievements with earned status
+    # Build list semua achievement dengan status earned/locked
     all_achievements = []
     for code, title in Achievement.ACHIEVEMENT_CODES:
+        # Cek apakah achievement ini sudah didapat
         is_earned = code in earned_codes
+
+        # Jika sudah didapat, ambil data achievement dari database
+        # Jika belum, earned_ach = None
         earned_ach = earned_achievements.filter(achievement_code=code).first() if is_earned else None
 
+        # Append data achievement ke list
         all_achievements.append({
             'code': code,
             'title': title,
             'is_earned': is_earned,
             'earned_at': earned_ach.earned_at if earned_ach else None,
             'bonus_points': earned_ach.bonus_points if earned_ach else 0,
+            # Jika sudah earned, gunakan description dari database
+            # Jika belum, gunakan description default dari helper function
             'description': earned_ach.description if earned_ach else get_achievement_description(code),
         })
 
+    # Siapkan context untuk template
     context = {
         'all_achievements': all_achievements,
         'earned_count': len(earned_codes),
         'total_count': len(all_achievement_codes),
+        # Hitung persentase achievement yang sudah didapat
         'earned_percent': (len(earned_codes) / len(all_achievement_codes) * 100) if all_achievement_codes else 0,
     }
 
+    # Render template achievements dengan context
     return render(request, 'leaderboard/achievements.html', context)
 
 
+# ===== HELPER FUNCTIONS =====
+
 def get_tier(points):
-    """Helper function untuk menentukan tier berdasarkan points"""
+    """
+    Helper function untuk menentukan tier user berdasarkan total points.
+
+    Tier levels:
+    - Master: >= 1000 points
+    - Expert: >= 500 points
+    - Advanced: >= 200 points
+    - Intermediate: >= 50 points
+    - Beginner: < 50 points
+
+    Args:
+        points (int): Total poin user
+
+    Returns:
+        str: Nama tier
+    """
     if points >= 1000:
         return 'Master'
     elif points >= 500:
@@ -291,7 +477,22 @@ def get_tier(points):
 
 
 def get_badge(points):
-    """Helper function untuk menentukan badge emoji"""
+    """
+    Helper function untuk menentukan badge emoji berdasarkan total points.
+
+    Badge levels:
+    - 🥇 Gold Medal: >= 1000 points
+    - 🥈 Silver Medal: >= 500 points
+    - 🥉 Bronze Medal: >= 200 points
+    - ⭐ Star: >= 50 points
+    - 🔰 Beginner Shield: < 50 points
+
+    Args:
+        points (int): Total poin user
+
+    Returns:
+        str: Emoji badge
+    """
     if points >= 1000:
         return '🥇'
     elif points >= 500:
@@ -305,7 +506,17 @@ def get_badge(points):
 
 
 def get_achievement_description(code):
-    """Get description for achievement code"""
+    """
+    Helper function untuk mendapatkan deskripsi default achievement.
+    Digunakan untuk achievement yang belum didapat (locked).
+
+    Args:
+        code (str): Kode achievement
+
+    Returns:
+        str: Deskripsi achievement
+    """
+    # Dictionary mapping kode achievement ke deskripsi
     descriptions = {
         'first_event': 'Join your first event',
         'ten_events': 'Complete 10 events',
@@ -314,4 +525,5 @@ def get_achievement_description(code):
         'social_butterfly': 'Make 20 connections',
         'early_bird': 'Join 5 morning events',
     }
+    # get(code, 'Unknown achievement'): Return deskripsi jika ada, jika tidak return 'Unknown achievement'
     return descriptions.get(code, 'Unknown achievement')
