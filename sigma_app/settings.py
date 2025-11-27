@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1","farrell-bagoes-sigmaapp.pbp.cs.ui.ac.
 
 CSRF_TRUSTED_ORIGINS = [
     "https://farrell-bagoes-sigmaapp.pbp.cs.ui.ac.id",
+    "http://localhost:28935"
 ]
 
 
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',  # Add CORS headers support for Flutter mobile app
     'authentication',
     'partner_matching',
     'event_discovery',
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise right after SecurityMiddleware
+    'corsheaders.middleware.CorsMiddleware',  # Add CORS middleware (must be before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -174,3 +177,46 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = '/'
+
+# ===== CORS Configuration for Flutter Mobile App =====
+# Allow all origins for development (restrict in production)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow credentials (cookies, authorization headers, etc.)
+CORS_ALLOW_CREDENTIALS = True
+
+# Allowed HTTP methods
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Allowed HTTP headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# ===== CSRF & Session Cookie Configuration for Mobile Apps =====
+# Set secure cookies for production (HTTPS only)
+CSRF_COOKIE_SECURE = PRODUCTION
+SESSION_COOKIE_SECURE = PRODUCTION
+
+# Allow cookies to be sent with cross-origin requests
+CSRF_COOKIE_SAMESITE = 'None' if PRODUCTION else 'Lax'
+SESSION_COOKIE_SAMESITE = 'None' if PRODUCTION else 'Lax'
+
+# Make cookies accessible to JavaScript (needed for mobile apps)
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_HTTPONLY = False
