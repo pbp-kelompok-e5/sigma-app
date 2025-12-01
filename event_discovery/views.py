@@ -25,7 +25,7 @@ def show_json(request):
     ) | Event.objects.filter(
         event_date=now.date(),
         start_time__gte=now.time()
-    )
+    ).order_by('-event_date', '-start_time')
 
     data=[
         {
