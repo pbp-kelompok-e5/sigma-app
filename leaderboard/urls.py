@@ -35,4 +35,17 @@ urlpatterns = [
     # URL: /leaderboard/achievements/
     # View: achievements_page - Halaman achievements user (earned + locked)
     path('achievements/', views.achievements_page, name='achievements'),
+
+    # ===== FLUTTER MOBILE APP API ENDPOINTS =====
+    # URL: /leaderboard/api/flutter/leaderboard/
+    # View: flutter_leaderboard - JSON API endpoint untuk Flutter app (leaderboard data)
+    path('api/flutter/leaderboard/', views.flutter_leaderboard, name='flutter_leaderboard'),
+
+    # URL: /leaderboard/api/flutter/points/dashboard/
+    # View: flutter_points_dashboard - JSON API endpoint untuk Flutter app (points dashboard)
+    path('api/flutter/points/dashboard/', views.flutter_points_dashboard, name='flutter_points_dashboard'),
+
+    # URL: /leaderboard/api/flutter/points/history/
+    # View: flutter_points_history - JSON API endpoint untuk Flutter app (points history)
+    path('api/flutter/points/history/', views.flutter_points_history, name='flutter_points_history'),
 ]
