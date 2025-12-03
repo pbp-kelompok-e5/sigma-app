@@ -7,6 +7,7 @@ from django.utils import timezone
 
 
 # Create your views here.
+# Test
 
 # Show All Event
 def show_event(request):
