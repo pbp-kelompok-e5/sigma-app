@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/events/create/', api.api_create_event, name='api_create_event'),
     path('api/events/<int:event_id>/update/', api.api_update_event, name='api_update_event'),
     path('api/events/<int:event_id>/delete/', api.api_delete_event, name='api_delete_event'),
+    path('api/events/<int:event_id>/cancel/', api.api_cancel_event, name='api_cancel_event'),
     path('api/events/<int:event_id>/participants/', api.api_participants_list, name='api_participants_list'),
     path('api/events/<int:event_id>/participants/manage/', api.api_manage_participant, name='api_manage_participant'),
 ]
