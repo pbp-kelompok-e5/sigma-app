@@ -16,4 +16,5 @@ urlpatterns = [
     path('events/<int:id>/participant-status/', views.event_participant_status, name='event_participant_status'),
     path('events/<int:id>/has-attended-participants/', views.event_has_attended_participants, name='event_has_attended_participants'),
     path('events/<int:id>/user-has-reviewed/', views.event_user_has_reviewed, name='event_user_has_reviewed'),
+    path('proxy-image/', views.proxy_image, name='proxy_image'),
 ]
