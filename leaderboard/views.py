@@ -11,6 +11,10 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 # Import JsonResponse untuk mengembalikan response dalam format JSON (untuk AJAX)
 from django.http import JsonResponse
+# Import decorator untuk CSRF exemption (untuk Flutter API)
+from django.views.decorators.csrf import csrf_exempt
+# Import JSON untuk parsing request body
+import json
 # Import model-model yang diperlukan
 from authentication.models import UserProfile
 from leaderboard.models import PointTransaction, Achievement
@@ -527,3 +531,299 @@ def get_achievement_description(code):
     }
     # get(code, 'Unknown achievement'): Return deskripsi jika ada, jika tidak return 'Unknown achievement'
     return descriptions.get(code, 'Unknown achievement')
+
+
+# ===== FLUTTER MOBILE APP API ENDPOINTS =====
+
+@csrf_exempt
+def flutter_leaderboard(request):
+    """
+    Flutter API endpoint for leaderboard data.
+    Returns ranked list of users based on total points.
+
+    Endpoint: GET /leaderboard/api/flutter/leaderboard/
+
+    Query Parameters:
+        limit (int): Maximum number of users to return (default: 50)
+
+    Response (200):
+    {
+        "status": true,
+        "message": "Leaderboard retrieved successfully",
+        "data": {
+            "users": [
+                {
+                    "rank": 1,
+                    "user_id": 1,
+                    "username": "string",
+                    "full_name": "string",
+                    "profile_image_url": "string",
+                    "total_points": 1000,
+                    "total_events": 50,
+                    "tier": "Master",
+                    "badge": "🥇"
+                },
+                ...
+            ],
+            "current_user_rank": 5,  // null if not authenticated
+            "total_users": 100
+        }
+    }
+    """
+    try:
+        # Get limit parameter (default: 50)
+        limit = int(request.GET.get('limit', 50))
+
+        # Query all user profiles with select_related for optimization
+        profiles_query = UserProfile.objects.select_related('user').all()
+
+        # Build ranked users list
+        ranked_users = []
+        for profile in profiles_query:
+            ranked_users.append({
+                'user_id': profile.user.id,
+                'username': profile.user.username,
+                'full_name': profile.full_name,
+                'profile_image_url': profile.profile_image_url or '',
+                'total_points': profile.total_points,
+                'total_events': profile.total_events,
+                'tier': get_tier(profile.total_points),
+                'badge': get_badge(profile.total_points),
+            })
+
+        # Sort by total_points (descending)
+        ranked_users.sort(key=lambda x: x['total_points'], reverse=True)
+
+        # Assign ranks
+        for rank, user_data in enumerate(ranked_users, start=1):
+            user_data['rank'] = rank
+
+        # Find current user's rank
+        current_user_rank = None
+        if request.user.is_authenticated:
+            for user_data in ranked_users:
+                if user_data['user_id'] == request.user.id:
+                    current_user_rank = user_data['rank']
+                    break
+
+        # Apply limit
+        limited_users = ranked_users[:limit]
+
+        return JsonResponse({
+            'status': True,
+            'message': 'Leaderboard retrieved successfully',
+            'data': {
+                'users': limited_users,
+                'current_user_rank': current_user_rank,
+                'total_users': len(ranked_users),
+            }
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'status': False,
+            'message': f'Failed to retrieve leaderboard: {str(e)}',
+        }, status=500)
+
+
+@csrf_exempt
+def flutter_points_dashboard(request):
+    """
+    Flutter API endpoint for user's points dashboard.
+    Returns authenticated user's points summary and statistics.
+
+    Endpoint: GET /leaderboard/api/flutter/points/dashboard/
+
+    Response (200):
+    {
+        "status": true,
+        "message": "Points dashboard retrieved successfully",
+        "data": {
+            "total_points": 1000,
+            "total_events": 50,
+            "current_rank": 5,
+            "tier": "Master",
+            "badge": "🥇",
+            "breakdown": {
+                "event_join": {"label": "Event Join", "total": 100, "count": 10},
+                "event_complete": {"label": "Event Complete", "total": 300, "count": 10},
+                ...
+            },
+            "recent_achievements": [
+                {
+                    "id": 1,
+                    "achievement_code": "first_event",
+                    "title": "First Event",
+                    "description": "Joined your first event",
+                    "bonus_points": 10,
+                    "earned_at": "2025-01-01T12:00:00Z"
+                },
+                ...
+            ]
+        }
+    }
+
+    Response (401):
+    {
+        "status": false,
+        "message": "Authentication required"
+    }
+    """
+    # Check authentication
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'status': False,
+            'message': 'Authentication required',
+        }, status=401)
+
+    try:
+        user = request.user
+        profile = get_object_or_404(UserProfile, user=user)
+
+        # Get all point transactions
+        transactions = PointTransaction.objects.filter(user=user).order_by('-created_at')
+
+        # Calculate breakdown by activity type
+        breakdown = {}
+        for activity_type, label in PointTransaction.ACTIVITY_CHOICES:
+            total = transactions.filter(activity_type=activity_type).aggregate(Sum('points'))['points__sum'] or 0
+            count = transactions.filter(activity_type=activity_type).count()
+            breakdown[activity_type] = {
+                'label': label,
+                'total': total,
+                'count': count,
+            }
+
+        # Get recent achievements (last 5)
+        recent_achievements = Achievement.objects.filter(user=user).order_by('-earned_at')[:5]
+        achievements_data = []
+        for achievement in recent_achievements:
+            achievements_data.append({
+                'id': achievement.id,
+                'achievement_code': achievement.achievement_code,
+                'title': achievement.title,
+                'description': achievement.description,
+                'bonus_points': achievement.bonus_points,
+                'earned_at': achievement.earned_at.isoformat(),
+            })
+
+        # Calculate user's rank
+        ranked_users = UserProfile.objects.order_by('-total_points')
+        user_rank = None
+        for idx, p in enumerate(ranked_users, start=1):
+            if p.user.id == user.id:
+                user_rank = idx
+                break
+
+        return JsonResponse({
+            'status': True,
+            'message': 'Points dashboard retrieved successfully',
+            'data': {
+                'total_points': profile.total_points,
+                'total_events': profile.total_events,
+                'current_rank': user_rank,
+                'tier': get_tier(profile.total_points),
+                'badge': get_badge(profile.total_points),
+                'breakdown': breakdown,
+                'recent_achievements': achievements_data,
+            }
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'status': False,
+            'message': f'Failed to retrieve points dashboard: {str(e)}',
+        }, status=500)
+
+
+@csrf_exempt
+def flutter_points_history(request):
+    """
+    Flutter API endpoint for user's points transaction history.
+    Returns authenticated user's complete points transaction history.
+
+    Endpoint: GET /leaderboard/api/flutter/points/history/
+
+    Query Parameters:
+        limit (int): Maximum number of transactions to return (default: 100)
+        activity_type (str): Filter by activity type (optional)
+
+    Response (200):
+    {
+        "status": true,
+        "message": "Points history retrieved successfully",
+        "data": {
+            "transactions": [
+                {
+                    "id": 1,
+                    "activity_type": "event_join",
+                    "activity_label": "Event Join",
+                    "points": 10,
+                    "description": "Joined event: Badminton Tournament",
+                    "created_at": "2025-01-01T12:00:00Z"
+                },
+                ...
+            ],
+            "total_transactions": 50
+        }
+    }
+
+    Response (401):
+    {
+        "status": false,
+        "message": "Authentication required"
+    }
+    """
+    # Check authentication
+    if not request.user.is_authenticated:
+        return JsonResponse({
+            'status': False,
+            'message': 'Authentication required',
+        }, status=401)
+
+    try:
+        user = request.user
+
+        # Get query parameters
+        limit = int(request.GET.get('limit', 100))
+        activity_type = request.GET.get('activity_type', '')
+
+        # Query transactions
+        transactions = PointTransaction.objects.filter(user=user).order_by('-created_at')
+
+        # Apply activity type filter if provided
+        if activity_type:
+            transactions = transactions.filter(activity_type=activity_type)
+
+        # Get total count before limiting
+        total_count = transactions.count()
+
+        # Apply limit
+        transactions = transactions[:limit]
+
+        # Build transactions data
+        transactions_data = []
+        for transaction in transactions:
+            transactions_data.append({
+                'id': transaction.id,
+                'activity_type': transaction.activity_type,
+                'activity_label': transaction.get_activity_type_display(),
+                'points': transaction.points,
+                'description': transaction.description,
+                'created_at': transaction.created_at.isoformat(),
+            })
+
+        return JsonResponse({
+            'status': True,
+            'message': 'Points history retrieved successfully',
+            'data': {
+                'transactions': transactions_data,
+                'total_transactions': total_count,
+            }
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'status': False,
+            'message': f'Failed to retrieve points history: {str(e)}',
+        }, status=500)
