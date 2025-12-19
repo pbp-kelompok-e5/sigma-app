@@ -62,6 +62,52 @@ def award_points_on_event_join(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=EventParticipant)
+def update_total_events_on_join(sender, instance, created, **kwargs):
+    """
+    Signal handler untuk update total_events di UserProfile ketika user join event.
+    Dipanggil otomatis setiap kali EventParticipant dibuat.
+
+    Args:
+        sender: Model class yang mengirim signal (EventParticipant)
+        instance: Instance EventParticipant yang baru dibuat
+        created: Boolean, True jika ini record baru (bukan update)
+        **kwargs: Keyword arguments tambahan dari signal
+
+    Flow:
+    1. Cek apakah ini record baru (created=True)
+    2. Ambil UserProfile dari user yang terkait
+    3. Hitung total event yang diikuti user (status 'joined' atau 'attended')
+    4. Update field total_events di UserProfile
+    5. Save UserProfile
+    """
+    # Hanya proses jika ini record baru
+    if created:
+        # Import UserProfile di dalam fungsi untuk menghindari circular import
+        from authentication.models import UserProfile
+
+        try:
+            # Ambil UserProfile dari user yang terkait
+            profile = UserProfile.objects.get(user=instance.user)
+
+            # Hitung total event yang diikuti user (status 'joined' atau 'attended')
+            # Tidak termasuk yang 'cancelled'
+            total_events = EventParticipant.objects.filter(
+                user=instance.user,
+                status__in=['joined', 'attended']
+            ).count()
+
+            # Update total_events di UserProfile
+            profile.total_events = total_events
+
+            # Simpan perubahan ke database
+            profile.save()
+
+        except UserProfile.DoesNotExist:
+            # Jika UserProfile belum ada, skip (tidak perlu error)
+            pass
+
+
+@receiver(post_save, sender=EventParticipant)
 def award_points_on_event_complete(sender, instance, created, **kwargs):
     """
     Signal handler untuk memberikan poin ketika user menyelesaikan event (hadir).
@@ -98,6 +144,94 @@ def award_points_on_event_complete(sender, instance, created, **kwargs):
                 description=f"Completed event: {instance.event.title}",
                 related_event=instance.event
             )
+
+
+@receiver(post_save, sender=EventParticipant)
+def update_total_events_on_status_change(sender, instance, created, **kwargs):
+    """
+    Signal handler untuk update total_events di UserProfile ketika status EventParticipant berubah.
+    Dipanggil otomatis setiap kali EventParticipant diupdate.
+
+    Args:
+        sender: Model class yang mengirim signal (EventParticipant)
+        instance: Instance EventParticipant yang diupdate
+        created: Boolean, True jika ini record baru (bukan update)
+        **kwargs: Keyword arguments tambahan dari signal
+
+    Flow:
+    1. Cek apakah ini update (created=False)
+    2. Ambil UserProfile dari user yang terkait
+    3. Hitung total event yang diikuti user (status 'joined' atau 'attended')
+    4. Update field total_events di UserProfile
+    5. Save UserProfile
+    """
+    # Hanya proses jika ini update (bukan record baru)
+    if not created:
+        # Import UserProfile di dalam fungsi untuk menghindari circular import
+        from authentication.models import UserProfile
+
+        try:
+            # Ambil UserProfile dari user yang terkait
+            profile = UserProfile.objects.get(user=instance.user)
+
+            # Hitung total event yang diikuti user (status 'joined' atau 'attended')
+            # Tidak termasuk yang 'cancelled'
+            total_events = EventParticipant.objects.filter(
+                user=instance.user,
+                status__in=['joined', 'attended']
+            ).count()
+
+            # Update total_events di UserProfile
+            profile.total_events = total_events
+
+            # Simpan perubahan ke database
+            profile.save()
+
+        except UserProfile.DoesNotExist:
+            # Jika UserProfile belum ada, skip (tidak perlu error)
+            pass
+
+
+@receiver(post_delete, sender=EventParticipant)
+def update_total_events_on_delete(sender, instance, **kwargs):
+    """
+    Signal handler untuk update total_events di UserProfile ketika EventParticipant dihapus.
+    Dipanggil otomatis setiap kali EventParticipant dihapus (misalnya user leave event).
+
+    Args:
+        sender: Model class yang mengirim signal (EventParticipant)
+        instance: Instance EventParticipant yang dihapus
+        **kwargs: Keyword arguments tambahan dari signal
+
+    Flow:
+    1. Ambil UserProfile dari user yang terkait
+    2. Hitung total event yang diikuti user (status 'joined' atau 'attended')
+    3. Update field total_events di UserProfile
+    4. Save UserProfile
+    """
+    # Import UserProfile di dalam fungsi untuk menghindari circular import
+    from authentication.models import UserProfile
+
+    try:
+        # Ambil UserProfile dari user yang terkait
+        profile = UserProfile.objects.get(user=instance.user)
+
+        # Hitung total event yang diikuti user (status 'joined' atau 'attended')
+        # Tidak termasuk yang 'cancelled'
+        total_events = EventParticipant.objects.filter(
+            user=instance.user,
+            status__in=['joined', 'attended']
+        ).count()
+
+        # Update total_events di UserProfile
+        profile.total_events = total_events
+
+        # Simpan perubahan ke database
+        profile.save()
+
+    except UserProfile.DoesNotExist:
+        # Jika UserProfile belum ada, skip (tidak perlu error)
+        pass
 
 
 # ===== EVENT SIGNALS =====
