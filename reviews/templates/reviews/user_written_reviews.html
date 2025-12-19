@@ -8,7 +8,7 @@
 <div class="container mx-auto" style="max-width: 1000px; padding: 40px 16px;">
   <div class="card-deep-sea">
 
-    <!-- ✅ Adaptive Header -->
+    <!-- Adaptive Header -->
     <div class="card-header">
       Reviews written by:
       {% if writer.id == request.user.id %}
@@ -27,7 +27,7 @@
         {% for review in reviews %}
         <div id="review-card-{{ review.id }}" style="background: var(--deep-sea-light); border-radius: 12px; padding: 16px;">
 
-          <!-- ✅ From (Adaptive YOU / username) -->
+          <!-- From (Adaptive YOU / username) -->
           <p>
             <strong>
               {% if review.from_user.id == request.user.id %}
@@ -58,7 +58,7 @@
             {{ review.created_at }}
           </p>
 
-          <!-- ✅ ONLY SHOW BUTTONS IF OWNER -->
+          <!-- ONLY SHOW BUTTONS IF OWNER -->
           {% if review.from_user.id == request.user.id %}
           <div class="flex gap-2 mt-4">
             <a href="{% url 'reviews:edit-review' review.id %}"
@@ -86,7 +86,7 @@
   </div>
 </div>
 
-<!-- ✅ DELETE MODAL -->
+<!-- DELETE MODAL -->
 <div id="deleteModal"
      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="card-deep-sea" style="max-width: 400px; padding: 24px; text-align:center;">
@@ -106,10 +106,10 @@
   </div>
 </div>
 
-<!-- ✅ TOAST CONTAINER -->
+<!-- TOAST CONTAINER -->
 <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
 
-<!-- ✅ AJAX DELETE SCRIPT -->
+<!-- AJAX DELETE SCRIPT -->
 <script>
 // CSRF helper
 function getCookie(name) {
