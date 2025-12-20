@@ -5,6 +5,7 @@ from sigma_app.constants import SPORT_CHOICES, CITY_CHOICES
 from reviews.models import Review
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+import requests
 
 
 # Create your views here.
