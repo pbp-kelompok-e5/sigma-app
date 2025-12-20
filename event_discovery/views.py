@@ -115,21 +115,29 @@ def show_json_my_event(request):
 
 # Event Joined
 @csrf_exempt
+@login_required 
 def join_event(request, id):
     event = get_object_or_404(Event, pk=id)
 
-    # Cek Kapasitas Sudah Penuh
+    # 1. Cek apakah user SUDAH join sebelumnya (Mencegah duplikasi & error constraint)
+    if EventParticipant.objects.filter(user=request.user, event=event).exists():
+        return JsonResponse({'message': 'You have already joined this event'}, status=200) # Return sukses saja agar UI tidak error
+
+    # 2. Cek Kapasitas
     if event.is_full():
         return JsonResponse({'message': 'Event is full'}, status=400)
 
-    # Tambah Participant
     try:
-        EventParticipant.objects.create(user=request.user, event=event, status='joined')
-        event.current_participants += 1
-        event.save()
+        # Gunakan transaction.atomic untuk memastikan data konsisten
+        with transaction.atomic():
+            EventParticipant.objects.create(user=request.user, event=event, status='joined')
+            event.current_participants += 1
+            event.save()
+            
         return JsonResponse({'message': 'Joined'}, status=201)
-    except:
-        return JsonResponse({'message': 'Could not join'}, status=400)
+    except Exception as e:
+        print(f"Error joining event: {e}") # Print error di terminal backend untuk debugging
+        return JsonResponse({'message': 'Could not join'}, status=500)
 
 
 # Event Leave
@@ -162,10 +170,13 @@ def event_detail(request, id):
 # Event Participant Status
 def event_participant_status(request, id):
     event = get_object_or_404(Event, pk=id)
-    try:
-        participant = EventParticipant.objects.get(user=request.user, event=event)
+    
+    # Gunakan filter().first() daripada get() untuk keamanan
+    participant = EventParticipant.objects.filter(user=request.user, event=event).first()
+    
+    if participant:
         return JsonResponse({'status': participant.status}, status=200)
-    except EventParticipant.DoesNotExist:
+    else:
         return JsonResponse({'status': 'not_participating'}, status=200)
 
 # Check if event has attended participants (excluding current user)
