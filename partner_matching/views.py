@@ -364,13 +364,23 @@ def public_connections(request, user_id):
         }
 
         return render(request, 'partner_matching/connections.html', context)
-    
+
+@csrf_exempt 
 @login_required
 def connection_action_by_user(request, action, user_id):
     target_user = get_object_or_404(User, id=user_id)
     
     try:
-        if action == 'accept':
+        if action == 'connect':
+            # user mengirim request ke target_user
+            connection, created = Connection.objects.get_or_create(
+                from_user=request.user,
+                to_user=target_user,
+                defaults={'status': 'pending'}
+            )
+            if not created:
+                return JsonResponse({'success': False, 'error': 'Connection request already exists'})
+        elif action == 'accept':
             # user menerima request dari target_user
             connection = Connection.objects.filter(
                 from_user=target_user, 
@@ -423,4 +433,176 @@ def connection_action_by_user(request, action, user_id):
     except Exception as e:
         print(f"Error in connection_action_by_user: {e}")
         return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def connections_api(request):
+    try:
+        friends_who_sent_to_me = User.objects.filter(
+            connections_sent__to_user=request.user,
+            connections_sent__status='accepted'
+        )
+        friends_who_received_from_me = User.objects.filter(
+            connections_received__from_user=request.user,
+            connections_received__status='accepted'
+        )
+        my_friends = friends_who_sent_to_me.union(friends_who_received_from_me)
+        
+        received_requests = User.objects.filter(
+            connections_sent__to_user=request.user,
+            connections_sent__status='pending'
+        )
+        sent_requests = User.objects.filter(
+            connections_received__from_user=request.user,
+            connections_received__status='pending'
+        )
+
+        excluded_users = User.objects.filter(
+            Q(connections_sent__to_user=request.user) |
+            Q(connections_received__from_user=request.user) |
+            Q(id=request.user.id)
+        ).distinct()
+
+        user_sports = SportPreference.objects.filter(user=request.user).values_list('sport_type', flat=True)
+        user_city = request.user.profile.city if hasattr(request.user, 'profile') else None
+        
+        recommendations = User.objects.exclude(
+            id__in=excluded_users.values_list('id', flat=True)
+        ).filter(sport_preferences__sport_type__in=user_sports).distinct()
+
+        def serialize_user(user, extra_data=None):
+            profile = getattr(user, 'profile', None)
+            pic_url = '/static/images/default-avatar.png'
+            if profile:
+                if hasattr(profile, 'profile_image_url') and profile.profile_image_url:
+                    pic_url = profile.profile_image_url
+                elif hasattr(profile, 'photo') and profile.photo:
+                    pic_url = profile.photo.url
+            
+            data = {
+                'id': user.id,
+                'username': user.username,
+                'full_name': profile.full_name if profile else user.username,
+                'city': profile.city if profile else 'Unknown',
+                'profile_picture_url': pic_url,
+                'sports': list(user.sport_preferences.values_list('sport_type', flat=True))
+            }
+            if extra_data:
+                data.update(extra_data)
+            return data
+
+        friends_data = [serialize_user(u) for u in my_friends]
+
+        received_data = [serialize_user(u) for u in received_requests]
+
+        sent_data = [serialize_user(u) for u in sent_requests]
+
+        recommendations_data = []
+        for user in recommendations:
+            score = calculate_match_score(request.user, user)
+            if score > 0:
+                rec_info = serialize_user(user, extra_data={
+                    'score': score,
+                    'common_sports': get_common_sports(request.user, user),
+                    'same_city': user_city and hasattr(user, 'profile') and user.profile.city == user_city
+                })
+                recommendations_data.append(rec_info)
+        
+        recommendations_data.sort(key=lambda x: x['score'], reverse=True)
+
+        return JsonResponse({
+            'status': 'success',
+            'my_friends': friends_data,
+            'received_requests': received_data,
+            'sent_requests': sent_data,
+            'recommendations': recommendations_data
+        })
+
+    except Exception as e:
+        print(f"Error in connections_api: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
+def get_filter_options_api(request):
+    def map_choices(choices):
+        return [{'value': key, 'label': label} for key, label in choices]
+
+    data = {
+        'cities': map_choices(CITY_CHOICES),
+        'sports': map_choices(SPORT_CHOICES),
+        'skills': map_choices(SKILL_CHOICES),
+    }
+
+    return JsonResponse(data)
+
+@login_required
+def user_profile_detail_api(request, user_id):
+    target_user = get_object_or_404(User, pk=user_id)
+
+    try:
+        target_profile = target_user.profile
+    except UserProfile.DoesNotExist:
+        target_profile = UserProfile.objects.create(
+            user=target_user,
+            full_name=target_user.get_full_name() or target_user.username,
+            city='jakarta'
+        )
+
+    sport_preferences = SportPreference.objects.filter(user=target_user)
+    sports_data = []
+    for sp in sport_preferences:
+        sports_data.append({
+            'id': sp.id,
+            'sport_type': sp.sport_type,
+            'skill_level': sp.skill_level,
+        })
+
+    connection_status = 'none'
+
+    is_friends = Connection.objects.filter(
+        Q(from_user=request.user, to_user=target_user, status='accepted') |
+        Q(from_user=target_user, to_user=request.user, status='accepted')
+    ).exists()
+
+    if is_friends:
+        connection_status = 'accepted'
+    else:
+        sent_request = Connection.objects.filter(
+            from_user=request.user,
+            to_user=target_user,
+            status='pending'
+        ).exists()
+
+        received_request = Connection.objects.filter(
+            from_user=target_user,
+            to_user=request.user,
+            status='pending'
+        ).exists()
+
+        if sent_request:
+            connection_status = 'pending_sent'
+        elif received_request:
+            connection_status = 'pending_received' 
+
+    pic_url = '/static/images/default-avatar.png'
+    if hasattr(target_profile, 'profile_image') and target_profile.profile_image:
+        pic_url = target_profile.profile_image.url
+    elif hasattr(target_profile, 'photo') and target_profile.photo:
+        pic_url = target_profile.photo.url
+    elif hasattr(target_profile, 'profile_image_url') and target_profile.profile_image_url:
+        pic_url = target_profile.profile_image_url
+
+    data = {
+        'status': True,
+        'data': {
+            'id': target_user.id,
+            'username': target_user.username,
+            'full_name': target_profile.full_name,
+            'city': target_profile.city,
+            'bio': getattr(target_profile, 'bio', ''),
+            'profile_picture_url': pic_url,
+            'connection_status': connection_status,
+            'sport_preferences': sports_data,
+        }
+    }
+
+    return JsonResponse(data)
+
