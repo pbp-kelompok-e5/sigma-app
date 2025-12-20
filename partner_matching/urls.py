@@ -25,5 +25,8 @@ urlpatterns = [
 
     path('connection/<str:action>/user/<int:user_id>/', views.connection_action_by_user, name='connection_action_by_user'),
 
+    path('connections/api/', views.connections_api, name='connections_api'),
 
+    path('filter-options-api/', views.get_filter_options_api, name='filter_options_api'),
+    path('profile/<int:user_id>/api/', views.user_profile_detail_api, name='user_profile_detail_api'),
 ]
