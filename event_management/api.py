@@ -111,6 +111,22 @@ def api_delete_event(request, event_id):
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
 
+# Cancel event (organizer only)
+@csrf_exempt
+@login_required
+def api_cancel_event(request, event_id):
+    if request.method not in ("POST", "PATCH"):
+        return HttpResponseBadRequest("Only POST/PATCH allowed")
+    
+    event = get_object_or_404(Event, pk=event_id, organizer=request.user)
+    
+    try:
+        event.status = "cancelled"
+        event.save()
+        return JsonResponse({"success": True, "message": "Event has been cancelled."})
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
 # Participants list (organizer only)
 @login_required
 def api_participants_list(request, event_id):
