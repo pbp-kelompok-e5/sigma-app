@@ -538,43 +538,14 @@ def get_achievement_description(code):
 @csrf_exempt
 def flutter_leaderboard(request):
     """
-    Flutter API endpoint for leaderboard data.
-    Returns ranked list of users based on total points.
-
-    Endpoint: GET /leaderboard/api/flutter/leaderboard/
-
-    Query Parameters:
-        limit (int): Maximum number of users to return (default: 50)
-
-    Response (200):
-    {
-        "status": true,
-        "message": "Leaderboard retrieved successfully",
-        "data": {
-            "users": [
-                {
-                    "rank": 1,
-                    "user_id": 1,
-                    "username": "string",
-                    "full_name": "string",
-                    "profile_image_url": "string",
-                    "total_points": 1000,
-                    "total_events": 50,
-                    "tier": "Master",
-                    "badge": "🥇"
-                },
-                ...
-            ],
-            "current_user_rank": 5,  // null if not authenticated
-            "total_users": 100
-        }
-    }
+    Flutter API endpoint for leaderboard data with PAGINATION support.
     """
     try:
-        # Get limit parameter (default: 50)
-        limit = int(request.GET.get('limit', 50))
+        # 1. Ambil parameter page dan limit (default limit disamakan dengan mobile: 10)
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 10))
 
-        # Query all user profiles with select_related for optimization
+        # Query all user profiles
         profiles_query = UserProfile.objects.select_related('user').all()
 
         # Build ranked users list
@@ -605,17 +576,34 @@ def flutter_leaderboard(request):
                 if user_data['user_id'] == request.user.id:
                     current_user_rank = user_data['rank']
                     break
+        
+        total_users = len(ranked_users)
+        
+        # Hitung start dan end index untuk slicing
+        start_index = (page - 1) * limit
+        end_index = start_index + limit
+        
+        # Ambil data spesifik untuk halaman ini saja
+        paginated_users = ranked_users[start_index:end_index]
 
-        # Apply limit
-        limited_users = ranked_users[:limit]
+        # Hitung metadata pagination untuk dikirim ke Flutter
+        import math
+        total_pages = math.ceil(total_users / limit)
+        has_next = page < total_pages
+        has_previous = page > 1
 
         return JsonResponse({
             'status': True,
             'message': 'Leaderboard retrieved successfully',
             'data': {
-                'users': limited_users,
+                'users': paginated_users,       # Data user HANYA untuk page yang diminta
                 'current_user_rank': current_user_rank,
-                'total_users': len(ranked_users),
+                'total_users': total_users,
+                
+                'total_pages': total_pages,
+                'current_page': page,
+                'has_next': has_next,
+                'has_previous': has_previous,
             }
         })
 
@@ -624,7 +612,6 @@ def flutter_leaderboard(request):
             'status': False,
             'message': f'Failed to retrieve leaderboard: {str(e)}',
         }, status=500)
-
 
 @csrf_exempt
 def flutter_points_dashboard(request):
