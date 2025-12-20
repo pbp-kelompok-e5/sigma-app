@@ -4,6 +4,7 @@ from .models import Event, EventParticipant
 from sigma_app.constants import SPORT_CHOICES, CITY_CHOICES
 from reviews.models import Review
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Create your views here.
@@ -112,9 +113,9 @@ def show_json_my_event(request):
     return JsonResponse(data, safe=False)
 
 # Event Joined
+@csrf_exempt
 def join_event(request, id):
     event = get_object_or_404(Event, pk=id)
-
 
     # Cek Kapasitas Sudah Penuh
     if event.is_full():
@@ -131,6 +132,7 @@ def join_event(request, id):
 
 
 # Event Leave
+@csrf_exempt
 def leave_event(request, id):
     try:
         event = get_object_or_404(Event, pk=id)
