@@ -115,7 +115,6 @@ def show_json_my_event(request):
 
 # Event Joined
 @csrf_exempt
-@login_required 
 def join_event(request, id):
     event = get_object_or_404(Event, pk=id)
 
