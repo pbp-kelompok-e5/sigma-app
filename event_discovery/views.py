@@ -1,5 +1,5 @@
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 from .models import Event, EventParticipant
 from sigma_app.constants import SPORT_CHOICES, CITY_CHOICES
 from reviews.models import Review
@@ -118,25 +118,18 @@ def show_json_my_event(request):
 def join_event(request, id):
     event = get_object_or_404(Event, pk=id)
 
-    # 1. Cek apakah user SUDAH join sebelumnya (Mencegah duplikasi & error constraint)
-    if EventParticipant.objects.filter(user=request.user, event=event).exists():
-        return JsonResponse({'message': 'You have already joined this event'}, status=200) # Return sukses saja agar UI tidak error
-
-    # 2. Cek Kapasitas
+    # Cek Kapasitas Sudah Penuh
     if event.is_full():
         return JsonResponse({'message': 'Event is full'}, status=400)
 
+    # Tambah Participant    ``
     try:
-        # Gunakan transaction.atomic untuk memastikan data konsisten
-        with transaction.atomic():
-            EventParticipant.objects.create(user=request.user, event=event, status='joined')
-            event.current_participants += 1
-            event.save()
-            
+        EventParticipant.objects.create(user=request.user, event=event, status='joined')
+        event.current_participants += 1
+        event.save()
         return JsonResponse({'message': 'Joined'}, status=201)
-    except Exception as e:
-        print(f"Error joining event: {e}") # Print error di terminal backend untuk debugging
-        return JsonResponse({'message': 'Could not join'}, status=500)
+    except:
+        return JsonResponse({'message': 'Could not join'}, status=400)
 
 
 # Event Leave
@@ -170,7 +163,6 @@ def event_detail(request, id):
 def event_participant_status(request, id):
     event = get_object_or_404(Event, pk=id)
     
-    # Gunakan filter().first() daripada get() untuk keamanan
     participant = EventParticipant.objects.filter(user=request.user, event=event).first()
     
     if participant:
