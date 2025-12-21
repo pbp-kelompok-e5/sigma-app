@@ -335,17 +335,19 @@ def public_connections(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
 
     try:
-        friends_from_received = User.objects.filter(
-            connections_received__to_user=target_user,
+        # Get friends where target_user sent the connection request (get to_user)
+        friends_who_received_from_target = User.objects.filter(
+            connections_received__from_user=target_user,
             connections_received__status='accepted'
         )
 
-        friends_from_sent = User.objects.filter(
-            connections_sent__from_user=target_user,
+        # Get friends who sent connection requests to target_user (get from_user)
+        friends_who_sent_to_target = User.objects.filter(
+            connections_sent__to_user=target_user,
             connections_sent__status='accepted'
         )
 
-        friends = friends_from_received.union(friends_from_sent)
+        friends = friends_who_received_from_target.union(friends_who_sent_to_target)
 
         context = {
             'target_user': target_user,
@@ -612,20 +614,20 @@ def public_connections_api(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
 
     try:
-        # Get friends who sent requests to target user
-        friends_from_received = User.objects.filter(
-            connections_received__to_user=target_user,
+        # Get friends where target_user sent the connection request (get to_user)
+        friends_who_received_from_target = User.objects.filter(
+            connections_received__from_user=target_user,
             connections_received__status='accepted'
         )
 
-        # Get friends who received requests from target user
-        friends_from_sent = User.objects.filter(
-            connections_sent__from_user=target_user,
+        # Get friends who sent connection requests to target_user (get from_user)
+        friends_who_sent_to_target = User.objects.filter(
+            connections_sent__to_user=target_user,
             connections_sent__status='accepted'
         )
 
         # Combine both querysets
-        friends = friends_from_received.union(friends_from_sent)
+        friends = friends_who_received_from_target.union(friends_who_sent_to_target)
 
         # Serialize user data
         def serialize_user(user):
