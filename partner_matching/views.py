@@ -580,7 +580,7 @@ def user_profile_detail_api(request, user_id):
         if sent_request:
             connection_status = 'pending_sent'
         elif received_request:
-            connection_status = 'pending_received' 
+            connection_status = 'pending_received'
 
     pic_url = '/static/images/default-avatar.png'
     if hasattr(target_profile, 'profile_image') and target_profile.profile_image:
@@ -605,4 +605,55 @@ def user_profile_detail_api(request, user_id):
     }
 
     return JsonResponse(data)
+
+@login_required
+def public_connections_api(request, user_id):
+    """API endpoint to fetch public connections for a specific user"""
+    target_user = get_object_or_404(User, id=user_id)
+
+    try:
+        # Get friends who sent requests to target user
+        friends_from_received = User.objects.filter(
+            connections_received__to_user=target_user,
+            connections_received__status='accepted'
+        )
+
+        # Get friends who received requests from target user
+        friends_from_sent = User.objects.filter(
+            connections_sent__from_user=target_user,
+            connections_sent__status='accepted'
+        )
+
+        # Combine both querysets
+        friends = friends_from_received.union(friends_from_sent)
+
+        # Serialize user data
+        def serialize_user(user):
+            profile = getattr(user, 'profile', None)
+            pic_url = '/static/images/default-avatar.png'
+            if profile:
+                if hasattr(profile, 'profile_image_url') and profile.profile_image_url:
+                    pic_url = profile.profile_image_url
+                elif hasattr(profile, 'photo') and profile.photo:
+                    pic_url = profile.photo.url
+
+            return {
+                'id': user.id,
+                'username': user.username,
+                'full_name': profile.full_name if profile else user.username,
+                'city': profile.city if profile else 'Unknown',
+                'profile_picture_url': pic_url,
+                'sports': list(user.sport_preferences.values_list('sport_type', flat=True))
+            }
+
+        friends_data = [serialize_user(u) for u in friends]
+
+        return JsonResponse({
+            'status': 'success',
+            'my_friends': friends_data
+        })
+
+    except Exception as e:
+        print(f"Error in public_connections_api: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
