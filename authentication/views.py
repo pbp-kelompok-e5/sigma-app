@@ -239,13 +239,24 @@ def profile_view(request, user_id=None):
     # aggregate mengembalikan dict, ambil nilai 'rating__avg', jika None gunakan 0
     average_rating = reviews_received.aggregate(Avg('rating'))['rating__avg'] or 0
 
+    # Import model Connection dan Q object untuk complex query
+    from partner_matching.models import Connection
+    from django.db.models import Q
+
+    # Fetch friends for the profile user (either own profile or public profile)
+    friends_who_sent_to_profile = User.objects.filter(
+        connections_sent__to_user=profile_user,
+        connections_sent__status='accepted'
+    )
+    friends_who_received_from_profile = User.objects.filter(
+        connections_received__from_user=profile_user,
+        connections_received__status='accepted'
+    )
+    friends = friends_who_sent_to_profile.union(friends_who_received_from_profile)
+
     # Cek status koneksi jika melihat profil user lain
     connection_status = None
     if not is_own_profile:
-        # Import model Connection dan Q object untuk complex query
-        from partner_matching.models import Connection
-        from django.db.models import Q
-
         # Cek apakah sudah berteman (connection dengan status 'accepted')
         # Q object digunakan untuk OR condition (bisa from_user atau to_user)
         is_friends = Connection.objects.filter(
@@ -291,6 +302,7 @@ def profile_view(request, user_id=None):
         'reviews_received': reviews_received,
         'average_rating': average_rating,
         'connection_status': connection_status,
+        'friends': friends,
     }
 
     # Render template profile dengan context
